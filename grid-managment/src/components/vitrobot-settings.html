@@ -1,55 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vitrobot Settings</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="form-section">
-        <h2 class="section-title">Vitrobot Settings</h2>
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="blotTime">Blot Time (s)</label>
-                <input type="number" id="blotTime" step="0.1" placeholder="3.0">
-            </div>
-            <div class="form-group">
-                <label for="blotForce">Blot Force</label>
-                <input type="number" id="blotForce" placeholder="5">
-            </div>
-            <div class="form-group">
-                <label for="waitTime">Wait Time (s)</label>
-                <input type="number" id="waitTime" step="0.1" placeholder="0.0">
-            </div>
-            <div class="form-group">
-                <label for="drainTime">Drain Time (s)</label>
-                <input type="number" id="drainTime" step="0.1" placeholder="1.0">
-            </div>
-            <div class="form-group">
-                <label for="humidity">Humidity (%)</label>
-                <input type="number" id="humidity" placeholder="95">
-            </div>
-            <div class="form-group">
-                <label for="temperature">Temperature (°C)</label>
-                <input type="number" id="temperature" placeholder="4">
-            </div>
+      <h2 class="section-title">Vitrobot Settings</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="humidity">Humidity [%]</label>
+          <input type="number" id="humidity" placeholder="95" />
+        </div>
+        <div class="form-group">
+          <label for="temperature">Temperature [°C]</label>
+          <input type="number" id="temperature" placeholder="4" />
+        </div>
+        <div class="form-group">
+          <label for="blotForce">Blot Force</label>
+          <input type="number" id="blotForce" placeholder="4" />
+        </div>
+        <div class="form-group">
+          <label for="blotTime">Blot Time [s]</label>
+          <input type="number" id="blotTime" step="0.1" placeholder="3.0" />
         </div>
 
-        <div class="checkbox-group">
-            <input type="checkbox" id="glowDischarge">
-            <label for="glowDischarge">Glow Discharge Applied</label>
+        <div class="form-group">
+          <label for="waitTime">Wait Time [s]</label>
+          <input type="number" id="waitTime" step="0.1" placeholder="0.0" />
         </div>
 
-        <div class="glow-discharge" id="glowDischargeSettings" style="display: none;">
-            <div class="form-group">
-                <label for="glowCurrent">Current (mA)</label>
-                <input type="number" id="glowCurrent" step="0.1" placeholder="15.0">
-            </div>
-            <div class="form-group">
-                <label for="glowTime">Time (s)</label>
-                <input type="number" id="glowTime" placeholder="60">
-            </div>
+        <div class="form-group">
+          <label for="volume">Volume [ul]</label>
+          <input type="number" id="volume" placeholder="3.5" />
         </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>
