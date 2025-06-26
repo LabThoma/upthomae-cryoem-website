@@ -1,0 +1,454 @@
+const express = require("express");
+const mariadb = require("mariadb");
+const cors = require("cors");
+const app = express();
+const port = 3000;
+
+// Enable CORS middleware - FIXED
+app.use(
+  cors({
+    origin: "http://127.0.0.1:5500", // Replace with your frontend's origin
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// Serve static files (for your HTML form)
+app.use(express.static("public"));
+
+// MariaDB connection pool
+const pool = mariadb.createPool({
+  host: "localhost",
+  user: "root",
+  database: "test_database",
+  connectionLimit: 5,
+  bigIntAsNumber: true, // Convert BIGINT to Number
+});
+
+// Helper function to convert BigInt values to strings/numbers
+const sanitizeBigInt = (obj) => {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") {
+    // Convert BigInt to number if it's within safe integer range
+    return obj <= Number.MAX_SAFE_INTEGER ? Number(obj) : obj.toString();
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeBigInt);
+  }
+
+  if (typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, sanitizeBigInt(value)])
+    );
+  }
+
+  return obj;
+};
+
+// ===== REFERENCE DATA ENDPOINTS =====
+
+// Get all samples for dropdown
+app.get("/api/samples", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(
+      "SELECT * FROM samples ORDER BY sample_name"
+    );
+    connection.release();
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching samples");
+  }
+});
+
+// Get all grid types for dropdown
+app.get("/api/grid-types", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(
+      "SELECT * FROM grid_types ORDER BY grid_type_name"
+    );
+    connection.release();
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching grid types");
+  }
+});
+
+// Add new sample
+app.post("/api/samples", async (req, res) => {
+  const { sample_name, sample_concentration_mg_ml, additives } = req.body;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "INSERT INTO samples (sample_name, sample_concentration_mg_ml, additives) VALUES (?, ?, ?)",
+      [sample_name, sample_concentration_mg_ml, additives]
+    );
+    connection.release();
+    res.status(201).json({ id: sanitizeBigInt(result.insertId) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error adding sample");
+  }
+});
+
+// Add new grid type
+app.post("/api/grid-types", async (req, res) => {
+  const { grid_type_name, grid_batch, manufacturer, specifications } = req.body;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "INSERT INTO grid_types (grid_type_name, grid_batch, manufacturer, specifications) VALUES (?, ?, ?, ?)",
+      [grid_type_name, grid_batch, manufacturer, specifications]
+    );
+    connection.release();
+    res.status(201).json({ id: sanitizeBigInt(result.insertId) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error adding grid type");
+  }
+});
+
+// ===== SESSION ENDPOINTS =====
+
+// Get all sessions with basic info
+app.get("/api/sessions", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(`
+      SELECT s.*, 
+             COUNT(gp.prep_id) as grid_count,
+             vs.humidity_percent, vs.temperature_c
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
+      LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id
+      GROUP BY s.session_id
+      ORDER BY s.date DESC, s.created_at DESC
+    `);
+    connection.release();
+
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error("Error fetching sessions:", err);
+    res.status(500).send("Error fetching sessions");
+  }
+});
+
+// Get complete session data (for editing/viewing)
+app.get("/api/sessions/:id", async (req, res) => {
+  const sessionId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+
+    // Get session info
+    const session = await connection.query(
+      "SELECT * FROM sessions WHERE session_id = ?",
+      [sessionId]
+    );
+
+    // Get vitrobot settings
+    const settings = await connection.query(
+      "SELECT * FROM vitrobot_settings WHERE session_id = ?",
+      [sessionId]
+    );
+
+    // Get grid preparations with sample and grid type info
+    const grids = await connection.query(
+      `
+      SELECT gp.*, 
+             s.sample_name, s.sample_concentration_mg_ml, s.additives,
+             gt.grid_type_name, gt.grid_batch
+      FROM grid_preparations gp
+      LEFT JOIN samples s ON gp.sample_id = s.sample_id
+      LEFT JOIN grid_types gt ON gp.grid_type_id = gt.grid_type_id
+      WHERE gp.session_id = ?
+      ORDER BY gp.slot_number
+    `,
+      [sessionId]
+    );
+
+    connection.release();
+
+    if (session.length === 0) {
+      return res.status(404).send("Session not found");
+    }
+
+    res.json(
+      sanitizeBigInt({
+        session: session[0],
+        settings: settings[0] || {},
+        grids: grids,
+      })
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching session details");
+  }
+});
+
+// Create new session with vitrobot settings and grids
+app.post("/api/sessions", async (req, res) => {
+  const { session, vitrobot_settings, grids } = req.body;
+
+  console.log("Request Body:", req.body);
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Insert session
+    console.log("Session Query Parameters:", [
+      session.user_name,
+      session.date,
+      session.grid_box_name,
+      session.loading_order,
+      session.puck_name,
+      session.puck_position,
+    ]);
+
+    const sessionResult = await connection.query(
+      `INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        session.user_name,
+        session.date,
+        session.grid_box_name,
+        session.loading_order,
+        session.puck_name,
+        session.puck_position,
+      ]
+    );
+
+    console.log("Session Insert Result:", sessionResult);
+    const sessionId = sanitizeBigInt(sessionResult.insertId);
+
+    // Insert vitrobot settings
+    await connection.query(
+      `INSERT INTO vitrobot_settings (session_id, humidity_percent, temperature_c, blot_force, blot_time_seconds, wait_time_seconds, default_volume_ul, glow_discharge_applied)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        sessionId,
+        vitrobot_settings.humidity_percent || null, // Use NULL if value is empty
+        vitrobot_settings.temperature_c || null,
+        vitrobot_settings.blot_force || null,
+        vitrobot_settings.blot_time_seconds || null,
+        vitrobot_settings.wait_time_seconds || null,
+        vitrobot_settings.default_volume_ul || null,
+        vitrobot_settings.glow_discharge_applied || false, // Default to false
+      ]
+    );
+
+    console.log("Vitrobot Settings Inserted:", vitrobot_settings);
+
+    // Insert grid preparations
+    for (const grid of grids) {
+      if (grid.include_in_session) {
+        await connection.query(
+          `INSERT INTO grid_preparations (session_id, slot_number, sample_id, grid_type_id, concentration_mg_ml_override, volume_ul_override, incubation_time_seconds, comments, include_in_session)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            sessionId,
+            grid.slot_number,
+            grid.sample_id || null,
+            grid.grid_type_id || null,
+            grid.concentration_mg_ml_override || null,
+            grid.volume_ul_override || null,
+            grid.incubation_time_seconds || null,
+            grid.comments || null,
+            grid.include_in_session,
+          ]
+        );
+      }
+    }
+
+    console.log("Grid Preparations Inserted:", grids);
+
+    await connection.commit();
+    res.status(201).json({
+      success: true,
+      session_id: sessionId,
+      message: "Session created successfully",
+    });
+  } catch (err) {
+    if (connection) await connection.rollback();
+    console.error("Error creating session:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      message: "Error creating session",
+    });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Update existing session
+app.put("/api/sessions/:id", async (req, res) => {
+  const sessionId = req.params.id;
+  const { session, vitrobot_settings, grids } = req.body;
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Update session
+    await connection.query(
+      `UPDATE sessions SET user_name = ?, date = ?, grid_box_name = ?, loading_order = ?, puck_name = ?, puck_position = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = ?`,
+      [
+        session.user_name,
+        session.date,
+        session.grid_box_name,
+        session.loading_order,
+        session.puck_name,
+        session.puck_position,
+        sessionId,
+      ]
+    );
+
+    // Update vitrobot settings
+    await connection.query(
+      `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, default_volume_ul = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = ?`,
+      [
+        vitrobot_settings.humidity_percent,
+        vitrobot_settings.temperature_c,
+        vitrobot_settings.blot_force,
+        vitrobot_settings.blot_time_seconds,
+        vitrobot_settings.wait_time_seconds,
+        vitrobot_settings.default_volume_ul,
+        vitrobot_settings.glow_discharge_applied,
+        sessionId,
+      ]
+    );
+
+    // Delete existing grid preparations and re-insert
+    await connection.query(
+      "DELETE FROM grid_preparations WHERE session_id = ?",
+      [sessionId]
+    );
+
+    // Insert updated grid preparations
+    for (const grid of grids) {
+      await connection.query(
+        `INSERT INTO grid_preparations (session_id, slot_number, sample_id, grid_type_id, concentration_mg_ml_override, volume_ul_override, incubation_time_seconds, comments, include_in_session)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sessionId,
+          grid.slot_number,
+          grid.sample_id || null,
+          grid.grid_type_id || null,
+          grid.concentration_mg_ml_override || null,
+          grid.volume_ul_override || null,
+          grid.incubation_time_seconds || null,
+          grid.comments || null,
+          grid.include_in_session || false,
+        ]
+      );
+    }
+
+    await connection.commit();
+    res.json({ message: "Session updated successfully" });
+  } catch (err) {
+    if (connection) await connection.rollback();
+    console.error(err);
+    res.status(500).send("Error updating session");
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Delete session
+app.delete("/api/sessions/:id", async (req, res) => {
+  const sessionId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    await connection.query("DELETE FROM sessions WHERE session_id = ?", [
+      sessionId,
+    ]);
+    connection.release();
+    res.json({ message: "Session deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error deleting session");
+  }
+});
+
+// ===== UTILITY ENDPOINTS =====
+
+// Get dashboard statistics
+app.get("/api/dashboard", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+
+    const stats = await connection.query(`
+      SELECT 
+        COUNT(DISTINCT s.session_id) as total_sessions,
+        COUNT(gp.prep_id) as total_grids,
+        COUNT(DISTINCT s.user_name) as active_users,
+        AVG(vs.humidity_percent) as avg_humidity,
+        AVG(vs.temperature_c) as avg_temperature
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
+      LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id
+      WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `);
+
+    const recentSessions = await connection.query(`
+      SELECT s.session_id, s.user_name, s.date, s.puck_name, COUNT(gp.prep_id) as grid_count
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
+      GROUP BY s.session_id
+      ORDER BY s.date DESC, s.created_at DESC
+      LIMIT 10
+    `);
+
+    connection.release();
+
+    res.json(
+      sanitizeBigInt({
+        stats: stats[0],
+        recent_sessions: recentSessions,
+      })
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching dashboard data");
+  }
+});
+
+// Health check endpoint
+app.get("/api/health", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.query("SELECT 1");
+    connection.release();
+    res.json({ status: "healthy", timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "unhealthy", error: err.message });
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Vitrobot Server running at http://localhost:${port}`);
+  console.log(`API endpoints available:`);
+  console.log(`  GET  /api/sessions - List all sessions`);
+  console.log(`  GET  /api/sessions/:id - Get session details`);
+  console.log(`  POST /api/sessions - Create new session`);
+  console.log(`  PUT  /api/sessions/:id - Update session`);
+  console.log(`  GET  /api/samples - Get all samples`);
+  console.log(`  GET  /api/grid-types - Get all grid types`);
+  console.log(`  GET  /api/dashboard - Get dashboard stats`);
+  console.log(`  GET  /api/health - Health check`);
+});
