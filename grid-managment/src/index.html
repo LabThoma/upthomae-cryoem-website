@@ -1,33 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vitrobot Grid Management System</title>
-    <link rel="stylesheet" href="styles/main.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
     <div class="container">
-        <!-- Header Component -->
-        <div id="header"></div>
+      <!-- Header Component -->
+      <div id="header"></div>
 
-        <div class="content">
-            <div id="alertContainer"></div>
+      <div class="content">
+        <div id="alertContainer"></div>
 
-            <!-- Session Information Component -->
-            <div id="session-info"></div>
+        <!-- Session Information Component -->
+        <div id="session-info"></div>
 
-            <!-- Vitrobot Settings Component -->
-            <div id="vitrobot-settings"></div>
+        <!-- Sample Information Component -->
+        <div id="sample-info"></div>
 
-            <!-- Grid Details Component -->
-            <div id="grid-details"></div>
+        <!-- Grid Information Component -->
+        <div id="grid-info"></div>
 
-            <!-- Grid Database Component -->
-            <div id="grid-database" style="display: none;"></div>
+        <!-- Vitrobot Settings Component -->
+        <div id="vitrobot-settings"></div>
+
+        <!-- Grid Details Component -->
+        <div id="grid-details"></div>
+
+        <!-- Grid Database Component -->
+        <div id="grid-database" style="display: none"></div>
+
+        <!-- Buttons for Saving and Updating -->
+        <div class="button-container">
+          <button id="saveUpdateButton" class="btn btn-primary">
+            Save & Update
+          </button>
+          <!-- <button id="saveToGridListButton" class="btn btn-secondary">
+            Save to Grid List
+          </button> -->
         </div>
+      </div>
     </div>
 
     <script src="scripts/main.js"></script>
-</body>
+  </body>
 </html>
