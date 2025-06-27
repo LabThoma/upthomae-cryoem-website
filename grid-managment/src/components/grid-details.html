@@ -1,64 +1,106 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid Details</title>
-</head>
-<body>
-    <div class="form-section">
-        <h2 class="section-title">Grid Details</h2>
-        <table class="grid-table">
-            <thead>
-                <tr>
-                    <th>Include</th>
-                    <th>Slot</th>
-                    <th>Sample</th>
-                    <th>Conc. (mg/ml)</th>
-                    <th>Volume (μl)</th>
-                    <th>Incubation (s)</th>
-                    <th>Comments</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr data-grid="1">
-                    <td><input type="checkbox" class="grid-checkbox"></td>
-                    <td><input type="text" class="grid-slot" placeholder="1"></td>
-                    <td><input type="text" class="grid-sample" placeholder="Sample name"></td>
-                    <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0"></td>
-                    <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0"></td>
-                    <td><input type="number" class="grid-incubation" placeholder="30"></td>
-                    <td><input type="text" class="grid-comments" placeholder="Notes"></td>
-                </tr>
-                <tr data-grid="2">
-                    <td><input type="checkbox" class="grid-checkbox"></td>
-                    <td><input type="text" class="grid-slot" placeholder="2"></td>
-                    <td><input type="text" class="grid-sample" placeholder="Sample name"></td>
-                    <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0"></td>
-                    <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0"></td>
-                    <td><input type="number" class="grid-incubation" placeholder="30"></td>
-                    <td><input type="text" class="grid-comments" placeholder="Notes"></td>
-                </tr>
-                <tr data-grid="3">
-                    <td><input type="checkbox" class="grid-checkbox"></td>
-                    <td><input type="text" class="grid-slot" placeholder="3"></td>
-                    <td><input type="text" class="grid-sample" placeholder="Sample name"></td>
-                    <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0"></td>
-                    <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0"></td>
-                    <td><input type="number" class="grid-incubation" placeholder="30"></td>
-                    <td><input type="text" class="grid-comments" placeholder="Notes"></td>
-                </tr>
-                <tr data-grid="4">
-                    <td><input type="checkbox" class="grid-checkbox"></td>
-                    <td><input type="text" class="grid-slot" placeholder="4"></td>
-                    <td><input type="text" class="grid-sample" placeholder="Sample name"></td>
-                    <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0"></td>
-                    <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0"></td>
-                    <td><input type="number" class="grid-incubation" placeholder="30"></td>
-                    <td><input type="text" class="grid-comments" placeholder="Notes"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>
+<div class="form-section">
+  <h2 class="section-title">Grid Details</h2>
+  <table class="grid-table">
+    <thead>
+      <tr>
+        <th>Include</th>
+        <th>Slot</th>
+        <th>Sample</th>
+        <th>Conc. (mg/ml)</th>
+        <th>Volume (μl)</th>
+        <th>Incubation (s)</th>
+        <th>Comments</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-grid="1">
+        <td><input type="checkbox" class="grid-checkbox" /></td>
+        <td><input type="text" class="grid-slot" placeholder="1" /></td>
+        <td>
+          <input type="text" class="grid-sample" placeholder="Sample name" />
+        </td>
+        <td>
+          <input type="number" class="grid-conc" step="0.1" placeholder="1.0" />
+        </td>
+        <td>
+          <input
+            type="number"
+            class="grid-volume"
+            step="0.1"
+            placeholder="3.0"
+          />
+        </td>
+        <td>
+          <input type="number" class="grid-incubation" placeholder="30" />
+        </td>
+        <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+      </tr>
+      <tr data-grid="2">
+        <td><input type="checkbox" class="grid-checkbox" /></td>
+        <td><input type="text" class="grid-slot" placeholder="2" /></td>
+        <td>
+          <input type="text" class="grid-sample" placeholder="Sample name" />
+        </td>
+        <td>
+          <input type="number" class="grid-conc" step="0.1" placeholder="1.0" />
+        </td>
+        <td>
+          <input
+            type="number"
+            class="grid-volume"
+            step="0.1"
+            placeholder="3.0"
+          />
+        </td>
+        <td>
+          <input type="number" class="grid-incubation" placeholder="30" />
+        </td>
+        <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+      </tr>
+      <tr data-grid="3">
+        <td><input type="checkbox" class="grid-checkbox" /></td>
+        <td><input type="text" class="grid-slot" placeholder="3" /></td>
+        <td>
+          <input type="text" class="grid-sample" placeholder="Sample name" />
+        </td>
+        <td>
+          <input type="number" class="grid-conc" step="0.1" placeholder="1.0" />
+        </td>
+        <td>
+          <input
+            type="number"
+            class="grid-volume"
+            step="0.1"
+            placeholder="3.0"
+          />
+        </td>
+        <td>
+          <input type="number" class="grid-incubation" placeholder="30" />
+        </td>
+        <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+      </tr>
+      <tr data-grid="4">
+        <td><input type="checkbox" class="grid-checkbox" /></td>
+        <td><input type="text" class="grid-slot" placeholder="4" /></td>
+        <td>
+          <input type="text" class="grid-sample" placeholder="Sample name" />
+        </td>
+        <td>
+          <input type="number" class="grid-conc" step="0.1" placeholder="1.0" />
+        </td>
+        <td>
+          <input
+            type="number"
+            class="grid-volume"
+            step="0.1"
+            placeholder="3.0"
+          />
+        </td>
+        <td>
+          <input type="number" class="grid-incubation" placeholder="30" />
+        </td>
+        <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

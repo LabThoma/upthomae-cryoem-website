@@ -1,57 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Grids Details & Glow Discharge</title>
-  </head>
-  <body>
-    <div class="form-section">
-      <h2 class="section-title">Grid Details & Glow Discharge</h2>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="GridType">Grid Type</label>
-          <input
-            type="text"
-            id="gridType"
-            placeholder="Enter grid type information (e.g. Quantifoil R1.2/1.3 Cu 300 mesh)"
-          />
-        </div>
+<div class="form-section">
+  <h2 class="section-title">Grid Details & Glow Discharge</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="GridType">Grid Type</label>
+      <input
+        type="text"
+        id="gridType"
+        placeholder="Enter grid type information (e.g. Quantifoil R1.2/1.3 Cu 300 mesh)"
+      />
+    </div>
 
-        <div class="form-group">
-          <label for="gridBatch">Grid Batch</label>
-          <input
-            type="text"
-            id="gridBatch"
-            placeholder="Enter grid batch information (Q number)"
-          />
-        </div>
+    <div class="form-group">
+      <label for="gridBatch">Grid Batch</label>
+      <input
+        type="text"
+        id="gridBatch"
+        placeholder="Enter grid batch information (Q number)"
+      />
+    </div>
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="glowDischarge" />
-          <label for="glowDischarge">Glow Discharge Applied</label>
-        </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="glowDischarge" />
+      <label for="glowDischarge">Glow Discharge Applied</label>
+    </div>
 
-        <div
-          class="glow-discharge"
-          id="glowDischargeSettings"
-          style="display: none"
-        >
-          <div class="form-group">
-            <label for="glowCurrent">Current [mA]</label>
-            <input
-              type="number"
-              id="glowCurrent"
-              step="0.1"
-              placeholder="15.0"
-            />
-          </div>
-          <div class="form-group">
-            <label for="glowTime">Time [s]</label>
-            <input type="number" id="glowTime" placeholder="60" />
-          </div>
-        </div>
+    <div
+      class="glow-discharge"
+      id="glowDischargeSettings"
+      style="display: none"
+    >
+      <div class="form-group">
+        <label for="glowCurrent">Current [mA]</label>
+        <input type="number" id="glowCurrent" step="0.1" placeholder="15.0" />
+      </div>
+      <div class="form-group">
+        <label for="glowTime">Time [s]</label>
+        <input type="number" id="glowTime" placeholder="60" />
       </div>
     </div>
-  </body>
-</html>
+  </div>
+</div>
