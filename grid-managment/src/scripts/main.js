@@ -19,6 +19,9 @@ function setDefaultDate() {
 
 // Set up event listeners for various UI interactions
 function setupEventListeners() {
+  // Initialize grid table
+  setupGridTable();
+
   const glowDischarge = document.getElementById("glowDischarge");
   if (glowDischarge) {
     glowDischarge.addEventListener("change", toggleGlowDischargeSettings);
@@ -307,6 +310,33 @@ function loadComponents(callback) {
       })
       .catch((error) => console.error(error));
   });
+}
+
+function setupGridTable() {
+  const tbody = document.querySelector(".grid-table tbody");
+  if (!tbody) return;
+
+  // Clear any existing rows
+  tbody.innerHTML = "";
+
+  // Generate 4 identical rows with different slot numbers
+  for (let i = 1; i <= 4; i++) {
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-grid", i);
+    tr.setAttribute("data-slot", i);
+
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td><input type="checkbox" class="grid-checkbox" /></td>
+      <td><input type="text" class="grid-sample" placeholder="Sample name" /></td>
+      <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0" /></td>
+      <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0" /></td>
+      <td><input type="number" class="grid-incubation" placeholder="30" /></td>
+      <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+    `;
+
+    tbody.appendChild(tr);
+  }
 }
 
 // Placeholder functions for missing functionality
