@@ -262,8 +262,9 @@ app.post("/api/sessions", async (req, res) => {
         blot_force_override, 
         grid_batch, 
         comments, 
+        additives_override, 
         include_in_session
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
@@ -274,6 +275,7 @@ app.post("/api/sessions", async (req, res) => {
             grid.blot_force_override || null,
             grid.grid_batch || null,
             grid.comments || null,
+            grid.additives_override || null,
             grid.include_in_session,
           ]
         );
@@ -361,8 +363,9 @@ app.put("/api/sessions/:id", async (req, res) => {
     blot_force_override, 
     grid_batch, 
     comments, 
+    additives_override,
     include_in_session
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sessionId,
           grid.slot_number,
@@ -373,6 +376,7 @@ app.put("/api/sessions/:id", async (req, res) => {
           grid.blot_force_override || null,
           grid.grid_batch || null,
           grid.comments || null,
+          grid.additives_override || null,
           grid.include_in_session || false,
         ]
       );

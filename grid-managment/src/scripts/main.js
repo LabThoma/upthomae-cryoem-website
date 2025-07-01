@@ -106,6 +106,7 @@ async function saveUpdate() {
         blot_time_override: getRowValue(row, ".grid-blot-time"),
         blot_force_override: getRowValue(row, ".grid-blot-force"),
         grid_batch: getRowValue(row, ".grid-batch"),
+        additives_override: getRowValue(row, ".grid-additives"),
         include_in_session: true,
       };
     });
@@ -336,7 +337,8 @@ function setupGridTable() {
       <td><input type="number" class="grid-blot-time" placeholder="Override" /></td>
       <td><input type="number" class="grid-blot-force" placeholder="Override" /></td>
       <td><input type="text" class="grid-batch" placeholder="Override" /></td>
-    `;
+    <td><input type="text" class="grid-additives" step="0.1" placeholder="Override" /></td>
+      `;
 
     tbody.appendChild(tr);
   }
