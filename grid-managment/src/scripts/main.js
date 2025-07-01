@@ -100,13 +100,12 @@ async function saveUpdate() {
     const gridPreparations = Array.from(checkedGrids).map((checkbox) => {
       const row = checkbox.closest("tr");
       return {
-        slot_number: getRowValue(row, ".grid-slot"),
-        sample_id: getRowValue(row, ".grid-sample"),
-        grid_type_id: getRowValue(row, ".grid-type"),
-        concentration_mg_ml_override: getRowValue(row, ".grid-conc"),
-        volume_ul_override: getRowValue(row, ".grid-volume"),
-        incubation_time_seconds: getRowValue(row, ".grid-incubation"),
+        slot_number: row.getAttribute("data-slot"),
         comments: getRowValue(row, ".grid-comments"),
+        volume_ul_override: getRowValue(row, ".grid-volume"),
+        blot_time_override: getRowValue(row, ".grid-blot-time"),
+        blot_force_override: getRowValue(row, ".grid-blot-force"),
+        grid_batch: getRowValue(row, ".grid-batch"),
         include_in_session: true,
       };
     });
@@ -161,6 +160,10 @@ function getElementChecked(id) {
 
 // Helper function to safely get row value
 function getRowValue(row, selector) {
+  // Special case for slot numbers as they are fixed text
+  if (selector === ".grid-slot") {
+    return row.getAttribute("data-slot") || "";
+  }
   const element = row.querySelector(selector);
   return element ? element.value : "";
 }
@@ -328,11 +331,11 @@ function setupGridTable() {
     tr.innerHTML = `
       <td>${i}</td>
       <td><input type="checkbox" class="grid-checkbox" /></td>
-      <td><input type="text" class="grid-sample" placeholder="Sample name" /></td>
-      <td><input type="number" class="grid-conc" step="0.1" placeholder="1.0" /></td>
-      <td><input type="number" class="grid-volume" step="0.1" placeholder="3.0" /></td>
-      <td><input type="number" class="grid-incubation" placeholder="30" /></td>
       <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
+      <td><input type="number" class="grid-volume" step="0.1" placeholder="Override" /></td>
+      <td><input type="number" class="grid-blot-time" placeholder="Override" /></td>
+      <td><input type="number" class="grid-blot-force" placeholder="Override" /></td>
+      <td><input type="text" class="grid-batch" placeholder="Override" /></td>
     `;
 
     tbody.appendChild(tr);

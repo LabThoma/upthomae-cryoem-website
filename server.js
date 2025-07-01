@@ -215,8 +215,8 @@ app.post("/api/sessions", async (req, res) => {
     ]);
 
     const sessionResult = await connection.query(
-      `INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position)
+   VALUES (?, ?, ?, ?, ?, ?)`,
       [
         session.user_name,
         session.date,
@@ -252,16 +252,27 @@ app.post("/api/sessions", async (req, res) => {
     for (const grid of grids) {
       if (grid.include_in_session) {
         await connection.query(
-          `INSERT INTO grid_preparations (session_id, slot_number, sample_id, grid_type_id, concentration_mg_ml_override, volume_ul_override, incubation_time_seconds, comments, include_in_session)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO grid_preparations (
+        session_id, 
+        slot_number, 
+        sample_id, 
+        grid_type_id, 
+        volume_ul_override, 
+        blot_time_override, 
+        blot_force_override, 
+        grid_batch, 
+        comments, 
+        include_in_session
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
             grid.sample_id || null,
             grid.grid_type_id || null,
-            grid.concentration_mg_ml_override || null,
             grid.volume_ul_override || null,
-            grid.incubation_time_seconds || null,
+            grid.blot_time_override || null,
+            grid.blot_force_override || null,
+            grid.grid_batch || null,
             grid.comments || null,
             grid.include_in_session,
           ]
@@ -340,16 +351,27 @@ app.put("/api/sessions/:id", async (req, res) => {
     // Insert updated grid preparations
     for (const grid of grids) {
       await connection.query(
-        `INSERT INTO grid_preparations (session_id, slot_number, sample_id, grid_type_id, concentration_mg_ml_override, volume_ul_override, incubation_time_seconds, comments, include_in_session)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO grid_preparations (
+    session_id, 
+    slot_number, 
+    sample_id, 
+    grid_type_id, 
+    volume_ul_override, 
+    blot_time_override, 
+    blot_force_override, 
+    grid_batch, 
+    comments, 
+    include_in_session
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sessionId,
           grid.slot_number,
           grid.sample_id || null,
           grid.grid_type_id || null,
-          grid.concentration_mg_ml_override || null,
           grid.volume_ul_override || null,
-          grid.incubation_time_seconds || null,
+          grid.blot_time_override || null,
+          grid.blot_force_override || null,
+          grid.grid_batch || null,
           grid.comments || null,
           grid.include_in_session || false,
         ]
