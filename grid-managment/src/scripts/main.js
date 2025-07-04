@@ -264,52 +264,59 @@ function updateDatabaseTable(sessions) {
     // Create a cell that spans all columns
     const detailCell = document.createElement("td");
     detailCell.colSpan = 3; // Span across all columns
-    detailCell.innerHTML = `
+
+    // Create the grid detail table
+    let gridTableHTML = `
       <div class="expandable-content" id="details-${session.session_id}">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <div class="detail-label">Session ID:</div>
-            <div class="detail-value">${session.session_id}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">User:</div>
-            <div class="detail-value">${session.user_name}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Date:</div>
-            <div class="detail-value">${session.date || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Box Name:</div>
-            <div class="detail-value">${session.grid_box_name || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Puck Name:</div>
-            <div class="detail-value">${session.puck_name || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Position:</div>
-            <div class="detail-value">${session.puck_position || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Loading Order:</div>
-            <div class="detail-value">${session.loading_order || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Humidity:</div>
-            <div class="detail-value">${session.humidity_percent || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Temperature:</div>
-            <div class="detail-value">${session.temperature_c || "N/A"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Comments:</div>
-            <div class="detail-value">${session.comments || "N/A"}</div>
-          </div>
+        <h4 class="detail-subtitle">Grid Details</h4>
+        <div class="grid-detail-container">
+          <table class="grid-detail-table">
+            <thead>
+              <tr>
+                <th>Slot</th>
+                <th>Grid Type</th>
+                <th>Blot Time</th>
+                <th>Blot Force</th>
+                <th>Volume</th>
+                <th>Additive</th>
+                <th class="comments-col">Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Generate 4 rows for the grids
+    // Check if session has grid_preparations data
+    const grids = session.grid_preparations || [];
+
+    // Generate rows for each slot (1-4)
+    for (let i = 1; i <= 4; i++) {
+      // Find the grid data for this slot if it exists
+      const gridData = grids.find((g) => g.slot_number === i) || {};
+
+      gridTableHTML += `
+        <tr>
+          <td>${i}</td>
+          <td>${gridData.grid_type_id || "N/A"}</td>
+          <td>${gridData.blot_time_override || session.blot_time || "N/A"}</td>
+          <td>${
+            gridData.blot_force_override || session.blot_force || "N/A"
+          }</td>
+          <td>${gridData.volume_ul_override || session.volume_ul || "N/A"}</td>
+          <td>${gridData.additives_override || "N/A"}</td>
+          <td class="comments-col">${gridData.comments || "No comments"}</td>
+        </tr>
+      `;
+    }
+
+    gridTableHTML += `
+            </tbody>
+          </table>
         </div>
       </div>
     `;
+
+    detailCell.innerHTML = gridTableHTML;
     detailRow.appendChild(detailCell);
     tableBody.appendChild(detailRow);
   });

@@ -296,6 +296,55 @@ body {
   font-size: 0.9rem;
 }
 
+.detail-subtitle {
+  font-size: 1.1rem;
+  color: #4a5568;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.grid-detail-container {
+  overflow-x: auto;
+  margin-bottom: 15px;
+}
+
+.grid-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.grid-detail-table th,
+.grid-detail-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.grid-detail-table th {
+  background-color: #f7fafc;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.grid-detail-table tr:hover {
+  background-color: #f1f5f9;
+}
+/* Make the comments column wider */
+.grid-detail-table .comments-col {
+  min-width: 200px;
+  width: 30%;
+}
+
+.session-info {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;
