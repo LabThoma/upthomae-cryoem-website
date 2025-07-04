@@ -164,7 +164,7 @@ app.get("/api/sessions/:id", async (req, res) => {
       `
       SELECT gp.*, 
              s.sample_name, s.sample_concentration_mg_ml, s.additives,
-             gt.grid_type_name, gt.grid_batch
+             gt.grid_type_name, gt.grid_batch AS grid_type_batch
       FROM grid_preparations gp
       LEFT JOIN samples s ON gp.sample_id = s.sample_id
       LEFT JOIN grid_types gt ON gp.grid_type_id = gt.grid_type_id
@@ -409,6 +409,34 @@ app.delete("/api/sessions/:id", async (req, res) => {
   }
 });
 
+// Get sessions by user name
+app.get("/api/users/:username/sessions", async (req, res) => {
+  const username = req.params.username;
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(
+      `
+      SELECT s.*, 
+             COUNT(gp.prep_id) as grid_count,
+             vs.humidity_percent, vs.temperature_c
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
+      LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id
+      WHERE s.user_name = ?
+      GROUP BY s.session_id
+      ORDER BY s.date DESC, s.created_at DESC
+    `,
+      [username]
+    );
+    connection.release();
+
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error("Error fetching user sessions:", err);
+    res.status(500).send(`Error fetching sessions for user: ${username}`);
+  }
+});
+
 // ===== UTILITY ENDPOINTS =====
 
 // Get dashboard statistics
@@ -477,4 +505,7 @@ app.listen(port, () => {
   console.log(`  GET  /api/grid-types - Get all grid types`);
   console.log(`  GET  /api/dashboard - Get dashboard stats`);
   console.log(`  GET  /api/health - Health check`);
+  console.log(
+    `  GET  /api/users/:username/sessions - Get sessions for a specific user`
+  );
 });

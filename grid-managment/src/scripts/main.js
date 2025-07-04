@@ -280,6 +280,7 @@ function updateDatabaseTable(sessions) {
                 <th>Volume</th>
                 <th>Additive</th>
                 <th class="comments-col">Comments</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -305,6 +306,11 @@ function updateDatabaseTable(sessions) {
           <td>${gridData.volume_ul_override || session.volume_ul || "N/A"}</td>
           <td>${gridData.additives_override || "N/A"}</td>
           <td class="comments-col">${gridData.comments || "No comments"}</td>
+          <td>
+             <button class="btn-small view-grid-btn" data-session-id="${
+               session.session_id
+             }" data-slot="${i}">View</button>
+          </td>
         </tr>
       `;
     }
@@ -333,6 +339,222 @@ function updateDatabaseTable(sessions) {
       content.classList.toggle("expanded");
     });
   });
+
+  setupGridModalEventListeners();
+
+  // Show grid detail modal
+  function showGridModal(sessionId, slotNumber) {
+    // Find the session and grid data
+    fetch(`http://localhost:3000/api/sessions/${sessionId}`)
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(`Failed to fetch session ${sessionId}`);
+        return response.json();
+      })
+      .then((session) => {
+        // Find the specific grid data for this slot
+        const gridData =
+          session.grid_preparations?.find((g) => g.slot_number == slotNumber) ||
+          {};
+
+        // Populate the modal with all available data
+        const modalContent = document.getElementById("gridModalContent");
+
+        modalContent.innerHTML = `
+        <h2 class="grid-modal-title">Grid Details - ${
+          session.grid_box_name
+        } (Slot ${slotNumber})</h2>
+        
+        <div class="grid-detail-info">
+          <div class="grid-detail-section">
+            <h3>Session Information</h3>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">User:</div>
+              <div class="grid-detail-value">${session.session.user_name}</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Date:</div>
+              <div class="grid-detail-value">${
+                session.session.date || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Box Name:</div>
+              <div class="grid-detail-value">${
+                session.session.grid_box_name || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Loading Order:</div>
+              <div class="grid-detail-value">${
+                session.session.loading_order || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Puck Name:</div>
+              <div class="grid-detail-value">${
+                session.session.puck_name || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Puck Position:</div>
+              <div class="grid-detail-value">${
+                session.session.puck_position || "N/A"
+              }</div>
+            </div>
+          </div>
+          
+          <div class="grid-detail-section">
+            <h3>Sample Information</h3>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Sample Name:</div>
+              <div class="grid-detail-value">${
+                gridData.sample_name || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Sample Concentration (mg/mL):</div>
+              <div class="grid-detail-value">${
+                gridData.sample_concentration_mg_ml || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Sample Additives:</div>
+              <div class="grid-detail-value">${
+                gridData.additives || "N/A"
+              }</div>
+            </div>
+          </div>
+          
+          <div class="grid-detail-section">
+            <h3>Grid Information</h3>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Slot Number:</div>
+              <div class="grid-detail-value">${slotNumber}</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Grid Type:</div>
+              <div class="grid-detail-value">${
+                gridData.grid_type_id || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Grid Batch:</div>
+              <div class="grid-detail-value">${
+                gridData.grid_batch || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Glow Discharge Applied:</div>
+              <div class="grid-detail-value">${
+                session.settings.glow_discharge_applied ? "Yes" : "No"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Glow Discharge Current:</div>
+              <div class="grid-detail-value">${
+                session.settings.glow_discharge_current || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Glow Discharge Time:</div>
+              <div class="grid-detail-value">${
+                session.settings.glow_discharge_time || "N/A"
+              }</div>
+            </div>
+          </div>
+          
+          <div class="grid-detail-section">
+            <h3>Vitrobot Settings</h3>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Humidity (%):</div>
+              <div class="grid-detail-value">${
+                session.settings.humidity_percent || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Temperature (°C):</div>
+              <div class="grid-detail-value">${
+                session.settings.temperature_c || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Blot Force:</div>
+              <div class="grid-detail-value">${
+                gridData.blot_force_override ||
+                session.settings.blot_force ||
+                "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Blot Time:</div>
+              <div class="grid-detail-value">${
+                gridData.blot_time_override ||
+                session.settings.blot_time_seconds ||
+                "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Wait Time:</div>
+              <div class="grid-detail-value">${
+                session.settings.wait_time_seconds || "N/A"
+              }</div>
+            </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Volume (μL):</div>
+              <div class="grid-detail-value">${
+                gridData.volume_ul_override ||
+                session.settings.default_volume_ul ||
+                "N/A"
+              }</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid-detail-section">
+          <h3>Comments</h3>
+          <div class="grid-detail-value">${
+            gridData.comments || "No comments"
+          }</div>
+        </div>
+      `;
+
+        // Show the modal
+        document.getElementById("gridModal").style.display = "block";
+      })
+      .catch((error) => {
+        console.error("Error fetching grid details:", error);
+        showAlert(`Error fetching grid details: ${error.message}`, "error");
+      });
+  }
+
+  function setupGridModalEventListeners() {
+    // Add event listeners to the view buttons
+    const viewButtons = document.querySelectorAll(".view-grid-btn");
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const sessionId = this.getAttribute("data-session-id");
+        const slotNumber = this.getAttribute("data-slot");
+        showGridModal(sessionId, slotNumber);
+      });
+    });
+
+    // Add event listener to the close button
+    const closeModal = document.querySelector(".close-modal");
+    if (closeModal) {
+      closeModal.addEventListener("click", function () {
+        document.getElementById("gridModal").style.display = "none";
+      });
+    }
+
+    // Close modal when clicking outside the content
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("gridModal");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  }
 }
 
 // Show an alert message
