@@ -98,12 +98,12 @@ app.get("/api/grid-types", async (req, res) => {
 
 // Add new sample
 app.post("/api/samples", async (req, res) => {
-  const { sample_name, sample_concentration_mg_ml, additives } = req.body;
+  const { sample_name, sample_concentration, additives } = req.body;
   try {
     const connection = await pool.getConnection();
     const result = await connection.query(
-      "INSERT INTO samples (sample_name, sample_concentration_mg_ml, additives) VALUES (?, ?, ?)",
-      [sample_name, sample_concentration_mg_ml, additives]
+      "INSERT INTO samples (sample_name, sample_concentration, additives) VALUES (?, ?, ?)",
+      [sample_name, sample_concentration, additives]
     );
     connection.release();
     res.status(201).json({ id: sanitizeBigInt(result.insertId) });
@@ -177,7 +177,7 @@ app.get("/api/sessions/:id", async (req, res) => {
     const grids = await connection.query(
       `
       SELECT gp.*, 
-             s.sample_name, s.sample_concentration_mg_ml, s.additives,
+             s.sample_name, s.sample_concentration, s.additives,
              gt.grid_type_name, gt.grid_batch AS grid_type_batch
       FROM grid_preparations gp
       LEFT JOIN samples s ON gp.sample_id = s.sample_id
@@ -208,9 +208,9 @@ app.get("/api/sessions/:id", async (req, res) => {
     }
 
     const result = {
-        session: session[0],
-        settings: settings[0] || {},
-        grids: grids,
+      session: session[0],
+      settings: settings[0] || {},
+      grids: grids,
     };
 
     res.json(sanitizeBigInt(result));
@@ -278,6 +278,44 @@ app.post("/api/sessions", async (req, res) => {
     // Insert grid preparations
     for (const grid of grids) {
       if (grid.include_in_session) {
+        // Handle sample creation/lookup based on sample_name
+        let sampleId = null;
+
+        if (grid.sample_name) {
+          // First check if this sample already exists
+          const existingSamples = await connection.query(
+            "SELECT sample_id FROM samples WHERE sample_name = ?",
+            [grid.sample_name]
+          );
+
+          if (existingSamples.length > 0) {
+            // Use existing sample
+            sampleId = existingSamples[0].sample_id;
+            console.log(
+              `Found existing sample ID ${sampleId} for "${grid.sample_name}"`
+            );
+          } else {
+            // Create a new sample
+            const sampleResult = await connection.query(
+              "INSERT INTO samples (sample_name, sample_concentration, additives) VALUES (?, ?, ?)",
+              [
+                grid.sample_name,
+                grid.sample_concentration || null,
+                grid.additives || null,
+              ]
+            );
+            sampleId = sampleResult.insertId;
+            console.log(
+              `Created new sample ID ${sampleId} for "${grid.sample_name}"`
+            );
+          }
+        }
+        // Fall back to sample_id if provided directly
+        else if (grid.sample_id) {
+          sampleId = grid.sample_id;
+        }
+
+        // Then use the resolved sampleId in the grid preparation insert
         await connection.query(
           `INSERT INTO grid_preparations (
         session_id, 
@@ -295,7 +333,7 @@ app.post("/api/sessions", async (req, res) => {
           [
             sessionId,
             grid.slot_number,
-            grid.sample_id || null,
+            sampleId, // Now using our resolved sampleId
             grid.grid_type_id || null,
             grid.volume_ul_override || null,
             grid.blot_time_override || null,
@@ -443,9 +481,15 @@ app.get("/api/users/:username/sessions", async (req, res) => {
     const connection = await pool.getConnection();
     const rows = await connection.query(
       `
-      SELECT s.*, 
+      SELECT s.*,
              COUNT(gp.prep_id) as grid_count,
-             vs.humidity_percent, vs.temperature_c
+             vs.humidity_percent, vs.temperature_c,
+             (
+               SELECT GROUP_CONCAT(DISTINCT sam.sample_name SEPARATOR ', ')
+               FROM grid_preparations gp2
+               LEFT JOIN samples sam ON gp2.sample_id = sam.sample_id
+               WHERE gp2.session_id = s.session_id AND sam.sample_name IS NOT NULL
+             ) as sample_names
       FROM sessions s
       LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
       LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id

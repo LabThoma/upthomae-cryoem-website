@@ -315,8 +315,8 @@ function updateDatabaseTable(sessions) {
         }">▶</span>
         ${session.grid_box_name || "N/A"}
       </td>
-      <td>${session.date || "N/A"}</td>
-      <td>${session.sample_id || "N/A"}</td>
+      <td>${dateDisplay}</td> 
+      <td>${sampleName}</td> 
     `;
     tableBody.appendChild(row);
 
@@ -356,26 +356,44 @@ function updateDatabaseTable(sessions) {
     // Generate rows for each slot (1-4)
     for (let i = 1; i <= 4; i++) {
       // Find the grid data for this slot if it exists
-      const gridData = grids.find((g) => g.slot_number === i) || {};
+      const gridData = session.grid_preparations
+        ? session.grid_preparations.find(
+            (g) => parseInt(g.slot_number) === i
+          ) || {}
+        : {};
+
+      // Get blot time, force, and volume from the right places
+      const blotTime =
+        gridData.blot_time_override ||
+        (session.settings ? session.settings.blot_time_seconds : null) ||
+        "N/A";
+
+      const blotForce =
+        gridData.blot_force_override ||
+        (session.settings ? session.settings.blot_force : null) ||
+        "N/A";
+
+      const volume =
+        gridData.volume_ul_override ||
+        (session.settings ? session.settings.default_volume_ul : null) ||
+        "N/A";
 
       gridTableHTML += `
-        <tr>
-          <td>${i}</td>
-          <td>${gridData.grid_type_id || "N/A"}</td>
-          <td>${gridData.blot_time_override || session.blot_time || "N/A"}</td>
-          <td>${
-            gridData.blot_force_override || session.blot_force || "N/A"
-          }</td>
-          <td>${gridData.volume_ul_override || session.volume_ul || "N/A"}</td>
-          <td>${gridData.additives_override || "N/A"}</td>
-          <td class="comments-col">${gridData.comments || "No comments"}</td>
-          <td>
-             <button class="btn-small view-grid-btn" data-session-id="${
-               session.session_id
-             }" data-slot="${i}">View</button>
-          </td>
-        </tr>
-      `;
+    <tr>
+      <td>${i}</td>
+      <td>${gridData.grid_type_id || "N/A"}</td>
+      <td>${blotTime}</td>
+      <td>${blotForce}</td>
+      <td>${volume}</td>
+      <td>${gridData.additives_override || "N/A"}</td>
+      <td class="comments-col">${gridData.comments || "No comments"}</td>
+      <td>
+         <button class="btn-small view-grid-btn" data-session-id="${
+           session.session_id
+         }" data-slot="${i}">View</button>
+      </td>
+    </tr>
+  `;
     }
 
     gridTableHTML += `
@@ -450,18 +468,23 @@ function updateDatabaseTable(sessions) {
           throw new Error(`Failed to fetch session ${sessionId}`);
         return response.json();
       })
-      .then((session) => {
+      .then((sessionData) => {
         // Find the specific grid data for this slot
         const gridData =
-          session.grid_preparations?.find((g) => g.slot_number == slotNumber) ||
-          {};
+          sessionData.grids?.find(
+            (g) => parseInt(g.slot_number) === parseInt(slotNumber)
+          ) || {};
+
+        // Get the session and settings data with fallbacks
+        const session = sessionData.session || {};
+        const settings = sessionData.settings || {}; // Provide empty object as fallback
 
         // Populate the modal with all available data
         const modalContent = document.getElementById("gridModalContent");
 
         modalContent.innerHTML = `
         <h2 class="grid-modal-title">Grid Details - ${
-          session.grid_box_name
+          session.grid_box_name || "Unknown Box"
         } (Slot ${slotNumber})</h2>
         
         <div class="grid-detail-info">
@@ -469,36 +492,32 @@ function updateDatabaseTable(sessions) {
             <h3>Session Information</h3>
             <div class="grid-detail-item">
               <div class="grid-detail-label">User:</div>
-              <div class="grid-detail-value">${session.session.user_name}</div>
+              <div class="grid-detail-value">${session.user_name || "N/A"}</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Date:</div>
-              <div class="grid-detail-value">${
-                session.session.date || "N/A"
-              }</div>
+              <div class="grid-detail-value">${formatDate(session.date)}</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Box Name:</div>
               <div class="grid-detail-value">${
-                session.session.grid_box_name || "N/A"
+                session.grid_box_name || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Loading Order:</div>
               <div class="grid-detail-value">${
-                session.session.loading_order || "N/A"
+                session.loading_order || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Puck Name:</div>
-              <div class="grid-detail-value">${
-                session.session.puck_name || "N/A"
-              }</div>
+              <div class="grid-detail-value">${session.puck_name || "N/A"}</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Puck Position:</div>
               <div class="grid-detail-value">${
-                session.session.puck_position || "N/A"
+                session.puck_position || "N/A"
               }</div>
             </div>
           </div>
@@ -512,9 +531,9 @@ function updateDatabaseTable(sessions) {
               }</div>
             </div>
             <div class="grid-detail-item">
-              <div class="grid-detail-label">Sample Concentration (mg/mL):</div>
+              <div class="grid-detail-label">Sample Concentration:</div>
               <div class="grid-detail-value">${
-                gridData.sample_concentration_mg_ml || "N/A"
+                gridData.sample_concentration || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
@@ -546,19 +565,19 @@ function updateDatabaseTable(sessions) {
             <div class="grid-detail-item">
               <div class="grid-detail-label">Glow Discharge Applied:</div>
               <div class="grid-detail-value">${
-                session.settings.glow_discharge_applied ? "Yes" : "No"
+                settings.glow_discharge_applied ? "Yes" : "No"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Glow Discharge Current:</div>
               <div class="grid-detail-value">${
-                session.settings.glow_discharge_current || "N/A"
+                settings.glow_discharge_current || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Glow Discharge Time:</div>
               <div class="grid-detail-value">${
-                session.settings.glow_discharge_time || "N/A"
+                settings.glow_discharge_time || "N/A"
               }</div>
             </div>
           </div>
@@ -568,42 +587,40 @@ function updateDatabaseTable(sessions) {
             <div class="grid-detail-item">
               <div class="grid-detail-label">Humidity (%):</div>
               <div class="grid-detail-value">${
-                session.settings.humidity_percent || "N/A"
+                settings.humidity_percent || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Temperature (°C):</div>
               <div class="grid-detail-value">${
-                session.settings.temperature_c || "N/A"
+                settings.temperature_c || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Blot Force:</div>
               <div class="grid-detail-value">${
-                gridData.blot_force_override ||
-                session.settings.blot_force ||
-                "N/A"
+                gridData.blot_force_override || settings.blot_force || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Blot Time:</div>
               <div class="grid-detail-value">${
                 gridData.blot_time_override ||
-                session.settings.blot_time_seconds ||
+                settings.blot_time_seconds ||
                 "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Wait Time:</div>
               <div class="grid-detail-value">${
-                session.settings.wait_time_seconds || "N/A"
+                settings.wait_time_seconds || "N/A"
               }</div>
             </div>
             <div class="grid-detail-item">
               <div class="grid-detail-label">Volume (μL):</div>
               <div class="grid-detail-value">${
                 gridData.volume_ul_override ||
-                session.settings.default_volume_ul ||
+                settings.default_volume_ul ||
                 "N/A"
               }</div>
             </div>
