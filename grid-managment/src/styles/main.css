@@ -235,6 +235,67 @@ body {
     border: 1px solid #f5c6cb;
 }
 
+.expandable-row-icon {
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.expandable-row-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.expandable-content {
+  background: #f8fafc;
+  padding: 0;
+  border-radius: 0 0 10px 10px;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border-left: 3px solid #4facfe;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.expandable-content.expanded {
+  max-height: 500px;
+  margin: 10px 0;
+  padding: 15px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  opacity: 1;
+  visibility: visible;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.detail-item {
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;

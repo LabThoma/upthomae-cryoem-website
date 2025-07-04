@@ -243,23 +243,88 @@ function updateDatabaseTable(sessions) {
   }
 
   sessions.forEach((session) => {
+    // Create main row
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${session.grid_box_name || "N/A"}</td>
+      <td>
+        <span class="expandable-row-icon" data-session-id="${
+          session.session_id
+        }">▶</span>
+        ${session.grid_box_name || "N/A"}
+      </td>
       <td>${session.date || "N/A"}</td>
       <td>${session.sample_id || "N/A"}</td>
-      <!-- Buttons removed for now
-      <td>
-        <button onclick="editSession(${
-          session.session_id
-        })" class="btn-small">Edit</button>
-        <button onclick="deleteSession(${
-          session.session_id
-        })" class="btn-small">Delete</button>
-      </td>
-      -->
     `;
     tableBody.appendChild(row);
+
+    // Create expandable content row
+    const detailRow = document.createElement("tr");
+    detailRow.className = "expandable-row";
+
+    // Create a cell that spans all columns
+    const detailCell = document.createElement("td");
+    detailCell.colSpan = 3; // Span across all columns
+    detailCell.innerHTML = `
+      <div class="expandable-content" id="details-${session.session_id}">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Session ID:</div>
+            <div class="detail-value">${session.session_id}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">User:</div>
+            <div class="detail-value">${session.user_name}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Date:</div>
+            <div class="detail-value">${session.date || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Box Name:</div>
+            <div class="detail-value">${session.grid_box_name || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Puck Name:</div>
+            <div class="detail-value">${session.puck_name || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Position:</div>
+            <div class="detail-value">${session.puck_position || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Loading Order:</div>
+            <div class="detail-value">${session.loading_order || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Humidity:</div>
+            <div class="detail-value">${session.humidity_percent || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Temperature:</div>
+            <div class="detail-value">${session.temperature_c || "N/A"}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Comments:</div>
+            <div class="detail-value">${session.comments || "N/A"}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    detailRow.appendChild(detailCell);
+    tableBody.appendChild(detailRow);
+  });
+
+  // Add event listeners to the expandable row icons after the table is populated
+  const expandIcons = document.querySelectorAll(".expandable-row-icon");
+  expandIcons.forEach((icon) => {
+    icon.addEventListener("click", function () {
+      const sessionId = this.getAttribute("data-session-id");
+      const content = document.getElementById(`details-${sessionId}`);
+
+      // Toggle expanded class
+      this.classList.toggle("expanded");
+      content.classList.toggle("expanded");
+    });
   });
 }
 
