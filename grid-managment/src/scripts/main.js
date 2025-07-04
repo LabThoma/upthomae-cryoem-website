@@ -258,6 +258,56 @@ function updateDatabaseTable(sessions) {
   sessions.forEach((session) => {
     // Create main row
     const row = document.createElement("tr");
+
+    // Format date correctly - handle case where it might be an object or string
+    let dateDisplay = "N/A";
+    if (session.date) {
+      try {
+        // First check if it's already a formatted string
+        if (
+          typeof session.date === "string" &&
+          session.date.match(/^\d{4}-\d{2}-\d{2}$/)
+        ) {
+          dateDisplay = session.date;
+          console.log("Using date string directly:", dateDisplay);
+        }
+        // Then try to convert from timestamp or date object
+        else if (session.date) {
+          console.log("Attempting to convert date:", session.date);
+          const dateObj = new Date(session.date);
+          console.log("Created date object:", dateObj);
+          if (!isNaN(dateObj.getTime())) {
+            // Check if it's a valid date
+            dateDisplay = dateObj.toISOString().split("T")[0];
+            console.log("Converted to ISO string:", dateDisplay);
+          }
+        }
+      } catch (e) {
+        console.warn("Invalid date format:", session.date, e);
+        dateDisplay = "Invalid date";
+      }
+    }
+
+    // Get sample name from the first grid preparation that has one
+    let sampleName = "N/A";
+
+    // Check for sample_names field first (from SQL GROUP_CONCAT)
+    if (session.sample_names) {
+      sampleName = session.sample_names;
+    }
+    // Fall back to other options if available
+    else if (
+      session.grid_preparations &&
+      session.grid_preparations.length > 0
+    ) {
+      const gridWithSample = session.grid_preparations.find(
+        (grid) => grid.sample_name
+      );
+      if (gridWithSample) {
+        sampleName = gridWithSample.sample_name;
+      }
+    }
+
     row.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-id="${
@@ -354,6 +404,42 @@ function updateDatabaseTable(sessions) {
   });
 
   setupGridModalEventListeners();
+
+  function formatDate(dateValue) {
+    if (!dateValue) return "N/A";
+
+    try {
+      // Handle string format - most common case after our server fixes
+      if (typeof dateValue === "string") {
+        if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          return dateValue; // Already in YYYY-MM-DD format
+        } else if (dateValue.includes("T")) {
+          return dateValue.split("T")[0]; // ISO format with time
+        }
+      }
+
+      // Handle MariaDB date object
+      if (typeof dateValue === "object" && dateValue !== null) {
+        if ("year" in dateValue && "month" in dateValue && "day" in dateValue) {
+          return `${dateValue.year}-${String(dateValue.month).padStart(
+            2,
+            "0"
+          )}-${String(dateValue.day).padStart(2, "0")}`;
+        }
+      }
+
+      // Try standard Date constructor
+      const dateObj = new Date(dateValue);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toISOString().split("T")[0];
+      }
+
+      return String(dateValue);
+    } catch (e) {
+      console.warn("Error formatting date:", dateValue, e);
+      return "Invalid date";
+    }
+  }
 
   // Show grid detail modal
   function showGridModal(sessionId, slotNumber) {

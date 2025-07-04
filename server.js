@@ -42,6 +42,20 @@ const sanitizeBigInt = (obj) => {
   }
 
   if (typeof obj === "object") {
+    // Handle date objects from MariaDB (they have year, month, day properties)
+    if (obj && "year" in obj && "month" in obj && "day" in obj) {
+      console.log("Converting MariaDB date object to string:", obj);
+      return `${obj.year}-${String(obj.month).padStart(2, "0")}-${String(
+        obj.day
+      ).padStart(2, "0")}`;
+    }
+
+    // Handle JS Date objects
+    if (obj instanceof Date) {
+      return obj.toISOString().split("T")[0];
+    }
+
+    // Handle regular objects
     return Object.fromEntries(
       Object.entries(obj).map(([key, value]) => [key, sanitizeBigInt(value)])
     );
@@ -180,13 +194,26 @@ app.get("/api/sessions/:id", async (req, res) => {
       return res.status(404).send("Session not found");
     }
 
-    res.json(
-      sanitizeBigInt({
+    // Format the date specifically if needed
+    if (session[0].date && typeof session[0].date === "object") {
+      if (
+        "year" in session[0].date &&
+        "month" in session[0].date &&
+        "day" in session[0].date
+      ) {
+        session[0].date = `${session[0].date.year}-${String(
+          session[0].date.month
+        ).padStart(2, "0")}-${String(session[0].date.day).padStart(2, "0")}`;
+      }
+    }
+
+    const result = {
         session: session[0],
         settings: settings[0] || {},
         grids: grids,
-      })
-    );
+    };
+
+    res.json(sanitizeBigInt(result));
   } catch (err) {
     console.error(err);
     res.status(500).send("Error fetching session details");
@@ -430,7 +457,27 @@ app.get("/api/users/:username/sessions", async (req, res) => {
     );
     connection.release();
 
-    res.json(sanitizeBigInt(rows));
+    console.log(`Found ${rows.length} sessions for ${username}`);
+
+    // Pre-process dates in rows before sanitizing
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].date && typeof rows[i].date === "object") {
+        console.log(`Processing date for row ${i}:`, rows[i].date);
+        if (
+          "year" in rows[i].date &&
+          "month" in rows[i].date &&
+          "day" in rows[i].date
+        ) {
+          rows[i].date = `${rows[i].date.year}-${String(
+            rows[i].date.month
+          ).padStart(2, "0")}-${String(rows[i].date.day).padStart(2, "0")}`;
+          console.log(`Converted date for row ${i} to:`, rows[i].date);
+        }
+      }
+    }
+
+    const sanitized = sanitizeBigInt(rows);
+    res.json(sanitized);
   } catch (err) {
     console.error("Error fetching user sessions:", err);
     res.status(500).send(`Error fetching sessions for user: ${username}`);
