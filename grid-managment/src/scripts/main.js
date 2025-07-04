@@ -88,6 +88,15 @@ async function saveUpdate() {
 
     console.log("Session Data:", sessionData);
 
+    // Extract sample information (add this section)
+    const sampleData = {
+      sample_name: getElementValue("sampleName"),
+      sample_concentration: getElementValue("sampleConcentration"),
+      additives: getElementValue("additives"),
+    };
+
+    console.log("Sample Data:", sampleData);
+
     // Extract vitrobot settings data
     const vitrobotSettings = {
       humidity_percent: getElementValue("humidity"),
@@ -107,6 +116,9 @@ async function saveUpdate() {
       const row = checkbox.closest("tr");
       return {
         slot_number: row.getAttribute("data-slot"),
+        sample_name: sampleData.sample_name,
+        sample_concentration: sampleData.sample_concentration,
+        additives: sampleData.additives,
         comments: getRowValue(row, ".grid-comments"),
         volume_ul_override: getRowValue(row, ".grid-volume"),
         blot_time_override: getRowValue(row, ".grid-blot-time"),
@@ -122,6 +134,7 @@ async function saveUpdate() {
     // Construct the request body
     const requestBody = {
       session: sessionData,
+      sample: sampleData,
       vitrobot_settings: vitrobotSettings,
       grids: gridPreparations,
     };
