@@ -32,6 +32,12 @@ function setupEventListeners() {
     saveUpdateButton.addEventListener("click", saveUpdate);
   }
 
+  const viewUserButton = document.getElementById("viewUserButton");
+  if (viewUserButton) {
+    viewUserButton.addEventListener("click", () => viewUserData("Bob Smith"));
+  }
+
+  // These buttons are not currently used. Some need to be implemented.
   const saveToGridListButton = document.getElementById("saveToGridListButton");
   if (saveToGridListButton) {
     saveToGridListButton.addEventListener("click", saveToGridList);
@@ -232,25 +238,26 @@ function updateDatabaseTable(sessions) {
   tableBody.innerHTML = "";
 
   if (!sessions || sessions.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="12">No sessions found</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6">No sessions found</td></tr>';
     return;
   }
 
   sessions.forEach((session) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${session.session_id}</td>
-      <td>${session.user_name}</td>
-      <td>${session.date}</td>
-      <td>${session.grid_box_name}</td>
-      <td>${session.puck_name}</td>
-      <td>${session.grid_count}</td>
-      <td>${session.humidity_percent || "N/A"}</td>
-      <td>${session.temperature_c || "N/A"}</td>
+      <td>${session.grid_box_name || "N/A"}</td>
+      <td>${session.date || "N/A"}</td>
+      <td>${session.sample_id || "N/A"}</td>
+      <!-- Buttons removed for now
       <td>
-        <button onclick="editSession(${session.session_id})">Edit</button>
-        <button onclick="deleteSession(${session.session_id})">Delete</button>
+        <button onclick="editSession(${
+          session.session_id
+        })" class="btn-small">Edit</button>
+        <button onclick="deleteSession(${
+          session.session_id
+        })" class="btn-small">Delete</button>
       </td>
+      -->
     `;
     tableBody.appendChild(row);
   });
@@ -387,5 +394,50 @@ function deleteSession(sessionId) {
       `Delete session ${sessionId} functionality not implemented yet`,
       "info"
     );
+  }
+}
+
+// Fetch and display grid data for a specific user
+async function viewUserData(userName) {
+  console.log(`Fetching data for user: ${userName}`);
+
+  // Make the grid database component visible
+  const gridDatabaseDiv = document.getElementById("grid-database");
+  if (gridDatabaseDiv) {
+    gridDatabaseDiv.style.display = "block";
+  }
+
+  // Also make the database view inside the component visible
+  const databaseView = document.getElementById("databaseView");
+  if (databaseView) {
+    databaseView.style.display = "block";
+  }
+
+  try {
+    // Rest of your existing code...
+    const encodedUsername = encodeURIComponent(userName);
+    const url = `http://localhost:3000/api/users/${encodedUsername}/sessions`;
+    console.log(`Sending request to: ${url}`);
+
+    const response = await fetch(url);
+    console.log(`Response status: ${response.status}`);
+
+    if (!response.ok)
+      throw new Error(`Failed to fetch data for user: ${userName}`);
+
+    const userSessions = await response.json();
+    console.log(
+      `Received ${userSessions.length} sessions for ${userName}:`,
+      userSessions
+    );
+
+    // Update the table with this user's sessions
+    updateDatabaseTable(userSessions);
+
+    // Show user-specific message
+    showAlert(`Displaying grid data for ${userName}`, "info");
+  } catch (error) {
+    console.error("Error in viewUserData:", error);
+    showAlert(`Error fetching data for ${userName}: ${error.message}`, "error");
   }
 }
