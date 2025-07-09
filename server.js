@@ -98,12 +98,13 @@ app.get("/api/grid-types", async (req, res) => {
 
 // Add new sample
 app.post("/api/samples", async (req, res) => {
-  const { sample_name, sample_concentration, additives } = req.body;
+  const { sample_name, sample_concentration, additives, default_volume_ul } =
+    req.body;
   try {
     const connection = await pool.getConnection();
     const result = await connection.query(
-      "INSERT INTO samples (sample_name, sample_concentration, additives) VALUES (?, ?, ?)",
-      [sample_name, sample_concentration, additives]
+      "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
+      [sample_name, sample_concentration, additives, default_volume_ul]
     );
     connection.release();
     res.status(201).json({ id: sanitizeBigInt(result.insertId) });
@@ -177,7 +178,7 @@ app.get("/api/sessions/:id", async (req, res) => {
     const grids = await connection.query(
       `
       SELECT gp.*, 
-             s.sample_name, s.sample_concentration, s.additives,
+             s.sample_name, s.sample_concentration, s.additives, s.default_volume_ul,
              gt.grid_type_name, gt.grid_batch AS grid_type_batch
       FROM grid_preparations gp
       LEFT JOIN samples s ON gp.sample_id = s.sample_id
@@ -259,8 +260,8 @@ app.post("/api/sessions", async (req, res) => {
 
     // Insert vitrobot settings
     await connection.query(
-      `INSERT INTO vitrobot_settings (session_id, humidity_percent, temperature_c, blot_force, blot_time_seconds, wait_time_seconds, default_volume_ul, glow_discharge_applied)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO vitrobot_settings (session_id, humidity_percent, temperature_c, blot_force, blot_time_seconds, wait_time_seconds, glow_discharge_applied)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         sessionId,
         vitrobot_settings.humidity_percent || null, // Use NULL if value is empty
@@ -268,7 +269,6 @@ app.post("/api/sessions", async (req, res) => {
         vitrobot_settings.blot_force || null,
         vitrobot_settings.blot_time_seconds || null,
         vitrobot_settings.wait_time_seconds || null,
-        vitrobot_settings.default_volume_ul || null,
         vitrobot_settings.glow_discharge_applied || false, // Default to false
       ]
     );
@@ -297,11 +297,12 @@ app.post("/api/sessions", async (req, res) => {
           } else {
             // Create a new sample
             const sampleResult = await connection.query(
-              "INSERT INTO samples (sample_name, sample_concentration, additives) VALUES (?, ?, ?)",
+              "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
               [
                 grid.sample_name,
-                grid.sample_concentration || null,
+                grid.sample_concentration,
                 grid.additives || null,
+                req.body.sample ? req.body.sample.default_volume_ul : null,
               ]
             );
             sampleId = sampleResult.insertId;
@@ -395,7 +396,7 @@ app.put("/api/sessions/:id", async (req, res) => {
 
     // Update vitrobot settings
     await connection.query(
-      `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, default_volume_ul = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
+      `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
        WHERE session_id = ?`,
       [
         vitrobot_settings.humidity_percent,
@@ -403,7 +404,6 @@ app.put("/api/sessions/:id", async (req, res) => {
         vitrobot_settings.blot_force,
         vitrobot_settings.blot_time_seconds,
         vitrobot_settings.wait_time_seconds,
-        vitrobot_settings.default_volume_ul,
         vitrobot_settings.glow_discharge_applied,
         sessionId,
       ]

@@ -93,6 +93,7 @@ async function saveUpdate() {
       sample_name: getElementValue("sampleName"),
       sample_concentration: getElementValue("sampleConcentration"),
       additives: getElementValue("additives"),
+      default_volume_ul: getElementValue("volume"),
     };
 
     console.log("Sample Data:", sampleData);
@@ -104,7 +105,6 @@ async function saveUpdate() {
       blot_force: getElementValue("blotForce"),
       blot_time_seconds: getElementValue("blotTime"),
       wait_time_seconds: getElementValue("waitTime"),
-      default_volume_ul: getElementValue("drainTime"),
       glow_discharge_applied: getElementChecked("glowDischarge"),
     };
 
@@ -374,9 +374,7 @@ function updateDatabaseTable(sessions) {
         "N/A";
 
       const volume =
-        gridData.volume_ul_override ||
-        (session.settings ? session.settings.default_volume_ul : null) ||
-        "N/A";
+        gridData.volume_ul_override || gridData.default_volume_ul || "N/A";
 
       gridTableHTML += `
     <tr>
@@ -542,6 +540,14 @@ function updateDatabaseTable(sessions) {
                 gridData.additives || "N/A"
               }</div>
             </div>
+            <div class="grid-detail-item">
+              <div class="grid-detail-label">Volume (μL):</div>
+              <div class="grid-detail-value">${
+                gridData.volume_ul_override ||
+                gridData.default_volume_ul ||
+                "N/A"
+              }</div>
+            </div>
           </div>
           
           <div class="grid-detail-section">
@@ -614,14 +620,6 @@ function updateDatabaseTable(sessions) {
               <div class="grid-detail-label">Wait Time:</div>
               <div class="grid-detail-value">${
                 settings.wait_time_seconds || "N/A"
-              }</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Volume (μL):</div>
-              <div class="grid-detail-value">${
-                gridData.volume_ul_override ||
-                settings.default_volume_ul ||
-                "N/A"
               }</div>
             </div>
           </div>
