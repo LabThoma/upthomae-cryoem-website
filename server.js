@@ -174,6 +174,12 @@ app.get("/api/sessions/:id", async (req, res) => {
       [sessionId]
     );
 
+    // Get grid info
+    const gridInfo = await connection.query(
+      "SELECT * FROM grids WHERE session_id = ?",
+      [sessionId]
+    );
+
     // Get grid preparations with sample and grid type info
     const grids = await connection.query(
       `
@@ -211,6 +217,7 @@ app.get("/api/sessions/:id", async (req, res) => {
     const result = {
       session: session[0],
       settings: settings[0] || {},
+      grid_info: gridInfo[0] || {},
       grids: grids,
     };
 
@@ -223,7 +230,7 @@ app.get("/api/sessions/:id", async (req, res) => {
 
 // Create new session with vitrobot settings and grids
 app.post("/api/sessions", async (req, res) => {
-  const { session, vitrobot_settings, grids } = req.body;
+  const { session, vitrobot_settings, grid_info, grids } = req.body;
 
   console.log("Request Body:", req.body);
 
@@ -257,6 +264,23 @@ app.post("/api/sessions", async (req, res) => {
 
     console.log("Session Insert Result:", sessionResult);
     const sessionId = sanitizeBigInt(sessionResult.insertId);
+
+    // Insert grid information
+    await connection.query(
+      `INSERT INTO grids (session_id, grid_type, grid_batch, glow_discharge_applied, 
+        glow_discharge_current, glow_discharge_time)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        sessionId,
+        grid_info.grid_type || null,
+        grid_info.grid_batch || null,
+        grid_info.glow_discharge_applied || false,
+        grid_info.glow_discharge_current || null,
+        grid_info.glow_discharge_time || null,
+      ]
+    );
+
+    console.log("Grid Info Inserted:", grid_info);
 
     // Insert vitrobot settings
     await connection.query(
@@ -326,7 +350,7 @@ app.post("/api/sessions", async (req, res) => {
         volume_ul_override, 
         blot_time_override, 
         blot_force_override, 
-        grid_batch, 
+        grid_batch_override, 
         comments, 
         additives_override, 
         include_in_session
@@ -339,7 +363,7 @@ app.post("/api/sessions", async (req, res) => {
             grid.volume_ul_override || null,
             grid.blot_time_override || null,
             grid.blot_force_override || null,
-            grid.grid_batch || null,
+            grid.grid_batch_override || null,
             grid.comments || null,
             grid.additives_override || null,
             grid.include_in_session,
@@ -372,7 +396,7 @@ app.post("/api/sessions", async (req, res) => {
 // Update existing session
 app.put("/api/sessions/:id", async (req, res) => {
   const sessionId = req.params.id;
-  const { session, vitrobot_settings, grids } = req.body;
+  const { session, vitrobot_settings, grid_info, grids } = req.body;
 
   let connection;
   try {
@@ -393,6 +417,47 @@ app.put("/api/sessions/:id", async (req, res) => {
         sessionId,
       ]
     );
+
+    // Update grid info
+    const existingGridInfo = await connection.query(
+      "SELECT * FROM grids WHERE session_id = ?",
+      [sessionId]
+    );
+
+    if (existingGridInfo.length > 0) {
+      // Update existing grid info
+      await connection.query(
+        `UPDATE grids SET 
+          grid_type = ?, grid_batch = ?, glow_discharge_applied = ?,
+          glow_discharge_current = ?, glow_discharge_time = ?, 
+          updated_at = CURRENT_TIMESTAMP
+         WHERE session_id = ?`,
+        [
+          grid_info.grid_type,
+          grid_info.grid_batch,
+          grid_info.glow_discharge_applied,
+          grid_info.glow_discharge_current,
+          grid_info.glow_discharge_time,
+          sessionId,
+        ]
+      );
+    } else {
+      // Insert new grid info
+      await connection.query(
+        `INSERT INTO grids (
+          session_id, grid_type, grid_batch, glow_discharge_applied, 
+          glow_discharge_current, glow_discharge_time
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          sessionId,
+          grid_info.grid_type,
+          grid_info.grid_batch,
+          grid_info.glow_discharge_applied,
+          grid_info.glow_discharge_current,
+          grid_info.glow_discharge_time,
+        ]
+      );
+    }
 
     // Update vitrobot settings
     await connection.query(
@@ -426,7 +491,7 @@ app.put("/api/sessions/:id", async (req, res) => {
     volume_ul_override, 
     blot_time_override, 
     blot_force_override, 
-    grid_batch, 
+    grid_batch_override, 
     comments, 
     additives_override,
     include_in_session
@@ -439,7 +504,7 @@ app.put("/api/sessions/:id", async (req, res) => {
           grid.volume_ul_override || null,
           grid.blot_time_override || null,
           grid.blot_force_override || null,
-          grid.grid_batch || null,
+          grid.grid_batch_override || null,
           grid.comments || null,
           grid.additives_override || null,
           grid.include_in_session || false,

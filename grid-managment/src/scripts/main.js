@@ -108,6 +108,17 @@ async function saveUpdate() {
       glow_discharge_applied: getElementChecked("glowDischarge"),
     };
 
+    // Extract grid information
+    const gridInfo = {
+      grid_type: getElementValue("gridType"),
+      grid_batch: getElementValue("gridBatch"),
+      glow_discharge_applied: getElementChecked("glowDischarge"),
+      glow_discharge_current: getElementValue("glowCurrent"),
+      glow_discharge_time: getElementValue("glowTime"),
+    };
+
+    console.log("Grid Info:", gridInfo);
+
     console.log("Vitrobot Settings:", vitrobotSettings);
 
     // Extract grid preparation data
@@ -123,7 +134,7 @@ async function saveUpdate() {
         volume_ul_override: getRowValue(row, ".grid-volume"),
         blot_time_override: getRowValue(row, ".grid-blot-time"),
         blot_force_override: getRowValue(row, ".grid-blot-force"),
-        grid_batch: getRowValue(row, ".grid-batch"),
+        grid_batch_override: getRowValue(row, ".grid-batch-override"),
         additives_override: getRowValue(row, ".grid-additives"),
         include_in_session: true,
       };
@@ -136,6 +147,7 @@ async function saveUpdate() {
       session: sessionData,
       sample: sampleData,
       vitrobot_settings: vitrobotSettings,
+      grid_info: gridInfo,
       grids: gridPreparations,
     };
 
@@ -475,7 +487,8 @@ function updateDatabaseTable(sessions) {
 
         // Get the session and settings data with fallbacks
         const session = sessionData.session || {};
-        const settings = sessionData.settings || {}; // Provide empty object as fallback
+        const settings = sessionData.settings || {};
+        const grid_info = sessionData.grid_info || {};
 
         // Populate the modal with all available data
         const modalContent = document.getElementById("gridModalContent");
@@ -551,42 +564,46 @@ function updateDatabaseTable(sessions) {
           </div>
           
           <div class="grid-detail-section">
-            <h3>Grid Information</h3>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Slot Number:</div>
-              <div class="grid-detail-value">${slotNumber}</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Grid Type:</div>
-              <div class="grid-detail-value">${
-                gridData.grid_type_id || "N/A"
-              }</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Grid Batch:</div>
-              <div class="grid-detail-value">${
-                gridData.grid_batch || "N/A"
-              }</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Glow Discharge Applied:</div>
-              <div class="grid-detail-value">${
-                settings.glow_discharge_applied ? "Yes" : "No"
-              }</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Glow Discharge Current:</div>
-              <div class="grid-detail-value">${
-                settings.glow_discharge_current || "N/A"
-              }</div>
-            </div>
-            <div class="grid-detail-item">
-              <div class="grid-detail-label">Glow Discharge Time:</div>
-              <div class="grid-detail-value">${
-                settings.glow_discharge_time || "N/A"
-              }</div>
-            </div>
-          </div>
+        <h3>Grid Information</h3>
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Slot Number:</div>
+          <div class="grid-detail-value">${slotNumber}</div>
+        </div>
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Grid Type:</div>
+          <div class="grid-detail-value">${grid_info.grid_type || "N/A"}</div>
+        </div>
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Grid Batch:</div>
+          <div class="grid-detail-value">${grid_info.grid_batch || "N/A"}</div>
+        </div>
+        ${
+          gridData.grid_batch_override
+            ? `<div class="grid-detail-item">
+            <div class="grid-detail-label">Grid Batch Override:</div>
+            <div class="grid-detail-value">${gridData.grid_batch_override}</div>
+          </div>`
+            : ""
+        }
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Glow Discharge Applied:</div>
+          <div class="grid-detail-value">${
+            grid_info.glow_discharge_applied ? "Yes" : "No"
+          }</div>
+        </div>
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Glow Discharge Current:</div>
+          <div class="grid-detail-value">${
+            grid_info.glow_discharge_current || "N/A"
+          }</div>
+        </div>
+        <div class="grid-detail-item">
+          <div class="grid-detail-label">Glow Discharge Time:</div>
+          <div class="grid-detail-value">${
+            grid_info.glow_discharge_time || "N/A"
+          }</div>
+        </div>
+      </div>
           
           <div class="grid-detail-section">
             <h3>Vitrobot Settings</h3>
@@ -751,7 +768,7 @@ function setupGridTable() {
       <td><input type="number" class="grid-volume" step="0.1" placeholder="Override" /></td>
       <td><input type="number" class="grid-blot-time" placeholder="Override" /></td>
       <td><input type="number" class="grid-blot-force" placeholder="Override" /></td>
-      <td><input type="text" class="grid-batch" placeholder="Override" /></td>
+      <td><input type="text" class="grid-batch-override" placeholder="Override" /></td>
     <td><input type="text" class="grid-additives" step="0.1" placeholder="Override" /></td>
       `;
 
