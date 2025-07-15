@@ -127,6 +127,8 @@ async function saveUpdate() {
       const row = checkbox.closest("tr");
       return {
         slot_number: row.getAttribute("data-slot"),
+        grid_id: parseInt(document.getElementById("gridType").value) || null,
+        sample_id: null, // We'll resolve this on the server
         sample_name: sampleData.sample_name,
         sample_concentration: sampleData.sample_concentration,
         additives: sampleData.additives,
@@ -374,6 +376,22 @@ function updateDatabaseTable(sessions) {
           ) || {}
         : {};
 
+      // Enhanced debugging
+      console.log(
+        `Session ${session.session_id}, Slot ${i} - Complete grid data:`,
+        gridData
+      );
+
+      // Check specifically for grid_type_name
+      console.log(
+        `Grid type name available:`,
+        Boolean(gridData.grid_type_name)
+      );
+      console.log(`Grid type name value:`, gridData.grid_type_name);
+
+      // List all keys in the grid data object
+      console.log(`Available fields for grid:`, Object.keys(gridData));
+
       // Get blot time, force, and volume from the right places
       const blotTime =
         gridData.blot_time_override ||
@@ -388,14 +406,19 @@ function updateDatabaseTable(sessions) {
       const volume =
         gridData.volume_ul_override || gridData.default_volume_ul || "N/A";
 
+      const additives =
+        gridData.additives_override || gridData.additives || "N/A";
+
+      const gridType = gridData.grid_type || "N/A";
+
       gridTableHTML += `
     <tr>
       <td>${i}</td>
-      <td>${gridData.grid_type_id || "N/A"}</td>
+      <td>${gridType}</td>
       <td>${blotTime}</td>
       <td>${blotForce}</td>
       <td>${volume}</td>
-      <td>${gridData.additives_override || "N/A"}</td>
+      <td>${additives}</td>
       <td class="comments-col">${gridData.comments || "No comments"}</td>
       <td>
          <button class="btn-small view-grid-btn" data-session-id="${
@@ -424,10 +447,27 @@ function updateDatabaseTable(sessions) {
     icon.addEventListener("click", function () {
       const sessionId = this.getAttribute("data-session-id");
       const content = document.getElementById(`details-${sessionId}`);
+      const detailRow = this.closest("tr").nextElementSibling;
 
-      // Toggle expanded class
+      // Add debugging
+      console.log("Icon clicked for session:", sessionId);
+      console.log("Content element:", content);
+      console.log("Detail row:", detailRow);
+
+      // Toggle expanded class on the icon
       this.classList.toggle("expanded");
+      console.log("Icon classes after toggle:", this.className);
+
+      // Toggle expanded class on the content
       content.classList.toggle("expanded");
+      console.log("Content classes after toggle:", content.className);
+
+      // Toggle the visible class on the expandable-row
+      detailRow.classList.toggle("visible");
+      console.log("Detail row classes after toggle:", detailRow.className);
+
+      // Toggle the arrow icon
+      this.textContent = this.textContent === "▶" ? "▼" : "▶";
     });
   });
 

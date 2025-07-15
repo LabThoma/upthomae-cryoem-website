@@ -185,10 +185,10 @@ app.get("/api/sessions/:id", async (req, res) => {
       `
       SELECT gp.*, 
              s.sample_name, s.sample_concentration, s.additives, s.default_volume_ul,
-             gt.grid_type_name, gt.grid_batch AS grid_type_batch
+             g.grid_type, g.grid_batch
       FROM grid_preparations gp
       LEFT JOIN samples s ON gp.sample_id = s.sample_id
-      LEFT JOIN grid_types gt ON gp.grid_type_id = gt.grid_type_id
+      LEFT JOIN grids g ON gp.grid_id = g.grid_id
       WHERE gp.session_id = ?
       ORDER BY gp.slot_number
     `,
@@ -346,7 +346,7 @@ app.post("/api/sessions", async (req, res) => {
         session_id, 
         slot_number, 
         sample_id, 
-        grid_type_id, 
+        grid_id, 
         volume_ul_override, 
         blot_time_override, 
         blot_force_override, 
@@ -359,7 +359,7 @@ app.post("/api/sessions", async (req, res) => {
             sessionId,
             grid.slot_number,
             sampleId, // Now using our resolved sampleId
-            grid.grid_type_id || null,
+            grid.grid_id || null,
             grid.volume_ul_override || null,
             grid.blot_time_override || null,
             grid.blot_force_override || null,
@@ -487,7 +487,7 @@ app.put("/api/sessions/:id", async (req, res) => {
     session_id, 
     slot_number, 
     sample_id, 
-    grid_type_id, 
+    grid_id, 
     volume_ul_override, 
     blot_time_override, 
     blot_force_override, 
@@ -500,7 +500,7 @@ app.put("/api/sessions/:id", async (req, res) => {
           sessionId,
           grid.slot_number,
           grid.sample_id || null,
-          grid.grid_type_id || null,
+          grid.grid_id || null,
           grid.volume_ul_override || null,
           grid.blot_time_override || null,
           grid.blot_force_override || null,
@@ -544,9 +544,10 @@ app.get("/api/users/:username/sessions", async (req, res) => {
   const username = req.params.username;
   try {
     const connection = await pool.getConnection();
+
+    // Get basic session information first
     const rows = await connection.query(
-      `
-      SELECT s.*,
+      `SELECT s.*,
              COUNT(gp.prep_id) as grid_count,
              vs.humidity_percent, vs.temperature_c,
              (
@@ -560,18 +561,41 @@ app.get("/api/users/:username/sessions", async (req, res) => {
       LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id
       WHERE s.user_name = ?
       GROUP BY s.session_id
-      ORDER BY s.date DESC, s.created_at DESC
-    `,
+      ORDER BY s.date DESC, s.created_at DESC`,
       [username]
     );
+
+    // For each session, get detailed grid preparation information
+    for (let i = 0; i < rows.length; i++) {
+      const sessionId = rows[i].session_id;
+
+      // Get vitrobot settings
+      const settings = await connection.query(
+        "SELECT * FROM vitrobot_settings WHERE session_id = ?",
+        [sessionId]
+      );
+      rows[i].settings = settings[0] || {};
+
+      // Get grid preparations
+      const gridPreps = await connection.query(
+        `SELECT gp.*,
+          s.sample_name, s.sample_concentration, s.additives, s.default_volume_ul,
+          g.grid_type, g.grid_batch  
+        FROM grid_preparations gp
+        LEFT JOIN samples s ON gp.sample_id = s.sample_id
+        LEFT JOIN grids g ON gp.grid_id = g.grid_id
+        WHERE gp.session_id = ?
+        ORDER BY gp.slot_number`,
+        [sessionId]
+      );
+      rows[i].grid_preparations = gridPreps;
+    }
+
     connection.release();
 
-    console.log(`Found ${rows.length} sessions for ${username}`);
-
-    // Pre-process dates in rows before sanitizing
+    // Format dates and sanitize BigInt values
     for (let i = 0; i < rows.length; i++) {
       if (rows[i].date && typeof rows[i].date === "object") {
-        console.log(`Processing date for row ${i}:`, rows[i].date);
         if (
           "year" in rows[i].date &&
           "month" in rows[i].date &&
@@ -580,13 +604,11 @@ app.get("/api/users/:username/sessions", async (req, res) => {
           rows[i].date = `${rows[i].date.year}-${String(
             rows[i].date.month
           ).padStart(2, "0")}-${String(rows[i].date.day).padStart(2, "0")}`;
-          console.log(`Converted date for row ${i} to:`, rows[i].date);
         }
       }
     }
 
-    const sanitized = sanitizeBigInt(rows);
-    res.json(sanitized);
+    res.json(sanitizeBigInt(rows));
   } catch (err) {
     console.error("Error fetching user sessions:", err);
     res.status(500).send(`Error fetching sessions for user: ${username}`);

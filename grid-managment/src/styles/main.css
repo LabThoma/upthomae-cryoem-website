@@ -235,6 +235,15 @@ body {
     border: 1px solid #f5c6cb;
 }
 
+.expandable-row {
+  display: none; /* Hide by default */
+}
+
+.expandable-row.visible {
+  display: table-row;
+  animation: slideIn 0.3s ease;
+}
+
 .expandable-row-icon {
   cursor: pointer;
   display: inline-block;
