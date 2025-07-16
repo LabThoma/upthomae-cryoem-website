@@ -22,43 +22,28 @@ function setupDatabaseEventListeners() {
   }
 }
 
-// Add function to fetch user-specific grid data
 export async function fetchUserGridData(username) {
   try {
     console.log("Fetching data for user:", username);
 
-    // First, check if the server is reachable
-    const response = await fetch("http://localhost:3000/api/health").catch(
-      (error) => {
-        console.error("Server connection error:", error);
-        throw new Error("Cannot connect to server. Is it running?");
-      }
+    // Use the detailed user sessions endpoint with the username
+    const response = await fetch(
+      `http://localhost:3000/api/users/${username}/sessions`
     );
 
-    // Then fetch the actual data
-    const dataResponse = await fetch("http://localhost:3000/api/sessions");
-
-    if (!dataResponse.ok) {
-      console.error("Server returned error:", dataResponse.status);
-      throw new Error(`Server error: ${dataResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.status}`);
     }
 
-    const sessions = await dataResponse.json();
-    console.log("Received sessions:", sessions);
+    const sessions = await response.json();
+    console.log(`Received ${sessions.length} sessions for ${username}`);
 
-    // Filter sessions for this user
-    const userSessions = sessions.filter(
-      (session) =>
-        session.user_name === username || session.userName === username
-    );
-    console.log("Filtered user sessions:", userSessions);
-
-    if (userSessions.length === 0) {
+    if (sessions.length === 0) {
       showAlert(`No grids found for user: ${username}`, "info");
     } else {
-      updateDatabaseTable(userSessions);
+      updateDatabaseTable(sessions);
       showAlert(
-        `Displaying ${userSessions.length} grids for ${username}`,
+        `Displaying ${sessions.length} grids for ${username}`,
         "success"
       );
     }
@@ -70,14 +55,22 @@ export async function fetchUserGridData(username) {
 
 export async function fetchGridData() {
   try {
-    const response = await fetch("http://localhost:3000/api/sessions");
-    if (!response.ok) throw new Error("Failed to fetch grid data");
+    // Use the "all" special case for your user sessions endpoint
+    const response = await fetch(
+      "http://localhost:3000/api/users/all/sessions"
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.status}`);
+    }
 
     const sessions = await response.json();
+    console.log(`Received ${sessions.length} total sessions`);
+
     updateDatabaseTable(sessions);
     showAlert("Displaying all grids", "success");
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching all grid data:", error);
     showAlert("Error fetching grid data", "error");
   }
 }

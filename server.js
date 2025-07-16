@@ -559,8 +559,8 @@ app.get("/api/users/:username/sessions", async (req, res) => {
     const connection = await pool.getConnection();
 
     // Get basic session information first
-    const rows = await connection.query(
-      `SELECT s.*,
+    let query = `
+      SELECT s.*,
              COUNT(gp.prep_id) as grid_count,
              vs.humidity_percent, vs.temperature_c,
              (
@@ -572,11 +572,20 @@ app.get("/api/users/:username/sessions", async (req, res) => {
       FROM sessions s
       LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
       LEFT JOIN vitrobot_settings vs ON s.session_id = vs.session_id
-      WHERE s.user_name = ?
-      GROUP BY s.session_id
-      ORDER BY s.date DESC, s.created_at DESC`,
-      [username]
-    );
+    `;
+
+    // Only filter by username if not "all"
+    if (username !== "all") {
+      query += " WHERE s.user_name = ?";
+    }
+
+    query += " GROUP BY s.session_id ORDER BY s.date DESC, s.created_at DESC";
+
+    // Execute the query with or without the username parameter
+    const rows =
+      username !== "all"
+        ? await connection.query(query, [username])
+        : await connection.query(query);
 
     // For each session, get detailed grid preparation information
     for (let i = 0; i < rows.length; i++) {
