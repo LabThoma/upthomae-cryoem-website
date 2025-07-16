@@ -4,6 +4,7 @@
 // Import necessary functions
 import { setDefaultDate } from "../views/formView.js";
 import { setupGridTable } from "./gridTable.js";
+import { setupTabs } from "./tabs.js";
 
 export function loadComponents(callback) {
   const components = [
@@ -14,6 +15,7 @@ export function loadComponents(callback) {
     { id: "vitrobot-settings", filePath: "components/vitrobot-settings.html" },
     { id: "grid-details", filePath: "components/grid-details.html" },
     { id: "grid-database", filePath: "components/grid-database.html" },
+    { id: "alertContainer", filePath: "components/alert.html" },
   ];
 
   let loadedCount = 0;
@@ -34,12 +36,18 @@ export function loadComponents(callback) {
         if (id === "session-info") {
           setDefaultDate();
         }
-        loadedCount++;
+
+        // Setup tabs after header is loaded
+        if (id === "header") {
+          setupTabs();
+        }
 
         // Call setupGridTable after grid-details is loaded
         if (id === "grid-details") {
           setupGridTable();
         }
+
+        loadedCount++;
 
         // Call the callback after all components are loaded
         if (

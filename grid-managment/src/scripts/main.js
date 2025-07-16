@@ -16,7 +16,7 @@ import * as gridTable from "./components/gridTable.js";
 import * as gridModal from "./components/gridModal.js";
 
 // Import views
-import { setDefaultDate } from "./views/formView.js";
+import { setupFormView, setDefaultDate } from "./views/formView.js";
 import * as databaseView from "./views/databaseView.js";
 
 // Import controllers
@@ -24,36 +24,38 @@ import * as userController from "./controllers/userController.js";
 import * as gridController from "./controllers/gridController.js";
 import * as sessionController from "./controllers/sessionController.js";
 
+// Import tabs functionality
+import { setupTabs } from "./components/tabs.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   initializePage();
 });
 
 function initializePage() {
-  // Use the imported module
+  // First load all components
   componentLoader.loadComponents(() => {
+    // Then set up tabs functionality
+    setupTabs();
+
+    // Set up views
+    setupFormView();
+    databaseView.setupDatabaseView();
+
+    // Additional setup
     setupEventListeners();
   });
 }
 
 function setupEventListeners() {
+  // Event listeners for the Input Form view
   const saveUpdateButton = document.getElementById("saveUpdateButton");
   if (saveUpdateButton) {
-    // Use the imported module
     saveUpdateButton.addEventListener("click", sessionController.saveUpdate);
   }
 
-  const viewUserButton = document.getElementById("viewUserButton");
-  if (viewUserButton) {
-    // Use the imported module
-    viewUserButton.addEventListener("click", () =>
-      userController.viewUserData("Bob Smith")
-    );
-  }
-
-  const viewDatabaseButton = document.getElementById("viewDatabaseButton");
-  if (viewDatabaseButton) {
-    // Use the imported module
-    viewDatabaseButton.addEventListener("click", databaseView.fetchGridData);
+  const clearFormButton = document.getElementById("clearFormButton");
+  if (clearFormButton) {
+    clearFormButton.addEventListener("click", formUtils.clearFormFields);
   }
 }
 

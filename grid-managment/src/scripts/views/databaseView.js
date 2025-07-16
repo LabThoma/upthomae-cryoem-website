@@ -4,6 +4,47 @@
 import { showAlert } from "../components/alertSystem.js";
 import { setupGridModalEventListeners } from "../components/gridModal.js";
 
+export function setupDatabaseView() {
+  setupDatabaseEventListeners();
+}
+
+function setupDatabaseEventListeners() {
+  const viewUserButton = document.getElementById("viewUserButton");
+  if (viewUserButton) {
+    viewUserButton.addEventListener("click", () => {
+      fetchUserGridData("Bob Smith"); // Or whatever username you're using
+    });
+  }
+
+  const viewDatabaseButton = document.getElementById("viewDatabaseButton");
+  if (viewDatabaseButton) {
+    viewDatabaseButton.addEventListener("click", fetchGridData);
+  }
+}
+
+// Add function to fetch user-specific grid data
+export async function fetchUserGridData(username) {
+  try {
+    // In a real app, you'd call an API endpoint with the username as a parameter
+    // For now, we'll simulate it by fetching all data and filtering
+    const response = await fetch("http://localhost:3000/api/sessions");
+    if (!response.ok) throw new Error("Failed to fetch grid data");
+
+    const sessions = await response.json();
+    // Filter sessions for this user
+    const userSessions = sessions.filter(
+      (session) =>
+        session.user_name === username || session.userName === username
+    );
+
+    updateDatabaseTable(userSessions);
+    showAlert(`Displaying grids for ${username}`, "success");
+  } catch (error) {
+    console.error(error);
+    showAlert(`Error fetching grid data for ${username}`, "error");
+  }
+}
+
 export async function fetchGridData() {
   try {
     const response = await fetch("http://localhost:3000/api/sessions");
@@ -11,6 +52,7 @@ export async function fetchGridData() {
 
     const sessions = await response.json();
     updateDatabaseTable(sessions);
+    showAlert("Displaying all grids", "success");
   } catch (error) {
     console.error(error);
     showAlert("Error fetching grid data", "error");

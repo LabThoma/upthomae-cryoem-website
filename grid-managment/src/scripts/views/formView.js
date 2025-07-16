@@ -1,5 +1,8 @@
 // This file manages the display of the form view, including handling form submissions and validations.
 
+import { showAlert } from "../components/alertSystem.js";
+import { validateForm, clearFormFields } from "../utils/formUtils.js";
+
 export function setupFormView() {
   document.addEventListener("DOMContentLoaded", () => {
     initializeForm();
@@ -27,6 +30,19 @@ function setupFormEventListeners() {
   const clearFormButton = document.getElementById("clearFormButton");
   if (clearFormButton) {
     clearFormButton.addEventListener("click", clearForm);
+  }
+
+  const glowDischarge = document.getElementById("glowDischarge");
+  if (glowDischarge) {
+    glowDischarge.addEventListener("change", toggleGlowDischargeSettings);
+  }
+}
+
+// Toggle visibility of glow discharge settings
+function toggleGlowDischargeSettings() {
+  const settings = document.getElementById("glowDischargeSettings");
+  if (settings) {
+    settings.style.display = this.checked ? "grid" : "none";
   }
 }
 
@@ -130,18 +146,21 @@ async function saveUpdate() {
 }
 
 function clearForm() {
-  const inputs = document.querySelectorAll(
-    'input[type="text"], input[type="number"], input[type="date"], textarea'
+  // Use the imported clearFormFields function
+  clearFormFields();
+
+  // Hide the glow discharge settings
+  const glowDischargeSettings = document.getElementById(
+    "glowDischargeSettings"
   );
-  inputs.forEach((input) => (input.value = ""));
+  if (glowDischargeSettings) {
+    glowDischargeSettings.style.display = "none";
+  }
 
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-  checkboxes.forEach((checkbox) => (checkbox.checked = false));
+  // Set default date again
+  setDefaultDate();
 
-  const selects = document.querySelectorAll("select");
-  selects.forEach((select) => (select.selectedIndex = 0));
-
-  showAlert("Form cleared", "info");
+  showAlert("Form cleared", "success");
 }
 
 // Helper functions for form handling
@@ -161,40 +180,4 @@ function getRowValue(row, selector) {
   }
   const element = row.querySelector(selector);
   return element ? element.value : "";
-}
-
-function validateForm() {
-  const errors = [];
-  const requiredFields = [
-    { id: "userName", name: "User Name" },
-    { id: "sessionDate", name: "Session Date" },
-    { id: "gridBoxName", name: "Grid Box Name" },
-  ];
-
-  requiredFields.forEach((field) => {
-    const element = document.getElementById(field.id);
-    if (!element || !element.value.trim()) {
-      errors.push(`Please enter ${field.name}.`);
-    }
-  });
-
-  const checkedGrids = document.querySelectorAll(".grid-checkbox:checked");
-  if (checkedGrids.length === 0) {
-    errors.push("Please select at least one grid.");
-  }
-
-  const glowDischarge = document.getElementById("glowDischarge");
-  if (glowDischarge && glowDischarge.checked) {
-    const glowCurrent = document.getElementById("glowCurrent");
-    const glowTime = document.getElementById("glowTime");
-
-    if (!glowCurrent || !glowCurrent.value) {
-      errors.push("Please enter glow discharge current.");
-    }
-    if (!glowTime || !glowTime.value) {
-      errors.push("Please enter glow discharge time.");
-    }
-  }
-
-  return errors;
 }

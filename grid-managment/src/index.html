@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vitrobot Grid Management System</title>
+    <title>THOMAE cryoEM</title>
     <link rel="stylesheet" href="styles/main.css" />
     <link rel="icon" href="data:," />
   </head>
@@ -12,42 +12,64 @@
       <!-- Header Component -->
       <div id="header"></div>
 
+      <!-- Alert Container -->
+      <div id="alertContainer"></div>
+
       <div class="content">
-        <div id="alertContainer"></div>
+        <!-- Input Form View -->
+        <div id="inputFormView" class="content-view">
+          <!-- Session Information Component -->
+          <div id="session-info" class="form-section"></div>
 
-        <!-- Session Information Component -->
-        <div id="session-info"></div>
+          <!-- Sample Information Component -->
+          <div id="sample-info" class="form-section"></div>
 
-        <!-- Sample Information Component -->
-        <div id="sample-info"></div>
+          <!-- Grid Information Component -->
+          <div id="grid-info" class="form-section"></div>
 
-        <!-- Grid Information Component -->
-        <div id="grid-info"></div>
+          <!-- Vitrobot Settings Component -->
+          <div id="vitrobot-settings" class="form-section"></div>
 
-        <!-- Vitrobot Settings Component -->
-        <div id="vitrobot-settings"></div>
+          <!-- Grid Details Component -->
+          <div id="grid-details" class="form-section"></div>
 
-        <!-- Grid Details Component -->
-        <div id="grid-details"></div>
+          <!-- Buttons for Saving and Updating -->
+          <div class="button-group">
+            <button id="saveUpdateButton" class="btn btn-primary">
+              Save & Update
+            </button>
+            <button id="clearFormButton" class="btn btn-danger">
+              Clear Form
+            </button>
+          </div>
+        </div>
 
-        <!-- Grid Database Component -->
-        <div id="grid-database" style="display: none"></div>
+        <!-- Database View -->
+        <div id="databaseView" class="content-view">
+          <!-- Grid Database Component -->
+          <div id="grid-database" class="form-section"></div>
 
-        <!-- Buttons for Saving and Updating -->
-        <div class="button-container">
-          <button id="saveUpdateButton" class="btn btn-primary">
-            Save & Update
-          </button>
-          <button id="viewUserButton" class="btn btn-primary">
-            View Bob Smith's Grids
-          </button>
+          <div class="button-group">
+            <button id="viewUserButton" class="btn btn-primary">
+              View Bob Smith's Grids
+            </button>
+            <button id="viewDatabaseButton" class="btn btn-secondary">
+              View All Grids
+            </button>
+          </div>
+        </div>
 
-          <!-- <button id="saveToGridListButton" class="btn btn-secondary">
-            Save to Grid List
-          </button> -->
+        <!-- Blog View -->
+        <div id="blogView" class="content-view">
+          <div class="form-section">
+            <h2 class="section-title">Blog</h2>
+            <p>Blog content coming soon...</p>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Modal for Grid Details -->
     <div id="gridModal" class="modal">
       <div class="modal-content">
         <span class="close-modal">&times;</span>
