@@ -239,19 +239,10 @@ app.post("/api/sessions", async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Insert session
-    console.log("Session Query Parameters:", [
-      session.user_name,
-      session.date,
-      session.grid_box_name,
-      session.loading_order,
-      session.puck_name,
-      session.puck_position,
-    ]);
-
+    // Insert session FIRST
     const sessionResult = await connection.query(
-      `INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position)
-   VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         session.user_name,
         session.date,
@@ -262,16 +253,17 @@ app.post("/api/sessions", async (req, res) => {
       ]
     );
 
-    console.log("Session Insert Result:", sessionResult);
+    // Now we have sessionId
     const sessionId = sanitizeBigInt(sessionResult.insertId);
+    console.log("Created session with ID:", sessionId);
 
-    // Insert grid information
-    await connection.query(
+    // THEN insert grid info using the sessionId
+    const gridResult = await connection.query(
       `INSERT INTO grids (session_id, grid_type, grid_batch, glow_discharge_applied, 
         glow_discharge_current, glow_discharge_time)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
-        sessionId,
+        sessionId, // Now sessionId is defined
         grid_info.grid_type || null,
         grid_info.grid_batch || null,
         grid_info.glow_discharge_applied || false,
@@ -280,7 +272,11 @@ app.post("/api/sessions", async (req, res) => {
       ]
     );
 
-    console.log("Grid Info Inserted:", grid_info);
+    // Get the generated grid ID to use in grid_preparations
+    const gridId = sanitizeBigInt(gridResult.insertId);
+    console.log("Created grid with ID:", gridId);
+    console.log("Grid insert result:", gridResult);
+    console.log("Grid insert result type:", typeof gridId);
 
     // Insert vitrobot settings
     await connection.query(
@@ -339,9 +335,12 @@ app.post("/api/sessions", async (req, res) => {
         else if (grid.sample_id) {
           sampleId = grid.sample_id;
         }
+        console.log(
+          `Inserting grid preparation for slot ${grid.slot_number} with grid_id: ${gridId}`
+        );
 
         // Then use the resolved sampleId in the grid preparation insert
-        await connection.query(
+        const insertResult = await connection.query(
           `INSERT INTO grid_preparations (
         session_id, 
         slot_number, 
@@ -359,7 +358,7 @@ app.post("/api/sessions", async (req, res) => {
             sessionId,
             grid.slot_number,
             sampleId, // Now using our resolved sampleId
-            grid.grid_id || null,
+            gridId,
             grid.volume_ul_override || null,
             grid.blot_time_override || null,
             grid.blot_force_override || null,
@@ -369,10 +368,21 @@ app.post("/api/sessions", async (req, res) => {
             grid.include_in_session,
           ]
         );
+        console.log(
+          `Grid preparation inserted with ID: ${insertResult.insertId}, grid_id: ${gridId}`
+        );
       }
     }
 
-    console.log("Grid Preparations Inserted:", grids);
+    // Verify what was actually inserted
+    const verificationResult = await connection.query(
+      `SELECT * FROM grid_preparations WHERE session_id = ?`,
+      [sessionId]
+    );
+    console.log(
+      "VERIFICATION - Actual grid_preparations in database:",
+      sanitizeBigInt(verificationResult)
+    );
 
     await connection.commit();
     res.status(201).json({
@@ -383,11 +393,14 @@ app.post("/api/sessions", async (req, res) => {
   } catch (err) {
     if (connection) await connection.rollback();
     console.error("Error creating session:", err);
-    res.status(500).json({
-      success: false,
-      error: err.message,
-      message: "Error creating session",
-    });
+
+    // Make sure you don't send a response if headers were already sent
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: err.message || "Failed to create session",
+      });
+    }
   } finally {
     if (connection) connection.release();
   }

@@ -1,6 +1,8 @@
 // This file manages the grid modal functionality, including displaying grid details.
 // It exports functions like showGridModal and setupGridModalEventListeners.
 
+import { showAlert } from "./alertSystem.js";
+
 export function showGridModal(sessionId, slotNumber) {
   fetch(`http://localhost:3000/api/sessions/${sessionId}`)
     .then((response) => {

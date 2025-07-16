@@ -1,7 +1,23 @@
 // This file contains the logic for handling user-related operations.
 
+// Import needed functions from other modules
+import { updateDatabaseTable } from "../views/databaseView.js";
+import { showAlert } from "../components/alertSystem.js";
+
 export async function viewUserData(userName) {
   console.log(`Fetching data for user: ${userName}`);
+
+  // Make the grid database component visible
+  const gridDatabaseDiv = document.getElementById("grid-database");
+  if (gridDatabaseDiv) {
+    gridDatabaseDiv.style.display = "block";
+  }
+
+  // Also make the database view inside the component visible
+  const databaseView = document.getElementById("databaseView");
+  if (databaseView) {
+    databaseView.style.display = "block";
+  }
 
   const encodedUsername = encodeURIComponent(userName);
   const url = `http://localhost:3000/api/users/${encodedUsername}/sessions`;

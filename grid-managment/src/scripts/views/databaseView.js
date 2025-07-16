@@ -1,5 +1,9 @@
 // This file manages the display of the database view, including fetching and rendering session data.
 
+// Import the showAlert function
+import { showAlert } from "../components/alertSystem.js";
+import { setupGridModalEventListeners } from "../components/gridModal.js";
+
 export async function fetchGridData() {
   try {
     const response = await fetch("http://localhost:3000/api/sessions");
@@ -14,6 +18,7 @@ export async function fetchGridData() {
 }
 
 export function updateDatabaseTable(sessions) {
+  console.log("Sessions data structure:", JSON.stringify(sessions, null, 2));
   const tableBody = document.getElementById("databaseTableBody");
   if (!tableBody) return;
 
@@ -25,6 +30,8 @@ export function updateDatabaseTable(sessions) {
   }
 
   sessions.forEach((session) => {
+    console.log("Session data:", session);
+    console.log("Grid preparations:", session.grid_preparations);
     const row = document.createElement("tr");
 
     let dateDisplay = formatDate(session.date);
@@ -83,15 +90,71 @@ export function updateDatabaseTable(sessions) {
     `;
 
     const grids = session.grid_preparations || [];
+    console.log("Grids for session:", grids);
+
+    setupGridModalEventListeners();
+
+    // Extract session-level values to use as fallbacks
+    const sessionGridType = session.grid_info?.grid_type || "N/A";
+    const sessionBlotTime =
+      session.settings?.blot_time_seconds ||
+      session.vitrobot_settings?.blot_time_seconds ||
+      "N/A";
+    const sessionBlotForce =
+      session.settings?.blot_force ||
+      session.vitrobot_settings?.blot_force ||
+      "N/A";
+    const sessionDefaultVolume =
+      session.settings?.default_volume_ul ||
+      session.sample?.default_volume_ul ||
+      "N/A";
+
+    // For debugging
+    console.log("Session standard values:", {
+      gridType: sessionGridType,
+      blotTime: sessionBlotTime,
+      blotForce: sessionBlotForce,
+      defaultVolume: sessionDefaultVolume,
+      settings: session.settings,
+      vitrobot_settings: session.vitrobot_settings,
+    });
 
     for (let i = 1; i <= 4; i++) {
-      const gridData = grids.find((g) => parseInt(g.slot_number) === i) || {};
+      // Debug each grid row as it's being processed
+      console.log(`Creating grid row for slot ${i}`);
 
-      const blotTime = gridData.blot_time_override || "N/A";
-      const blotForce = gridData.blot_force_override || "N/A";
-      const volume = gridData.volume_ul_override || "N/A";
-      const additives = gridData.additives_override || "N/A";
-      const gridType = gridData.grid_type || "N/A";
+      const gridData =
+        grids.find(
+          (g) => parseInt(g.slot_number) === i || parseInt(g.slot) === i
+        ) || {};
+
+      console.log(`Grid data for slot ${i}:`, gridData);
+
+      // Use session values as fallbacks if grid-specific values are missing
+      const blotTime =
+        gridData.blot_time_override ||
+        gridData.blot_time ||
+        gridData.blot_time_seconds ||
+        sessionBlotTime ||
+        "N/A";
+
+      const blotForce =
+        gridData.blot_force_override ||
+        gridData.blot_force ||
+        sessionBlotForce ||
+        "N/A";
+
+      const volume =
+        gridData.volume_ul_override ||
+        gridData.default_volume_ul ||
+        sessionDefaultVolume ||
+        "N/A";
+
+      const additives =
+        gridData.additives_override || gridData.additives || "N/A";
+
+      const gridType =
+        gridData.grid_type || gridData.type || sessionGridType || "N/A";
 
       gridTableHTML += `
         <tr>

@@ -68,7 +68,7 @@ export async function saveUpdate(event) {
       const row = checkbox.closest("tr");
       return {
         slot_number: row.getAttribute("data-slot"),
-        grid_id: parseInt(document.getElementById("gridType").value) || null,
+        grid_id: null, // We'll resolve this on the server
         sample_id: null, // We'll resolve this on the server
         sample_name: sampleData.sample_name,
         sample_concentration: sampleData.sample_concentration,
