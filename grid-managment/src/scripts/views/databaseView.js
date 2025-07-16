@@ -25,23 +25,46 @@ function setupDatabaseEventListeners() {
 // Add function to fetch user-specific grid data
 export async function fetchUserGridData(username) {
   try {
-    // In a real app, you'd call an API endpoint with the username as a parameter
-    // For now, we'll simulate it by fetching all data and filtering
-    const response = await fetch("http://localhost:3000/api/sessions");
-    if (!response.ok) throw new Error("Failed to fetch grid data");
+    console.log("Fetching data for user:", username);
 
-    const sessions = await response.json();
+    // First, check if the server is reachable
+    const response = await fetch("http://localhost:3000/api/health").catch(
+      (error) => {
+        console.error("Server connection error:", error);
+        throw new Error("Cannot connect to server. Is it running?");
+      }
+    );
+
+    // Then fetch the actual data
+    const dataResponse = await fetch("http://localhost:3000/api/sessions");
+
+    if (!dataResponse.ok) {
+      console.error("Server returned error:", dataResponse.status);
+      throw new Error(`Server error: ${dataResponse.status}`);
+    }
+
+    const sessions = await dataResponse.json();
+    console.log("Received sessions:", sessions);
+
     // Filter sessions for this user
     const userSessions = sessions.filter(
       (session) =>
         session.user_name === username || session.userName === username
     );
+    console.log("Filtered user sessions:", userSessions);
 
-    updateDatabaseTable(userSessions);
-    showAlert(`Displaying grids for ${username}`, "success");
+    if (userSessions.length === 0) {
+      showAlert(`No grids found for user: ${username}`, "info");
+    } else {
+      updateDatabaseTable(userSessions);
+      showAlert(
+        `Displaying ${userSessions.length} grids for ${username}`,
+        "success"
+      );
+    }
   } catch (error) {
-    console.error(error);
-    showAlert(`Error fetching grid data for ${username}`, "error");
+    console.error("Error fetching user data:", error);
+    showAlert(`Error: ${error.message}`, "error");
   }
 }
 
