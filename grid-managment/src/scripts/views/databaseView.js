@@ -6,20 +6,25 @@ import { setupGridModalEventListeners } from "../components/gridModal.js";
 
 export function setupDatabaseView() {
   setupDatabaseEventListeners();
+  // Load users table on initial setup
+  fetchUsersData();
 }
 
 function setupDatabaseEventListeners() {
-  const viewUserButton = document.getElementById("viewUserButton");
-  if (viewUserButton) {
-    viewUserButton.addEventListener("click", () => {
-      fetchUserGridData("Bob Smith"); // Or whatever username you're using
-    });
-  }
+  // Event delegation for dynamically created user view buttons
+  document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('view-user-grids-btn')) {
+      const username = event.target.getAttribute('data-username');
+      showUserGrids(username);
+    }
+  });
 
-  const viewDatabaseButton = document.getElementById("viewDatabaseButton");
-  if (viewDatabaseButton) {
-    viewDatabaseButton.addEventListener("click", fetchGridData);
-  }
+  // Back to users button
+  document.addEventListener('click', function(event) {
+    if (event.target.id === 'backToUsersButton') {
+      showUsersTable();
+    }
+  });
 }
 
 export async function fetchUserGridData(username) {
@@ -38,8 +43,22 @@ export async function fetchUserGridData(username) {
     const sessions = await response.json();
     console.log(`Received ${sessions.length} sessions for ${username}`);
 
+    // Update the grid database header to show the user
+    const gridDatabase = document.getElementById("grid-database");
+    if (gridDatabase) {
+      const titleElement = gridDatabase.querySelector(".section-title");
+      if (titleElement) {
+        titleElement.textContent = `Grid Database - ${username}`;
+      }
+    }
+
     if (sessions.length === 0) {
       showAlert(`No grids found for user: ${username}`, "info");
+      // Show empty table
+      const tableBody = document.getElementById("databaseTableBody");
+      if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="3">No sessions found for this user</td></tr>';
+      }
     } else {
       updateDatabaseTable(sessions);
       showAlert(
@@ -72,6 +91,40 @@ export async function fetchGridData() {
   } catch (error) {
     console.error("Error fetching all grid data:", error);
     showAlert("Error fetching grid data", "error");
+  }
+}
+
+export async function fetchUsersData() {
+  try {
+    // For now, we'll fetch all sessions and extract unique users
+    // In the future, you might want a dedicated /api/users endpoint
+    const response = await fetch("http://localhost:3000/api/users/all/sessions");
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users data: ${response.status}`);
+    }
+
+    const sessions = await response.json();
+    
+    // Extract unique users from sessions
+    const usersMap = new Map();
+    sessions.forEach(session => {
+      const username = session.user_name;
+      if (username && !usersMap.has(username)) {
+        usersMap.set(username, {
+          username: username,
+          activeGridBoxes: 0, // Dummy value for now
+          nextBoxName: `${username}_Box_Next`, // Dummy value for now
+        });
+      }
+    });
+
+    const users = Array.from(usersMap.values());
+    updateUsersTable(users);
+    showAlert(`Found ${users.length} users`, "info");
+  } catch (error) {
+    console.error("Error fetching users data:", error);
+    showAlert(`Error fetching users: ${error.message}`, "error");
   }
 }
 
@@ -224,7 +277,7 @@ export function updateDatabaseTable(sessions) {
           <td>${additives}</td>
           <td class="comments-col">${gridData.comments || "No comments"}</td>
           <td>
-            <button class="btn-small view-grid-btn" data-session-id="${
+            <button class="btn btn-small view-grid-btn" data-session-id="${
               session.session_id
             }" data-slot="${i}">View</button>
           </td>
@@ -257,6 +310,70 @@ export function updateDatabaseTable(sessions) {
       this.textContent = this.textContent === "▶" ? "▼" : "▶";
     });
   });
+}
+
+export function updateUsersTable(users) {
+  const tableBody = document.getElementById("usersTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = "";
+
+  if (!users || users.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="4">No users found</td></tr>';
+    return;
+  }
+
+  users.forEach(user => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${user.username}</td>
+      <td>${user.activeGridBoxes}</td>
+      <td>${user.nextBoxName}</td>
+      <td>
+        <button class="btn btn-small view-user-grids-btn" data-username="${user.username}">
+          View Grids
+        </button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+export function showUserGrids(username) {
+  // Hide users table
+  const usersSection = document.querySelector("#databaseView .form-section:first-child");
+  if (usersSection) {
+    usersSection.style.display = "none";
+  }
+
+  // Show grid database
+  const gridDatabase = document.getElementById("grid-database");
+  if (gridDatabase) {
+    gridDatabase.style.display = "block";
+  }
+
+  // Fetch and display user's grids
+  fetchUserGridData(username);
+}
+
+export function showUsersTable() {
+  // Show users table
+  const usersSection = document.querySelector("#databaseView .form-section:first-child");
+  if (usersSection) {
+    usersSection.style.display = "block";
+  }
+
+  // Hide grid database
+  const gridDatabase = document.getElementById("grid-database");
+  if (gridDatabase) {
+    gridDatabase.style.display = "none";
+  }
+
+  // Clear grid database content
+  const tableBody = document.getElementById("databaseTableBody");
+  if (tableBody) {
+    tableBody.innerHTML = "";
+  }
 }
 
 function formatDate(dateValue) {

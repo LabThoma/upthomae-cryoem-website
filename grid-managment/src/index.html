@@ -46,15 +46,30 @@
 
         <!-- Database View -->
         <div id="databaseView" class="content-view">
-          <!-- Grid Database Component -->
-          <div id="grid-database" class="form-section"></div>
+          <!-- Users Table -->
+          <div class="form-section">
+            <h2 class="section-title">Users</h2>
+            <div style="overflow-x: auto">
+              <table class="grid-table" id="usersTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Active Grid Boxes</th>
+                    <th>Next Box Name</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
 
-          <div class="button-group">
-            <button id="viewUserButton" class="btn btn-primary">
-              View Bob Smith's Grids
-            </button>
-            <button id="viewDatabaseButton" class="btn btn-secondary">
-              View All Grids
+          <!-- Grid Database Component -->
+          <div id="grid-database" class="form-section" style="display: none;"></div>
+
+          <div class="button-group" style="display: none;">
+            <button id="viewAllButton" class="btn btn-secondary">
+              Back to Users
             </button>
           </div>
         </div>

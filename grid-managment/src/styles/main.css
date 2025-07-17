@@ -298,6 +298,12 @@ body {
     box-shadow: 0 10px 25px rgba(255, 154, 158, 0.5);
 }
 
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    min-width: auto;
+}
+
 .alert {
     padding: 15px 20px;
     border-radius: 10px;
@@ -532,19 +538,6 @@ body {
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 3px solid #4facfe;
-}
-
-.view-grid-btn {
-  background-color: #4facfe;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.view-grid-btn:hover {
-  background-color: #3d8cd9;
 }
 
 @keyframes slideIn {
