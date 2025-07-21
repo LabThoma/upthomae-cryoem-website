@@ -4,14 +4,89 @@ import { showAlert } from "../components/alertSystem.js";
 import { validateForm, clearFormFields } from "../utils/formUtils.js";
 
 export function setupFormView() {
-  document.addEventListener("DOMContentLoaded", () => {
-    initializeForm();
-    setupFormEventListeners();
-  });
+  initializeForm();
+  setupFormEventListeners();
 }
 
 function initializeForm() {
   setDefaultDate();
+  loadUsers();
+}
+
+async function loadUsers() {
+  try {
+    // Wait for the userName element to be available
+    const userSelect = await waitForElement("userName");
+    if (!userSelect) {
+      console.error("userName element not found after waiting");
+      return;
+    }
+
+    const response = await fetch("http://localhost:3000/api/users");
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.status}`);
+    }
+
+    const users = await response.json();
+    populateUserDropdown(users);
+  } catch (error) {
+    console.error("Error loading users:", error);
+    showAlert("Error loading users. Using default options.", "warning");
+  }
+}
+
+// Helper function to wait for an element to be available
+function waitForElement(id, maxAttempts = 50, interval = 100) {
+  return new Promise((resolve) => {
+    let attempts = 0;
+    const checkForElement = () => {
+      const element = document.getElementById(id);
+      if (element) {
+        resolve(element);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(checkForElement, interval);
+      } else {
+        resolve(null);
+      }
+    };
+    checkForElement();
+  });
+}
+
+function populateUserDropdown(users) {
+  const userSelect = document.getElementById("userName");
+  if (!userSelect) return;
+
+  // Clear existing options except the first one (Select User)
+  const firstOption = userSelect.querySelector('option[value=""]');
+  userSelect.innerHTML = "";
+  if (firstOption) {
+    userSelect.appendChild(firstOption);
+  } else {
+    // Create default option if it doesn't exist
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select User";
+    userSelect.appendChild(defaultOption);
+  }
+
+  // Add users from the API
+  users.forEach((user) => {
+    const option = document.createElement("option");
+    option.value = user.username;
+    option.textContent = user.username;
+    userSelect.appendChild(option);
+  });
+
+  // Add option to add new user
+  const newUserOption = document.createElement("option");
+  newUserOption.value = "__new_user__";
+  newUserOption.textContent = "+ Add New User";
+  userSelect.appendChild(newUserOption);
+
+  console.log(`Loaded ${users.length} users into dropdown`);
 }
 
 export function setDefaultDate() {
@@ -35,6 +110,38 @@ function setupFormEventListeners() {
   const glowDischarge = document.getElementById("glowDischarge");
   if (glowDischarge) {
     glowDischarge.addEventListener("change", toggleGlowDischargeSettings);
+  }
+
+  // Handle user selection changes
+  const userSelect = document.getElementById("userName");
+  if (userSelect) {
+    userSelect.addEventListener("change", handleUserSelection);
+  }
+}
+
+function handleUserSelection(event) {
+  if (event.target.value === "__new_user__") {
+    const newUserName = prompt("Enter new user name:");
+    if (newUserName && newUserName.trim()) {
+      // Add the new user to the dropdown
+      const option = document.createElement("option");
+      option.value = newUserName.trim();
+      option.textContent = newUserName.trim();
+
+      // Insert before the "Add New User" option
+      const addNewOption = event.target.querySelector(
+        'option[value="__new_user__"]'
+      );
+      event.target.insertBefore(option, addNewOption);
+
+      // Select the new user
+      event.target.value = newUserName.trim();
+
+      showAlert(`Added new user: ${newUserName.trim()}`, "success");
+    } else {
+      // Reset to empty selection if cancelled or empty
+      event.target.value = "";
+    }
   }
 }
 
