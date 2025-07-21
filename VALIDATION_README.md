@@ -52,15 +52,25 @@ The validation rules are based on your MariaDB schema from `setup.sql`:
 
 - `slot_number`: 1-48 (integer)
 - `volume_ul_override`: 0-99.99 μL, max 2 decimal places
+- `incubation_time_seconds`: 0-9999.99 seconds, max 2 decimal places
 - `blot_time_override`: 0-99.99 seconds, max 2 decimal places
 - `blot_force_override`: -99.99 to 99.99 (allows negative values)
 - `comments`: Max 1000 characters
+- `grid_batch_override`: Max 100 characters
+- `additives_override`: Max 100 characters
 
 #### Grid Types
 
 - `grid_type_name`: Required string, 1-255 characters
 - `grid_batch`, `manufacturer`: Optional strings, max 255 characters
 - `specifications`: Optional text, max 1000 characters
+
+#### Grids
+
+- `grid_type`: Required string, max 255 characters
+- `grid_batch`: Optional string, max 100 characters
+- `glow_discharge_current`: 0-100 mA, max 2 decimal places
+- `glow_discharge_time`: 0-3600 seconds (integer)
 
 ## How to Use
 
