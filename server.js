@@ -637,6 +637,49 @@ app.get("/api/users/:username/sessions", async (req, res) => {
   }
 });
 
+// ===== USER ENDPOINTS =====
+
+// Get all users
+app.get("/api/users", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+
+    const users = await connection.query(`
+      SELECT 
+        s.user_name,
+        COUNT(DISTINCT s.session_id) as total_sessions,
+        COUNT(DISTINCT DATE(s.date)) as session_days,
+        COUNT(gp.prep_id) as total_grids,
+        MAX(s.date) as last_session_date,
+        MIN(s.date) as first_session_date
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id AND gp.include_in_session = TRUE
+      GROUP BY s.user_name
+      ORDER BY s.user_name
+    `);
+
+    connection.release();
+
+    // Process the results to add computed fields
+    const processedUsers = users.map((user) => ({
+      username: user.user_name,
+      totalSessions: user.total_sessions || 0,
+      totalGrids: user.total_grids || 0,
+      sessionDays: user.session_days || 0,
+      lastSessionDate: user.last_session_date,
+      firstSessionDate: user.first_session_date,
+      // Dummy values that can be replaced with real logic later
+      activeGridBoxes: 0, // Could be calculated based on recent sessions
+      nextBoxName: `${user.user_name}_Box_${(user.total_sessions || 0) + 1}`, // Simple naming convention
+    }));
+
+    res.json(sanitizeBigInt(processedUsers));
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).send("Error fetching users");
+  }
+});
+
 // ===== UTILITY ENDPOINTS =====
 
 // Get dashboard statistics
@@ -703,9 +746,10 @@ app.listen(port, () => {
   console.log(`  PUT  /api/sessions/:id - Update session`);
   console.log(`  GET  /api/samples - Get all samples`);
   console.log(`  GET  /api/grid-types - Get all grid types`);
-  console.log(`  GET  /api/dashboard - Get dashboard stats`);
-  console.log(`  GET  /api/health - Health check`);
+  console.log(`  GET  /api/users - Get all users with statistics`);
   console.log(
     `  GET  /api/users/:username/sessions - Get sessions for a specific user`
   );
+  console.log(`  GET  /api/dashboard - Get dashboard stats`);
+  console.log(`  GET  /api/health - Health check`);
 });

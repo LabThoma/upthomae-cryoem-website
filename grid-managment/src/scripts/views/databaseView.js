@@ -12,16 +12,16 @@ export function setupDatabaseView() {
 
 function setupDatabaseEventListeners() {
   // Event delegation for dynamically created user view buttons
-  document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('view-user-grids-btn')) {
-      const username = event.target.getAttribute('data-username');
+  document.addEventListener("click", function (event) {
+    if (event.target.classList.contains("view-user-grids-btn")) {
+      const username = event.target.getAttribute("data-username");
       showUserGrids(username);
     }
   });
 
   // Back to users button
-  document.addEventListener('click', function(event) {
-    if (event.target.id === 'backToUsersButton') {
+  document.addEventListener("click", function (event) {
+    if (event.target.id === "backToUsersButton") {
       showUsersTable();
     }
   });
@@ -57,7 +57,8 @@ export async function fetchUserGridData(username) {
       // Show empty table
       const tableBody = document.getElementById("databaseTableBody");
       if (tableBody) {
-        tableBody.innerHTML = '<tr><td colspan="3">No sessions found for this user</td></tr>';
+        tableBody.innerHTML =
+          '<tr><td colspan="3">No sessions found for this user</td></tr>';
       }
     } else {
       updateDatabaseTable(sessions);
@@ -96,30 +97,16 @@ export async function fetchGridData() {
 
 export async function fetchUsersData() {
   try {
-    // For now, we'll fetch all sessions and extract unique users
-    // In the future, you might want a dedicated /api/users endpoint
-    const response = await fetch("http://localhost:3000/api/users/all/sessions");
-    
+    // Use the new dedicated users endpoint
+    const response = await fetch("http://localhost:3000/api/users");
+
     if (!response.ok) {
       throw new Error(`Failed to fetch users data: ${response.status}`);
     }
 
-    const sessions = await response.json();
-    
-    // Extract unique users from sessions
-    const usersMap = new Map();
-    sessions.forEach(session => {
-      const username = session.user_name;
-      if (username && !usersMap.has(username)) {
-        usersMap.set(username, {
-          username: username,
-          activeGridBoxes: 0, // Dummy value for now
-          nextBoxName: `${username}_Box_Next`, // Dummy value for now
-        });
-      }
-    });
+    const users = await response.json();
 
-    const users = Array.from(usersMap.values());
+    // The users data now comes directly from the API with proper statistics
     updateUsersTable(users);
     showAlert(`Found ${users.length} users`, "info");
   } catch (error) {
@@ -323,7 +310,7 @@ export function updateUsersTable(users) {
     return;
   }
 
-  users.forEach(user => {
+  users.forEach((user) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${user.username}</td>
@@ -341,7 +328,9 @@ export function updateUsersTable(users) {
 
 export function showUserGrids(username) {
   // Hide users table
-  const usersSection = document.querySelector("#databaseView .form-section:first-child");
+  const usersSection = document.querySelector(
+    "#databaseView .form-section:first-child"
+  );
   if (usersSection) {
     usersSection.style.display = "none";
   }
@@ -358,7 +347,9 @@ export function showUserGrids(username) {
 
 export function showUsersTable() {
   // Show users table
-  const usersSection = document.querySelector("#databaseView .form-section:first-child");
+  const usersSection = document.querySelector(
+    "#databaseView .form-section:first-child"
+  );
   if (usersSection) {
     usersSection.style.display = "block";
   }
