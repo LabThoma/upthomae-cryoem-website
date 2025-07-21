@@ -1,6 +1,10 @@
 const express = require("express");
 const mariadb = require("mariadb");
 const cors = require("cors");
+const {
+  createValidationMiddleware,
+  validateSessionMiddleware,
+} = require("./validation.js");
 const app = express();
 const port = 3000;
 
@@ -97,39 +101,48 @@ app.get("/api/grid-types", async (req, res) => {
 });
 
 // Add new sample
-app.post("/api/samples", async (req, res) => {
-  const { sample_name, sample_concentration, additives, default_volume_ul } =
-    req.body;
-  try {
-    const connection = await pool.getConnection();
-    const result = await connection.query(
-      "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
-      [sample_name, sample_concentration, additives, default_volume_ul]
-    );
-    connection.release();
-    res.status(201).json({ id: sanitizeBigInt(result.insertId) });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error adding sample");
+app.post(
+  "/api/samples",
+  createValidationMiddleware("samples"),
+  async (req, res) => {
+    const { sample_name, sample_concentration, additives, default_volume_ul } =
+      req.body;
+    try {
+      const connection = await pool.getConnection();
+      const result = await connection.query(
+        "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
+        [sample_name, sample_concentration, additives, default_volume_ul]
+      );
+      connection.release();
+      res.status(201).json({ id: sanitizeBigInt(result.insertId) });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Error adding sample");
+    }
   }
-});
+);
 
 // Add new grid type
-app.post("/api/grid-types", async (req, res) => {
-  const { grid_type_name, grid_batch, manufacturer, specifications } = req.body;
-  try {
-    const connection = await pool.getConnection();
-    const result = await connection.query(
-      "INSERT INTO grid_types (grid_type_name, grid_batch, manufacturer, specifications) VALUES (?, ?, ?, ?)",
-      [grid_type_name, grid_batch, manufacturer, specifications]
-    );
-    connection.release();
-    res.status(201).json({ id: sanitizeBigInt(result.insertId) });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error adding grid type");
+app.post(
+  "/api/grid-types",
+  createValidationMiddleware("grid_types"),
+  async (req, res) => {
+    const { grid_type_name, grid_batch, manufacturer, specifications } =
+      req.body;
+    try {
+      const connection = await pool.getConnection();
+      const result = await connection.query(
+        "INSERT INTO grid_types (grid_type_name, grid_batch, manufacturer, specifications) VALUES (?, ?, ?, ?)",
+        [grid_type_name, grid_batch, manufacturer, specifications]
+      );
+      connection.release();
+      res.status(201).json({ id: sanitizeBigInt(result.insertId) });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Error adding grid type");
+    }
   }
-});
+);
 
 // ===== SESSION ENDPOINTS =====
 
@@ -229,7 +242,7 @@ app.get("/api/sessions/:id", async (req, res) => {
 });
 
 // Create new session with vitrobot settings and grids
-app.post("/api/sessions", async (req, res) => {
+app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
   const { session, vitrobot_settings, grid_info, grids } = req.body;
 
   console.log("Request Body:", req.body);

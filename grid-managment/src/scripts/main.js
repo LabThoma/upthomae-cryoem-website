@@ -47,6 +47,9 @@ function initializePage() {
 }
 
 function setupEventListeners() {
+  // Set up real-time validation
+  formUtils.setupRealTimeValidation();
+
   // Event listeners for the Input Form view
   const saveUpdateButton = document.getElementById("saveUpdateButton");
   if (saveUpdateButton) {
