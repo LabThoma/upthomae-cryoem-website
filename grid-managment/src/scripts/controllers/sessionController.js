@@ -96,25 +96,56 @@ export async function saveUpdate(event) {
 
     console.log("Request Body:", requestBody);
 
-    // Send the request to the backend
-    const response = await fetch("http://localhost:3000/api/sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result.message || result.error || "Failed to save session data"
-      );
+    // First check if a session with this grid box name already exists for this user
+    const checkResponse = await fetch(
+      `http://localhost:3000/api/sessions/check?user_name=${encodeURIComponent(sessionData.user_name)}&grid_box_name=${encodeURIComponent(sessionData.grid_box_name)}`
+    );
+    
+    let existingSession = null;
+    if (checkResponse.ok) {
+      const checkResult = await checkResponse.json();
+      existingSession = checkResult.session;
     }
 
-    console.log("Session saved successfully:", result);
-    alertSystem.showAlert("Data saved successfully!", "success");
+    let response, result;
+    
+    if (existingSession) {
+      // Update existing session
+      console.log("Updating existing session:", existingSession.session_id);
+      response = await fetch(`http://localhost:3000/api/sessions/${existingSession.session_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+      result = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          result.message || result.error || "Failed to update session data"
+        );
+      }
+      console.log("Session updated successfully:", result);
+      alertSystem.showAlert("Grid box data updated successfully!", "success");
+    } else {
+      // Create new session
+      console.log("Creating new session");
+      response = await fetch("http://localhost:3000/api/sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+      result = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          result.message || result.error || "Failed to save session data"
+        );
+      }
+      console.log("Session created successfully:", result);
+      alertSystem.showAlert("New grid box created successfully!", "success");
+    }
   } catch (error) {
     console.error("Error saving data:", error);
     alertSystem.showAlert(`Error saving data: ${error.message}`, "error");

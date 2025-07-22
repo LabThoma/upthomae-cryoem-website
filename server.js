@@ -169,6 +169,43 @@ app.get("/api/sessions", async (req, res) => {
   }
 });
 
+// Check if a session exists for a given user and grid box name
+app.get("/api/sessions/check", async (req, res) => {
+  const { user_name, grid_box_name } = req.query;
+
+  if (!user_name || !grid_box_name) {
+    return res.status(400).json({ 
+      error: "user_name and grid_box_name are required parameters" 
+    });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    
+    const sessions = await connection.query(
+      "SELECT session_id, user_name, date, grid_box_name FROM sessions WHERE user_name = ? AND grid_box_name = ? ORDER BY updated_at DESC LIMIT 1",
+      [user_name, grid_box_name]
+    );
+    
+    connection.release();
+
+    if (sessions.length > 0) {
+      res.json({
+        exists: true,
+        session: sanitizeBigInt(sessions[0])
+      });
+    } else {
+      res.json({
+        exists: false,
+        session: null
+      });
+    }
+  } catch (err) {
+    console.error("Error checking for existing session:", err);
+    res.status(500).json({ error: "Error checking for existing session" });
+  }
+});
+
 // Get complete session data (for editing/viewing)
 app.get("/api/sessions/:id", async (req, res) => {
   const sessionId = req.params.id;
@@ -459,11 +496,11 @@ app.put("/api/sessions/:id", async (req, res) => {
           updated_at = CURRENT_TIMESTAMP
          WHERE session_id = ?`,
         [
-          grid_info.grid_type,
-          grid_info.grid_batch,
-          grid_info.glow_discharge_applied,
-          grid_info.glow_discharge_current,
-          grid_info.glow_discharge_time,
+          grid_info.grid_type || null,
+          grid_info.grid_batch || null,
+          grid_info.glow_discharge_applied || false,
+          grid_info.glow_discharge_current || null,
+          grid_info.glow_discharge_time || null,
           sessionId,
         ]
       );
@@ -476,11 +513,11 @@ app.put("/api/sessions/:id", async (req, res) => {
         ) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           sessionId,
-          grid_info.grid_type,
-          grid_info.grid_batch,
-          grid_info.glow_discharge_applied,
-          grid_info.glow_discharge_current,
-          grid_info.glow_discharge_time,
+          grid_info.grid_type || null,
+          grid_info.grid_batch || null,
+          grid_info.glow_discharge_applied || false,
+          grid_info.glow_discharge_current || null,
+          grid_info.glow_discharge_time || null,
         ]
       );
     }
@@ -490,12 +527,12 @@ app.put("/api/sessions/:id", async (req, res) => {
       `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
        WHERE session_id = ?`,
       [
-        vitrobot_settings.humidity_percent,
-        vitrobot_settings.temperature_c,
-        vitrobot_settings.blot_force,
-        vitrobot_settings.blot_time_seconds,
-        vitrobot_settings.wait_time_seconds,
-        vitrobot_settings.glow_discharge_applied,
+        vitrobot_settings.humidity_percent || null,
+        vitrobot_settings.temperature_c || null,
+        vitrobot_settings.blot_force || null,
+        vitrobot_settings.blot_time_seconds || null,
+        vitrobot_settings.wait_time_seconds || null,
+        vitrobot_settings.glow_discharge_applied || false,
         sessionId,
       ]
     );
@@ -506,36 +543,83 @@ app.put("/api/sessions/:id", async (req, res) => {
       [sessionId]
     );
 
+    // Get the grid_id for this session
+    const gridQuery = await connection.query(
+      "SELECT grid_id FROM grids WHERE session_id = ?",
+      [sessionId]
+    );
+    const gridId = gridQuery.length > 0 ? gridQuery[0].grid_id : null;
+
     // Insert updated grid preparations
     for (const grid of grids) {
-      await connection.query(
-        `INSERT INTO grid_preparations (
-    session_id, 
-    slot_number, 
-    sample_id, 
-    grid_id, 
-    volume_ul_override, 
-    blot_time_override, 
-    blot_force_override, 
-    grid_batch_override, 
-    comments, 
-    additives_override,
-    include_in_session
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          sessionId,
-          grid.slot_number,
-          grid.sample_id || null,
-          grid.grid_id || null,
-          grid.volume_ul_override || null,
-          grid.blot_time_override || null,
-          grid.blot_force_override || null,
-          grid.grid_batch_override || null,
-          grid.comments || null,
-          grid.additives_override || null,
-          grid.include_in_session || false,
-        ]
-      );
+      if (grid.include_in_session) {
+        // Handle sample creation/lookup based on sample_name
+        let sampleId = null;
+
+        if (grid.sample_name) {
+          // First check if this sample already exists
+          const existingSamples = await connection.query(
+            "SELECT sample_id FROM samples WHERE sample_name = ?",
+            [grid.sample_name]
+          );
+
+          if (existingSamples.length > 0) {
+            // Use existing sample
+            sampleId = existingSamples[0].sample_id;
+            console.log(
+              `Found existing sample ID ${sampleId} for "${grid.sample_name}"`
+            );
+          } else {
+            // Create a new sample
+            const sampleResult = await connection.query(
+              "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
+              [
+                grid.sample_name,
+                grid.sample_concentration,
+                grid.additives || null,
+                req.body.sample ? req.body.sample.default_volume_ul : null,
+              ]
+            );
+            sampleId = sampleResult.insertId;
+            console.log(
+              `Created new sample ID ${sampleId} for "${grid.sample_name}"`
+            );
+          }
+        }
+        // Fall back to sample_id if provided directly
+        else if (grid.sample_id) {
+          sampleId = grid.sample_id;
+        }
+
+        await connection.query(
+          `INSERT INTO grid_preparations (
+      session_id, 
+      slot_number, 
+      sample_id, 
+      grid_id, 
+      volume_ul_override, 
+      blot_time_override, 
+      blot_force_override, 
+      grid_batch_override, 
+      comments, 
+      additives_override,
+      include_in_session
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            sessionId,
+            grid.slot_number,
+            sampleId,
+            gridId,
+            grid.volume_ul_override || null,
+            grid.blot_time_override || null,
+            grid.blot_force_override || null,
+            grid.grid_batch_override || null,
+            grid.comments || null,
+            grid.additives_override || null,
+            grid.include_in_session,
+          ]
+        );
+      }
     }
 
     await connection.commit();
