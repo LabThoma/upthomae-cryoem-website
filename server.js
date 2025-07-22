@@ -123,26 +123,58 @@ app.post(
 );
 
 // Add new grid type
-app.post(
-  "/api/grid-types",
-  createValidationMiddleware("grid_types"),
-  async (req, res) => {
-    const { grid_type_name, grid_batch, manufacturer, specifications } =
-      req.body;
-    try {
-      const connection = await pool.getConnection();
-      const result = await connection.query(
-        "INSERT INTO grid_types (grid_type_name, grid_batch, manufacturer, specifications) VALUES (?, ?, ?, ?)",
-        [grid_type_name, grid_batch, manufacturer, specifications]
-      );
-      connection.release();
-      res.status(201).json({ id: sanitizeBigInt(result.insertId) });
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error adding grid type");
-    }
+app.post("/api/grid-types", async (req, res) => {
+  const {
+    manufacturer,
+    support,
+    spacing,
+    grid_material,
+    grid_mesh,
+    extra_layer,
+    extra_layer_thickness,
+    q_number,
+    extra_info,
+    quantity,
+  } = req.body;
+
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      `INSERT INTO grid_types (
+          manufacturer, 
+          support, 
+          spacing, 
+          grid_material, 
+          grid_mesh, 
+          extra_layer, 
+          extra_layer_thickness, 
+          q_number, 
+          extra_info, 
+          quantity
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        manufacturer || null,
+        support || null,
+        spacing || null,
+        grid_material || null,
+        grid_mesh || null,
+        extra_layer || null,
+        extra_layer_thickness || null,
+        q_number || null,
+        extra_info || null,
+        quantity ? parseInt(quantity) : null,
+      ]
+    );
+    connection.release();
+    res.status(201).json({
+      id: sanitizeBigInt(result.insertId),
+      message: "Grid type added successfully",
+    });
+  } catch (err) {
+    console.error("Error adding grid type:", err);
+    res.status(500).json({ error: "Error adding grid type: " + err.message });
   }
-);
+});
 
 // ===== SESSION ENDPOINTS =====
 

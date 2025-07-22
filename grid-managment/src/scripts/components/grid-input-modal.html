@@ -1,0 +1,74 @@
+<!-- Modal for Adding New Grid Types -->
+<div id="gridInputModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" id="closeGridInputModal">&times;</span>
+    <div id="gridInputModalContent">
+      <h2 class="section-title">Add New Grid Type</h2>
+
+      <form id="newGridForm" class="admin-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="manufacturer">Manufacturer:</label>
+            <input type="text" id="manufacturer" name="manufacturer" required />
+          </div>
+
+          <div class="form-group">
+            <label for="support">Support:</label>
+            <input type="text" id="support" name="support" />
+          </div>
+
+          <div class="form-group">
+            <label for="spacing">Spacing:</label>
+            <input type="text" id="spacing" name="spacing" />
+          </div>
+
+          <div class="form-group">
+            <label for="gridMaterial">Grid Material:</label>
+            <input type="text" id="gridMaterial" name="gridMaterial" />
+          </div>
+
+          <div class="form-group">
+            <label for="gridMesh">Grid Mesh:</label>
+            <input type="text" id="gridMesh" name="gridMesh" />
+          </div>
+
+          <div class="form-group">
+            <label for="extraLayer">Extra Layer:</label>
+            <input type="text" id="extraLayer" name="extraLayer" />
+          </div>
+
+          <div class="form-group">
+            <label for="extraLayerThickness">Extra Layer Thickness:</label>
+            <input
+              type="text"
+              id="extraLayerThickness"
+              name="extraLayerThickness"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="qNumber">Q Number:</label>
+            <input type="text" id="qNumber" name="qNumber" />
+          </div>
+
+          <div class="form-group">
+            <label for="extraInfo">Extra Info:</label>
+            <textarea id="extraInfo" name="extraInfo" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" min="1" />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn btn-primary">Add Grid Type</button>
+          <button type="button" id="clearGridForm" class="btn btn-secondary">
+            Clear Form
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

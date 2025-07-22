@@ -1,6 +1,7 @@
 // This file handles the tab navigation functionality
 
 import { setupDatabaseView } from "../views/databaseView.js";
+import { setupAdminView } from "../views/adminView.js";
 
 const ADMIN_PASSWORD = "NoGlycerol!";
 let isAdminAuthenticated = false;
@@ -39,6 +40,8 @@ export function setupTabs() {
       // Initialize views when they become active
       if (targetView === "databaseView") {
         setupDatabaseView();
+      } else if (targetView === "adminView" && isAdminAuthenticated) {
+        setupAdminView();
       }
     });
   });
@@ -160,6 +163,7 @@ function showAdminContent() {
   if (passwordPrompt && adminContent) {
     passwordPrompt.style.display = "none";
     adminContent.style.display = "block";
+    setupAdminView();
   }
 }
 

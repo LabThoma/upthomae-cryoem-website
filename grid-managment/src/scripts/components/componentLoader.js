@@ -18,8 +18,15 @@ export function loadComponents(callback) {
     { id: "alertContainer", filePath: "components/alert.html" },
   ];
 
-  let loadedCount = 0;
+  // Additional components to append to body
+  const bodyComponents = [
+    { filePath: "scripts/components/grid-input-modal.html" },
+  ];
 
+  let loadedCount = 0;
+  const totalComponents = components.length + bodyComponents.length;
+
+  // Load regular components
   components.forEach(({ id, filePath }) => {
     fetch(filePath)
       .then((response) => {
@@ -50,10 +57,28 @@ export function loadComponents(callback) {
         loadedCount++;
 
         // Call the callback after all components are loaded
-        if (
-          loadedCount === components.length &&
-          typeof callback === "function"
-        ) {
+        if (loadedCount === totalComponents && typeof callback === "function") {
+          callback();
+        }
+      })
+      .catch((error) => console.error(error));
+  });
+
+  // Load body components (like modals)
+  bodyComponents.forEach(({ filePath }) => {
+    fetch(filePath)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Failed to load ${filePath}`);
+        return response.text();
+      })
+      .then((html) => {
+        // Append to body
+        document.body.insertAdjacentHTML("beforeend", html);
+
+        loadedCount++;
+
+        // Call the callback after all components are loaded
+        if (loadedCount === totalComponents && typeof callback === "function") {
           callback();
         }
       })
