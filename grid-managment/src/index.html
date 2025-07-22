@@ -65,9 +65,13 @@
           </div>
 
           <!-- Grid Database Component -->
-          <div id="grid-database" class="form-section" style="display: none;"></div>
+          <div
+            id="grid-database"
+            class="form-section"
+            style="display: none"
+          ></div>
 
-          <div class="button-group" style="display: none;">
+          <div class="button-group" style="display: none">
             <button id="viewAllButton" class="btn btn-secondary">
               Back to Users
             </button>
@@ -79,6 +83,36 @@
           <div class="form-section">
             <h2 class="section-title">Blog</h2>
             <p>Blog content coming soon...</p>
+          </div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="adminView" class="content-view">
+          <div id="adminPasswordPrompt" class="form-section">
+            <h2 class="section-title">Admin Access</h2>
+            <div class="form-row">
+              <label for="adminPassword">Password:</label>
+              <input
+                type="password"
+                id="adminPassword"
+                placeholder="Enter password"
+              />
+              <button id="adminLoginButton" class="btn btn-primary">
+                Login
+              </button>
+            </div>
+            <div
+              id="adminLoginError"
+              style="color: red; margin-top: 10px; display: none"
+            ></div>
+          </div>
+
+          <div id="adminContent" class="form-section" style="display: none">
+            <h2 class="section-title">Admin Panel</h2>
+            <p>Admin functionality will be implemented here.</p>
+            <button id="adminLogoutButton" class="btn btn-danger">
+              Logout
+            </button>
           </div>
         </div>
       </div>

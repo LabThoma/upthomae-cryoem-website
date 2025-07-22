@@ -752,3 +752,33 @@ body {
     border-right: 5px solid transparent;
     border-bottom: 5px solid #333;
 }
+
+/* Simple Admin Password Styling */
+#adminPasswordPrompt .form-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+#adminPasswordPrompt .form-row label {
+    font-size: 1.1em;
+    font-weight: 600;
+    min-width: 100px;
+    color: #495057;
+}
+
+#adminPasswordPrompt .form-row input {
+    padding: 12px 15px;
+    font-size: 1em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    min-width: 200px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#adminPasswordPrompt .form-row input:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+}
