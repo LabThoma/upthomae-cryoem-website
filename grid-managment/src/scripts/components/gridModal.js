@@ -190,14 +190,22 @@ export function showGridModal(sessionId, slotNumber) {
     });
 }
 
+// Flag to prevent multiple modal event listener setup
+let isGridModalInitialized = false;
+
 export function setupGridModalEventListeners() {
-  const viewButtons = document.querySelectorAll(".view-grid-btn");
-  viewButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const sessionId = this.getAttribute("data-session-id");
-      const slotNumber = this.getAttribute("data-slot");
+  // Prevent setting up listeners multiple times
+  if (isGridModalInitialized) {
+    return;
+  }
+
+  // Use event delegation instead of attaching to individual buttons
+  document.addEventListener("click", function (event) {
+    if (event.target.classList.contains("view-grid-btn")) {
+      const sessionId = event.target.getAttribute("data-session-id");
+      const slotNumber = event.target.getAttribute("data-slot");
       showGridModal(sessionId, slotNumber);
-    });
+    }
   });
 
   const closeModal = document.querySelector(".close-modal");
@@ -213,6 +221,8 @@ export function setupGridModalEventListeners() {
       modal.style.display = "none";
     }
   });
+
+  isGridModalInitialized = true;
 }
 
 function formatDate(dateValue) {

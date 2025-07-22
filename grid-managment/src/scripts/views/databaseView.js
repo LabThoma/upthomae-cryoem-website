@@ -4,10 +4,20 @@
 import { showAlert } from "../components/alertSystem.js";
 import { setupGridModalEventListeners } from "../components/gridModal.js";
 
+// Flag to prevent multiple initialization
+let isDatabaseViewInitialized = false;
+
 export function setupDatabaseView() {
+  // Prevent multiple initialization
+  if (isDatabaseViewInitialized) {
+    // Just refresh the view, don't fetch data again to avoid duplicate alerts
+    return;
+  }
+
   setupDatabaseEventListeners();
   // Load users table on initial setup
   fetchUsersData();
+  isDatabaseViewInitialized = true;
 }
 
 function setupDatabaseEventListeners() {
@@ -190,8 +200,6 @@ export function updateDatabaseTable(sessions) {
     const grids = session.grid_preparations || [];
     console.log("Grids for session:", grids);
 
-    setupGridModalEventListeners();
-
     // Extract session-level values to use as fallbacks
     const sessionGridType = session.grid_info?.grid_type || "N/A";
     const sessionBlotTime =
@@ -297,6 +305,9 @@ export function updateDatabaseTable(sessions) {
       this.textContent = this.textContent === "▶" ? "▼" : "▶";
     });
   });
+
+  // Set up grid modal event listeners once after all rows are created
+  setupGridModalEventListeners();
 }
 
 export function updateUsersTable(users) {

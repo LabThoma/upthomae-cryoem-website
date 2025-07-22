@@ -39,7 +39,8 @@ function initializePage() {
 
     // Set up views
     setupFormView();
-    databaseView.setupDatabaseView();
+    // Note: setupDatabaseView() is now only called when the database tab is activated
+    // This prevents duplicate event listeners and alerts
 
     // Additional setup
     setupEventListeners();
