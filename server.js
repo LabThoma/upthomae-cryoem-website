@@ -174,30 +174,30 @@ app.get("/api/sessions/check", async (req, res) => {
   const { user_name, grid_box_name } = req.query;
 
   if (!user_name || !grid_box_name) {
-    return res.status(400).json({ 
-      error: "user_name and grid_box_name are required parameters" 
+    return res.status(400).json({
+      error: "user_name and grid_box_name are required parameters",
     });
   }
 
   try {
     const connection = await pool.getConnection();
-    
+
     const sessions = await connection.query(
       "SELECT session_id, user_name, date, grid_box_name FROM sessions WHERE user_name = ? AND grid_box_name = ? ORDER BY updated_at DESC LIMIT 1",
       [user_name, grid_box_name]
     );
-    
+
     connection.release();
 
     if (sessions.length > 0) {
       res.json({
         exists: true,
-        session: sanitizeBigInt(sessions[0])
+        session: sanitizeBigInt(sessions[0]),
       });
     } else {
       res.json({
         exists: false,
-        session: null
+        session: null,
       });
     }
   } catch (err) {
@@ -352,20 +352,22 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
         let sampleId = null;
 
         if (grid.sample_name) {
-          // First check if this sample already exists
+          // Check if this sample already exists FOR THIS SESSION/GRID BOX
           const existingSamples = await connection.query(
-            "SELECT sample_id FROM samples WHERE sample_name = ?",
-            [grid.sample_name]
+            `SELECT s.sample_id FROM samples s 
+             JOIN grid_preparations gp ON s.sample_id = gp.sample_id 
+             WHERE gp.session_id = ? AND s.sample_name = ?`,
+            [sessionId, grid.sample_name]
           );
 
           if (existingSamples.length > 0) {
-            // Use existing sample
+            // Use existing sample from this session
             sampleId = existingSamples[0].sample_id;
             console.log(
-              `Found existing sample ID ${sampleId} for "${grid.sample_name}"`
+              `Found existing sample ID ${sampleId} for "${grid.sample_name}" in session ${sessionId}`
             );
           } else {
-            // Create a new sample
+            // Create a new sample for this grid box/session
             const sampleResult = await connection.query(
               "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
               [
@@ -377,7 +379,7 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
             );
             sampleId = sampleResult.insertId;
             console.log(
-              `Created new sample ID ${sampleId} for "${grid.sample_name}"`
+              `Created new sample ID ${sampleId} for "${grid.sample_name}" in session ${sessionId}`
             );
           }
         }
@@ -557,20 +559,22 @@ app.put("/api/sessions/:id", async (req, res) => {
         let sampleId = null;
 
         if (grid.sample_name) {
-          // First check if this sample already exists
+          // Check if this sample already exists FOR THIS SESSION/GRID BOX
           const existingSamples = await connection.query(
-            "SELECT sample_id FROM samples WHERE sample_name = ?",
-            [grid.sample_name]
+            `SELECT s.sample_id FROM samples s 
+             JOIN grid_preparations gp ON s.sample_id = gp.sample_id 
+             WHERE gp.session_id = ? AND s.sample_name = ?`,
+            [sessionId, grid.sample_name]
           );
 
           if (existingSamples.length > 0) {
-            // Use existing sample
+            // Use existing sample from this session
             sampleId = existingSamples[0].sample_id;
             console.log(
-              `Found existing sample ID ${sampleId} for "${grid.sample_name}"`
+              `Found existing sample ID ${sampleId} for "${grid.sample_name}" in session ${sessionId}`
             );
           } else {
-            // Create a new sample
+            // Create a new sample for this grid box/session
             const sampleResult = await connection.query(
               "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
               [
@@ -582,7 +586,7 @@ app.put("/api/sessions/:id", async (req, res) => {
             );
             sampleId = sampleResult.insertId;
             console.log(
-              `Created new sample ID ${sampleId} for "${grid.sample_name}"`
+              `Created new sample ID ${sampleId} for "${grid.sample_name}" in session ${sessionId}`
             );
           }
         }
