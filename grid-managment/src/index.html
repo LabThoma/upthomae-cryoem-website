@@ -113,7 +113,19 @@
             <div class="admin-actions">
               <!-- Grid Summary Section -->
               <div class="admin-section">
-                <h3>Grid Type Summary</h3>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                  "
+                >
+                  <h3 style="margin: 0">Grid Type Summary</h3>
+                  <button id="addNewGridsButton" class="btn btn-primary">
+                    Add New Grids
+                  </button>
+                </div>
                 <div class="grid-summary-container">
                   <table class="grid-table" id="gridSummaryTable">
                     <thead>
@@ -121,7 +133,6 @@
                         <th>Grid Type</th>
                         <th>Unused Grids</th>
                         <th>Used (Last 3 Months)</th>
-                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody id="gridSummaryTableBody">
@@ -129,14 +140,6 @@
                     </tbody>
                   </table>
                 </div>
-              </div>
-
-              <div class="admin-section">
-                <h3>Grid Management</h3>
-                <p>Manage grid types and inventory</p>
-                <button id="addNewGridsButton" class="btn btn-primary">
-                  Add New Grids
-                </button>
               </div>
 
               <div class="admin-section">

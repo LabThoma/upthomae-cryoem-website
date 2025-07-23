@@ -394,9 +394,6 @@ function displayGridSummary(summaryData) {
       </td>
       <td>${gridType.total_unused_grids || 0}</td>
       <td>${gridType.total_used_last_3_months || 0}</td>
-      <td>
-        <span class="text-muted" style="font-size: 0.85em;">Expand to see batches</span>
-      </td>
     `;
 
     // Detail row (initially hidden, using existing expandable-row class)
@@ -404,7 +401,7 @@ function displayGridSummary(summaryData) {
     detailRow.className = "expandable-row";
 
     const detailCell = document.createElement("td");
-    detailCell.colSpan = 4;
+    detailCell.colSpan = 3;
     detailCell.innerHTML = `
       <div class="expandable-content" id="grid-details-${encodeURIComponent(
         gridType.grid_type_name
