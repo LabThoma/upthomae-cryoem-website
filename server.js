@@ -12,7 +12,7 @@ const port = 3000;
 app.use(
   cors({
     origin: "http://127.0.0.1:5500", // Replace with your frontend's origin
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type"],
   })
 );
@@ -186,7 +186,12 @@ app.get("/api/grid-types/summary", async (req, res) => {
     const rows = await connection.query(`
       SELECT 
         gt.grid_type_name,
-        SUM(COALESCE(gt.quantity, 0) - COALESCE(usage_counts.total_used, 0)) as total_unused_grids,
+        SUM(
+          CASE 
+            WHEN gt.marked_as_empty = TRUE THEN 0
+            ELSE COALESCE(gt.quantity, 0) - COALESCE(usage_counts.total_used, 0)
+          END
+        ) as total_unused_grids,
         SUM(COALESCE(usage_counts.used_last_3_months, 0)) as total_used_last_3_months,
         COUNT(gt.grid_type_id) as batch_count
       FROM grid_types gt
@@ -225,8 +230,12 @@ app.get("/api/grid-types/batches/:gridTypeName", async (req, res) => {
         gt.q_number,
         gt.quantity,
         gt.created_at,
+        gt.marked_as_empty,
         COALESCE(usage_counts.used_grids, 0) as used_grids,
-        COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0) as remaining_grids
+        CASE 
+          WHEN gt.marked_as_empty = TRUE THEN 0
+          ELSE COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0)
+        END as remaining_grids
       FROM grid_types gt
       LEFT JOIN (
         SELECT 
@@ -265,8 +274,12 @@ app.get("/api/grid-types/:id/details", async (req, res) => {
         gt.q_number,
         gt.quantity,
         gt.created_at,
+        gt.marked_as_empty,
         COALESCE(usage_counts.used_grids, 0) as used_grids,
-        COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0) as remaining_grids
+        CASE 
+          WHEN gt.marked_as_empty = TRUE THEN 0
+          ELSE COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0)
+        END as remaining_grids
       FROM grid_types gt
       LEFT JOIN (
         SELECT 
@@ -379,13 +392,13 @@ app.delete("/api/grid-types/:id", async (req, res) => {
   }
 });
 
-// Mark grid type as empty (set quantity to 0)
+// Mark grid type as empty (indicates batch is exhausted due to unlogged usage)
 app.patch("/api/grid-types/:id/mark-empty", async (req, res) => {
   const gridTypeId = req.params.id;
   try {
     const connection = await pool.getConnection();
     const result = await connection.query(
-      "UPDATE grid_types SET quantity = 0, updated_at = NOW() WHERE grid_type_id = ?",
+      "UPDATE grid_types SET marked_as_empty = TRUE, updated_at = NOW() WHERE grid_type_id = ?",
       [gridTypeId]
     );
     connection.release();

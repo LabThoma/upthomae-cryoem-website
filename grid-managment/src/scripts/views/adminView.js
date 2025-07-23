@@ -492,6 +492,7 @@ function displayGridTypeBatches(batches, container) {
           <th>Total Quantity</th>
           <th>Used Grids</th>
           <th>Remaining Grids</th>
+          <th>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -499,12 +500,20 @@ function displayGridTypeBatches(batches, container) {
   `;
 
   batches.forEach((batch) => {
+    const isMarkedEmpty = batch.marked_as_empty;
+    const statusText = isMarkedEmpty
+      ? '<span style="color: orange; font-weight: bold;">Marked Empty</span>'
+      : batch.remaining_grids <= 0
+      ? '<span style="color: red;">Empty</span>'
+      : '<span style="color: green;">Available</span>';
+
     tableHTML += `
       <tr>
         <td>${batch.q_number || "N/A"}</td>
         <td>${batch.quantity || 0}</td>
         <td>${batch.used_grids || 0}</td>
         <td>${batch.remaining_grids || 0}</td>
+        <td>${statusText}</td>
         <td>
           <div class="action-buttons">
             <button class="action-btn edit" onclick="editGridType(${
@@ -512,11 +521,15 @@ function displayGridTypeBatches(batches, container) {
             })">
               Edit
             </button>
-            <button class="action-btn empty" onclick="markGridTypeEmpty(${
-              batch.grid_type_id
-            })">
+            ${
+              !isMarkedEmpty && batch.remaining_grids > 0
+                ? `
+            <button class="action-btn empty" onclick="markGridTypeEmpty(${batch.grid_type_id})">
               Mark Empty
             </button>
+            `
+                : ""
+            }
             <button class="action-btn delete" onclick="deleteGridType(${
               batch.grid_type_id
             })">
