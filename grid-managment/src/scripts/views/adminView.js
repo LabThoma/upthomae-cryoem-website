@@ -498,11 +498,20 @@ function displayGridTypeBatches(batches, container) {
 
   batches.forEach((batch) => {
     const isMarkedEmpty = batch.marked_as_empty;
-    const statusText = isMarkedEmpty
-      ? '<span style="color: orange; font-weight: bold;">Marked Empty</span>'
-      : batch.remaining_grids <= 0
-      ? '<span style="color: red;">Empty</span>'
-      : '<span style="color: green;">Available</span>';
+    const isMarkedInUse = batch.marked_as_in_use;
+
+    let statusText;
+    if (isMarkedEmpty) {
+      statusText =
+        '<span style="color: orange; font-weight: bold;">Marked Empty</span>';
+    } else if (isMarkedInUse) {
+      statusText =
+        '<span style="color: blue; font-weight: bold;">In Use</span>';
+    } else if (batch.remaining_grids <= 0) {
+      statusText = '<span style="color: red;">Empty</span>';
+    } else {
+      statusText = '<span style="color: green;">Available</span>';
+    }
 
     tableHTML += `
       <tr>
@@ -523,6 +532,15 @@ function displayGridTypeBatches(batches, container) {
                 ? `
             <button class="action-btn empty" onclick="markGridTypeEmpty(${batch.grid_type_id})">
               Mark Empty
+            </button>
+            `
+                : ""
+            }
+            ${
+              !isMarkedEmpty && !isMarkedInUse && batch.remaining_grids > 0
+                ? `
+            <button class="action-btn in-use" onclick="markGridTypeInUse(${batch.grid_type_id})">
+              Mark In Use
             </button>
             `
                 : ""
@@ -698,7 +716,42 @@ async function deleteGridType(gridTypeId) {
   }
 }
 
+// Mark grid type as in use
+async function markGridTypeInUse(gridTypeId) {
+  if (
+    !confirm(
+      "Are you sure you want to mark this grid type as 'In Use'? This indicates the batch is currently being used."
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/grid-types/${gridTypeId}/mark-in-use`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to mark grid type as in use");
+    }
+
+    showAlert("Grid type marked as in use successfully!", "success");
+    loadGridSummary(); // Refresh the table
+  } catch (error) {
+    console.error("Error marking grid type as in use:", error);
+    showAlert(`Error marking grid type as in use: ${error.message}`, "error");
+  }
+}
+
 // Make functions globally accessible
 window.editGridType = editGridType;
 window.markGridTypeEmpty = markGridTypeEmpty;
+window.markGridTypeInUse = markGridTypeInUse;
 window.deleteGridType = deleteGridType;

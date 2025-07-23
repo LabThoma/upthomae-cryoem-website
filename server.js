@@ -231,6 +231,7 @@ app.get("/api/grid-types/batches/:gridTypeName", async (req, res) => {
         gt.quantity,
         gt.created_at,
         gt.marked_as_empty,
+        gt.marked_as_in_use,
         COALESCE(usage_counts.used_grids, 0) as used_grids,
         CASE 
           WHEN gt.marked_as_empty = TRUE THEN 0
@@ -275,6 +276,7 @@ app.get("/api/grid-types/:id/details", async (req, res) => {
         gt.quantity,
         gt.created_at,
         gt.marked_as_empty,
+        gt.marked_as_in_use,
         COALESCE(usage_counts.used_grids, 0) as used_grids,
         CASE 
           WHEN gt.marked_as_empty = TRUE THEN 0
@@ -413,6 +415,30 @@ app.patch("/api/grid-types/:id/mark-empty", async (req, res) => {
     res
       .status(500)
       .json({ error: "Error marking grid type as empty: " + err.message });
+  }
+});
+
+// Mark grid type as in use (indicates batch is currently being used)
+app.patch("/api/grid-types/:id/mark-in-use", async (req, res) => {
+  const gridTypeId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "UPDATE grid_types SET marked_as_in_use = TRUE, updated_at = NOW() WHERE grid_type_id = ?",
+      [gridTypeId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid type not found" });
+    }
+
+    res.json({ message: "Grid type marked as in use successfully" });
+  } catch (err) {
+    console.error("Error marking grid type as in use:", err);
+    res
+      .status(500)
+      .json({ error: "Error marking grid type as in use: " + err.message });
   }
 });
 

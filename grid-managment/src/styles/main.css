@@ -946,3 +946,12 @@ body {
 .action-btn.empty:hover {
     background-color: #5a6268;
 }
+
+.action-btn.in-use {
+    background-color: #007bff;
+    color: white;
+}
+
+.action-btn.in-use:hover {
+    background-color: #0056b3;
+}
