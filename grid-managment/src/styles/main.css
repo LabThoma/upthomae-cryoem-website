@@ -228,6 +228,42 @@ body {
     text-align: center;
 }
 
+.grid-name-preview {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.grid-name-preview label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.name-preview-display {
+    padding: 12px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.name-preview-display em {
+    color: #9ca3af;
+    font-style: italic;
+    font-family: inherit;
+}
+
 .button-group {
     display: flex;
     gap: 15px;

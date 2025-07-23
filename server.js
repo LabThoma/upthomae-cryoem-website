@@ -125,6 +125,7 @@ app.post(
 // Add new grid type
 app.post("/api/grid-types", async (req, res) => {
   const {
+    grid_type_name,
     manufacturer,
     support,
     spacing,
@@ -141,6 +142,7 @@ app.post("/api/grid-types", async (req, res) => {
     const connection = await pool.getConnection();
     const result = await connection.query(
       `INSERT INTO grid_types (
+          grid_type_name,
           manufacturer, 
           support, 
           spacing, 
@@ -151,8 +153,9 @@ app.post("/api/grid-types", async (req, res) => {
           q_number, 
           extra_info, 
           quantity
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        grid_type_name || null,
         manufacturer || null,
         support || null,
         spacing || null,
