@@ -179,6 +179,230 @@ app.post("/api/grid-types", async (req, res) => {
   }
 });
 
+// Get grid type summary for admin
+app.get("/api/grid-types/summary", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(`
+      SELECT 
+        gt.grid_type_name,
+        SUM(COALESCE(gt.quantity, 0) - COALESCE(usage_counts.total_used, 0)) as total_unused_grids,
+        SUM(COALESCE(usage_counts.used_last_3_months, 0)) as total_used_last_3_months,
+        COUNT(gt.grid_type_id) as batch_count
+      FROM grid_types gt
+      LEFT JOIN (
+        SELECT 
+          g.grid_batch as q_number,
+          COUNT(*) as total_used,
+          COUNT(CASE WHEN g.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH) THEN 1 END) as used_last_3_months
+        FROM grids g
+        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
+        GROUP BY g.grid_batch
+      ) usage_counts ON gt.q_number = usage_counts.q_number
+      GROUP BY gt.grid_type_name
+      ORDER BY gt.grid_type_name
+    `);
+    connection.release();
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error("Error fetching grid type summary:", err);
+    res
+      .status(500)
+      .json({ error: "Error fetching grid type summary: " + err.message });
+  }
+});
+
+// Get detailed batches for a specific grid type name
+app.get("/api/grid-types/batches/:gridTypeName", async (req, res) => {
+  const gridTypeName = decodeURIComponent(req.params.gridTypeName);
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(
+      `
+      SELECT 
+        gt.grid_type_id,
+        gt.grid_type_name,
+        gt.q_number,
+        gt.quantity,
+        gt.created_at,
+        COALESCE(usage_counts.used_grids, 0) as used_grids,
+        COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0) as remaining_grids
+      FROM grid_types gt
+      LEFT JOIN (
+        SELECT 
+          g.grid_batch as q_number,
+          COUNT(*) as used_grids
+        FROM grids g
+        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
+        GROUP BY g.grid_batch
+      ) usage_counts ON gt.q_number = usage_counts.q_number
+      WHERE gt.grid_type_name = ?
+      ORDER BY gt.created_at DESC
+    `,
+      [gridTypeName]
+    );
+    connection.release();
+
+    res.json(sanitizeBigInt(rows));
+  } catch (err) {
+    console.error("Error fetching grid type batches:", err);
+    res
+      .status(500)
+      .json({ error: "Error fetching grid type batches: " + err.message });
+  }
+});
+
+// Get detailed grid info for a specific grid type
+app.get("/api/grid-types/:id/details", async (req, res) => {
+  const gridTypeId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const rows = await connection.query(
+      `
+      SELECT 
+        gt.grid_type_id,
+        gt.grid_type_name,
+        gt.q_number,
+        gt.quantity,
+        gt.created_at,
+        COALESCE(usage_counts.used_grids, 0) as used_grids,
+        COALESCE(gt.quantity, 0) - COALESCE(usage_counts.used_grids, 0) as remaining_grids
+      FROM grid_types gt
+      LEFT JOIN (
+        SELECT 
+          g.grid_batch as q_number,
+          COUNT(*) as used_grids
+        FROM grids g
+        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
+        GROUP BY g.grid_batch
+      ) usage_counts ON gt.q_number = usage_counts.q_number
+      WHERE gt.grid_type_id = ?
+    `,
+      [gridTypeId]
+    );
+    connection.release();
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Grid type not found" });
+    }
+
+    res.json(sanitizeBigInt(rows[0]));
+  } catch (err) {
+    console.error("Error fetching grid type details:", err);
+    res
+      .status(500)
+      .json({ error: "Error fetching grid type details: " + err.message });
+  }
+});
+
+// Update grid type (for edit functionality)
+app.put("/api/grid-types/:id", async (req, res) => {
+  const gridTypeId = req.params.id;
+  const {
+    grid_type_name,
+    manufacturer,
+    support,
+    spacing,
+    grid_material,
+    grid_mesh,
+    extra_layer,
+    extra_layer_thickness,
+    q_number,
+    extra_info,
+    quantity,
+  } = req.body;
+
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      `UPDATE grid_types SET
+         grid_type_name = ?,
+         manufacturer = ?, 
+         support = ?, 
+         spacing = ?, 
+         grid_material = ?, 
+         grid_mesh = ?, 
+         extra_layer = ?, 
+         extra_layer_thickness = ?, 
+         q_number = ?, 
+         extra_info = ?, 
+         quantity = ?,
+         updated_at = NOW()
+       WHERE grid_type_id = ?`,
+      [
+        grid_type_name || null,
+        manufacturer || null,
+        support || null,
+        spacing || null,
+        grid_material || null,
+        grid_mesh || null,
+        extra_layer || null,
+        extra_layer_thickness || null,
+        q_number || null,
+        extra_info || null,
+        quantity ? parseInt(quantity) : null,
+        gridTypeId,
+      ]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid type not found" });
+    }
+
+    res.json({ message: "Grid type updated successfully" });
+  } catch (err) {
+    console.error("Error updating grid type:", err);
+    res.status(500).json({ error: "Error updating grid type: " + err.message });
+  }
+});
+
+// Delete grid type
+app.delete("/api/grid-types/:id", async (req, res) => {
+  const gridTypeId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "DELETE FROM grid_types WHERE grid_type_id = ?",
+      [gridTypeId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid type not found" });
+    }
+
+    res.json({ message: "Grid type deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting grid type:", err);
+    res.status(500).json({ error: "Error deleting grid type: " + err.message });
+  }
+});
+
+// Mark grid type as empty (set quantity to 0)
+app.patch("/api/grid-types/:id/mark-empty", async (req, res) => {
+  const gridTypeId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "UPDATE grid_types SET quantity = 0, updated_at = NOW() WHERE grid_type_id = ?",
+      [gridTypeId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid type not found" });
+    }
+
+    res.json({ message: "Grid type marked as empty successfully" });
+  } catch (err) {
+    console.error("Error marking grid type as empty:", err);
+    res
+      .status(500)
+      .json({ error: "Error marking grid type as empty: " + err.message });
+  }
+});
+
 // ===== SESSION ENDPOINTS =====
 
 // Get all sessions with basic info
