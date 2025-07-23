@@ -6,6 +6,8 @@ import { showAlert } from "../components/alertSystem.js";
 export function setupAdminView() {
   setupAdminButtons();
   setupGridModal();
+  // Make handleSelectChange globally available
+  window.handleSelectChange = handleSelectChange;
 }
 
 function setupAdminButtons() {
@@ -62,14 +64,24 @@ async function handleGridFormSubmit(event) {
   event.preventDefault();
   
   const formData = new FormData(event.target);
+  
+  // Helper function to get the final value (either from dropdown or custom input)
+  function getFieldValue(fieldName, otherFieldName) {
+    const mainValue = formData.get(fieldName);
+    if (mainValue === "other") {
+      return formData.get(otherFieldName);
+    }
+    return mainValue;
+  }
+  
   const gridData = {
-    manufacturer: formData.get("manufacturer"),
-    support: formData.get("support"),
-    spacing: formData.get("spacing"),
-    grid_material: formData.get("gridMaterial"),
-    grid_mesh: formData.get("gridMesh"),
-    extra_layer: formData.get("extraLayer"),
-    extra_layer_thickness: formData.get("extraLayerThickness"),
+    manufacturer: getFieldValue("manufacturer", "manufacturerOther"),
+    support: getFieldValue("support", "supportOther"),
+    spacing: getFieldValue("spacing", "spacingOther"),
+    grid_material: getFieldValue("gridMaterial", "gridMaterialOther"),
+    grid_mesh: getFieldValue("gridMesh", "gridMeshOther"),
+    extra_layer: getFieldValue("extraLayer", "extraLayerOther"),
+    extra_layer_thickness: getFieldValue("extraLayerThickness", "extraLayerThicknessOther"),
     q_number: formData.get("qNumber"),
     extra_info: formData.get("extraInfo"),
     quantity: formData.get("quantity")
@@ -103,5 +115,23 @@ function clearGridForm() {
   const form = document.getElementById("newGridForm");
   if (form) {
     form.reset();
+    // Also hide all custom input fields
+    const customInputs = form.querySelectorAll('input[id$="Other"]');
+    customInputs.forEach(input => {
+      input.style.display = 'none';
+    });
+  }
+}
+
+// Function to handle dropdown changes and show/hide custom input fields
+function handleSelectChange(selectElement, customInputId) {
+  const customInput = document.getElementById(customInputId);
+  if (selectElement.value === "other") {
+    customInput.style.display = "block";
+    customInput.required = true;
+  } else {
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
   }
 }

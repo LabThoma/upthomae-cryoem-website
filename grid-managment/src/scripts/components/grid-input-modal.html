@@ -9,41 +9,85 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="manufacturer">Manufacturer:</label>
-            <input type="text" id="manufacturer" name="manufacturer" required />
+            <select id="manufacturer" name="manufacturer" required onchange="handleSelectChange(this, 'manufacturerOther')">
+              <option value="">Select manufacturer...</option>
+              <option value="Quantifoil">Quantifoil</option>
+              <option value="Ultrafoil">Ultrafoil</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="manufacturerOther" name="manufacturerOther" placeholder="Enter custom manufacturer" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="support">Support:</label>
-            <input type="text" id="support" name="support" />
+            <select id="support" name="support" onchange="handleSelectChange(this, 'supportOther')">
+              <option value="">Select support...</option>
+              <option value="Holey Carbon">Holey Carbon</option>
+              <option value="Holey Gold">Holey Gold</option>
+              <option value="Lacey Carbon">Lacey Carbon</option>
+              <option value="HexAuFoil">HexAuFoil</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="supportOther" name="supportOther" placeholder="Enter custom support" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="spacing">Spacing:</label>
-            <input type="text" id="spacing" name="spacing" />
+            <select id="spacing" name="spacing" onchange="handleSelectChange(this, 'spacingOther')">
+              <option value="">Select spacing...</option>
+              <option value="R 1/1">R 1/1</option>
+              <option value="R 1.2/1.3">R 1.2/1.3</option>
+              <option value="R 1/4">R 1/4</option>
+              <option value="R 2/2">R 2/2</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="spacingOther" name="spacingOther" placeholder="Enter custom spacing" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="gridMaterial">Grid Material:</label>
-            <input type="text" id="gridMaterial" name="gridMaterial" />
+            <select id="gridMaterial" name="gridMaterial" onchange="handleSelectChange(this, 'gridMaterialOther')">
+              <option value="">Select grid material...</option>
+              <option value="Cu">Cu</option>
+              <option value="Au">Au</option>
+              <option value="Ni">Ni</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="gridMaterialOther" name="gridMaterialOther" placeholder="Enter custom grid material" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="gridMesh">Grid Mesh:</label>
-            <input type="text" id="gridMesh" name="gridMesh" />
+            <select id="gridMesh" name="gridMesh" onchange="handleSelectChange(this, 'gridMeshOther')">
+              <option value="">Select grid mesh...</option>
+              <option value="200">200</option>
+              <option value="300">300</option>
+              <option value="400">400</option>
+              <option value="G300F1">G300F1</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="gridMeshOther" name="gridMeshOther" placeholder="Enter custom grid mesh" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="extraLayer">Extra Layer:</label>
-            <input type="text" id="extraLayer" name="extraLayer" />
+            <select id="extraLayer" name="extraLayer" onchange="handleSelectChange(this, 'extraLayerOther')">
+              <option value="">Select extra layer...</option>
+              <option value="Carbon">Carbon</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="extraLayerOther" name="extraLayerOther" placeholder="Enter custom extra layer" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
             <label for="extraLayerThickness">Extra Layer Thickness:</label>
-            <input
-              type="text"
-              id="extraLayerThickness"
-              name="extraLayerThickness"
-            />
+            <select id="extraLayerThickness" name="extraLayerThickness" onchange="handleSelectChange(this, 'extraLayerThicknessOther')">
+              <option value="">Select thickness...</option>
+              <option value="2 nm">2 nm</option>
+              <option value="3 nm">3 nm</option>
+              <option value="other">Other (specify)</option>
+            </select>
+            <input type="text" id="extraLayerThicknessOther" name="extraLayerThicknessOther" placeholder="Enter custom thickness" style="display: none; margin-top: 5px;" />
           </div>
 
           <div class="form-group">
