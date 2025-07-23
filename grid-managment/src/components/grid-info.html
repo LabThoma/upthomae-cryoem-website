@@ -2,17 +2,33 @@
   <h2 class="section-title">Grid Details & Glow Discharge</h2>
   <div class="form-grid">
     <div class="form-group">
-      <label for="GridType">Grid Type</label>
+      <label for="gridType">Grid Type</label>
+      <select id="gridType" onchange="handleGridTypeChange(this)">
+        <option value="">Select Grid Type</option>
+        <!-- Options will be populated dynamically -->
+        <option value="__custom__">+ Enter Custom</option>
+      </select>
       <input
         type="text"
-        id="gridType"
-        placeholder="e.g. Quantifoil R1.2/1.3 Cu 300 mesh"
+        id="gridTypeCustom"
+        placeholder="Enter custom grid type"
+        style="display: none; margin-top: 5px"
       />
     </div>
 
     <div class="form-group">
-      <label for="gridBatch">Grid Batch</label>
-      <input type="text" id="gridBatch" placeholder="Q number" />
+      <label for="gridBatch">Grid Batch (Q Number)</label>
+      <select id="gridBatch" onchange="handleGridBatchChange(this)">
+        <option value="">Select Q Number</option>
+        <!-- Options will be populated based on selected grid type -->
+        <option value="__custom__">+ Enter Custom</option>
+      </select>
+      <input
+        type="text"
+        id="gridBatchCustom"
+        placeholder="Enter custom Q number"
+        style="display: none; margin-top: 5px"
+      />
     </div>
 
     <div class="checkbox-group">

@@ -955,3 +955,16 @@ body {
 .action-btn.in-use:hover {
     background-color: #0056b3;
 }
+
+/* Grid selection dropdown styling */
+#gridType, #gridBatch {
+    width: 100%;
+}
+
+#gridTypeCustom, #gridBatchCustom {
+    width: 100%;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}

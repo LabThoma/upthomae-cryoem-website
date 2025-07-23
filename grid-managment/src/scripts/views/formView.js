@@ -6,6 +6,26 @@ import { validateForm, clearFormFields } from "../utils/formUtils.js";
 export function setupFormView() {
   initializeForm();
   setupFormEventListeners();
+  initializeGridComponents();
+  loadGridTypes();
+}
+
+function initializeGridComponents() {
+  // Ensure grid batch dropdown starts in correct state
+  clearGridBatchDropdown();
+
+  // Hide custom input fields initially
+  const gridTypeCustom = document.getElementById("gridTypeCustom");
+  if (gridTypeCustom) {
+    gridTypeCustom.style.display = "none";
+    gridTypeCustom.required = false;
+  }
+
+  const gridBatchCustom = document.getElementById("gridBatchCustom");
+  if (gridBatchCustom) {
+    gridBatchCustom.style.display = "none";
+    gridBatchCustom.required = false;
+  }
 }
 
 function initializeForm() {
@@ -98,7 +118,7 @@ export function setDefaultDate() {
 
 function setupFormEventListeners() {
   // Note: saveUpdateButton event listener is handled in main.js to avoid duplicates
-  
+
   const clearFormButton = document.getElementById("clearFormButton");
   if (clearFormButton) {
     clearFormButton.addEventListener("click", clearForm);
@@ -176,6 +196,23 @@ function clearForm() {
   // Use the imported clearFormFields function
   clearFormFields();
 
+  // Reset grid type dropdown
+  const gridTypeSelect = document.getElementById("gridType");
+  if (gridTypeSelect) {
+    gridTypeSelect.value = "";
+  }
+
+  // Reset custom grid type input
+  const gridTypeCustom = document.getElementById("gridTypeCustom");
+  if (gridTypeCustom) {
+    gridTypeCustom.style.display = "none";
+    gridTypeCustom.required = false;
+    gridTypeCustom.value = "";
+  }
+
+  // Clear grid batch dropdown
+  clearGridBatchDropdown();
+
   // Hide the glow discharge settings
   const glowDischargeSettings = document.getElementById(
     "glowDischargeSettings"
@@ -192,3 +229,216 @@ function clearForm() {
 
 // Note: Helper functions getElementValue, getElementChecked, and getRowValue
 // have been moved to sessionController.js where they are actually used
+
+// ===== GRID TYPE FUNCTIONALITY =====
+
+// Load grid types for dropdown
+async function loadGridTypes() {
+  try {
+    // Wait for the gridType element to be available
+    const gridTypeSelect = await waitForElement("gridType");
+    if (!gridTypeSelect) {
+      console.error("gridType element not found after waiting");
+      return;
+    }
+
+    const response = await fetch(
+      "http://localhost:3000/api/grid-types/summary"
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch grid types");
+    }
+
+    const gridTypes = await response.json();
+    populateGridTypeDropdown(gridTypes);
+  } catch (error) {
+    console.error("Error loading grid types:", error);
+    showAlert("Error loading grid types. Using manual input.", "warning");
+  }
+}
+
+// Populate grid type dropdown
+function populateGridTypeDropdown(gridTypes) {
+  const gridTypeSelect = document.getElementById("gridType");
+  if (!gridTypeSelect) return;
+
+  // Clear all existing options
+  gridTypeSelect.innerHTML = "";
+
+  // Always add the default option first
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Select Grid Type";
+  gridTypeSelect.appendChild(defaultOption);
+
+  // Add grid types from the API
+  gridTypes.forEach((gridType) => {
+    if (gridType.grid_type_name) {
+      const option = document.createElement("option");
+      option.value = gridType.grid_type_name;
+      option.textContent = gridType.grid_type_name;
+      gridTypeSelect.appendChild(option);
+    }
+  });
+
+  // Add custom option at the end
+  const customOption = document.createElement("option");
+  customOption.value = "__custom__";
+  customOption.textContent = "+ Enter Custom";
+  gridTypeSelect.appendChild(customOption);
+
+  // Ensure the default option is selected
+  gridTypeSelect.value = "";
+
+  console.log(`Loaded ${gridTypes.length} grid types into dropdown`);
+}
+
+// Handle grid type selection changes
+function handleGridTypeChange(selectElement) {
+  const customInput = document.getElementById("gridTypeCustom");
+
+  if (selectElement.value === "__custom__") {
+    // Show custom input field
+    customInput.style.display = "block";
+    customInput.required = true;
+    // Set grid batch dropdown to allow custom entry
+    setGridBatchToCustomMode();
+  } else if (selectElement.value === "") {
+    // Hide custom input and clear grid batch
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
+    clearGridBatchDropdown();
+  } else {
+    // Hide custom input and load batches for selected grid type
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
+    loadGridBatches(selectElement.value);
+  }
+}
+
+// Load grid batches for the selected grid type
+async function loadGridBatches(gridTypeName) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/grid-types/batches/${encodeURIComponent(
+        gridTypeName
+      )}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch grid batches");
+    }
+
+    const batches = await response.json();
+    populateGridBatchDropdown(batches);
+  } catch (error) {
+    console.error("Error loading grid batches:", error);
+    showAlert("Error loading batches. You can enter manually.", "warning");
+    clearGridBatchDropdown();
+  }
+}
+
+// Populate grid batch dropdown
+function populateGridBatchDropdown(batches) {
+  const gridBatchSelect = document.getElementById("gridBatch");
+  if (!gridBatchSelect) return;
+
+  // Clear existing options
+  gridBatchSelect.innerHTML = "";
+
+  // Add default option
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Select Q Number";
+  gridBatchSelect.appendChild(defaultOption);
+
+  // Filter to only show "In Use" batches
+  const inUseBatches = batches.filter(
+    (batch) => batch.marked_as_in_use && batch.q_number
+  );
+
+  // Add "In Use" batches
+  inUseBatches.forEach((batch) => {
+    const option = document.createElement("option");
+    option.value = batch.q_number;
+    option.textContent = `${batch.q_number} (${batch.remaining_grids} left)`;
+    gridBatchSelect.appendChild(option);
+  });
+
+  // Add custom option at the end
+  const customOption = document.createElement("option");
+  customOption.value = "__custom__";
+  customOption.textContent = "+ Enter Custom Q Number";
+  gridBatchSelect.appendChild(customOption);
+
+  console.log(`Loaded ${inUseBatches.length} in-use batches for grid type`);
+}
+
+// Clear grid batch dropdown
+function clearGridBatchDropdown() {
+  const gridBatchSelect = document.getElementById("gridBatch");
+  if (!gridBatchSelect) return;
+
+  gridBatchSelect.innerHTML = "";
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Select Grid Type First";
+  gridBatchSelect.appendChild(defaultOption);
+
+  // Hide custom input
+  const customInput = document.getElementById("gridBatchCustom");
+  if (customInput) {
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
+  }
+}
+
+// Set grid batch dropdown to custom mode (for when custom grid type is selected)
+function setGridBatchToCustomMode() {
+  const gridBatchSelect = document.getElementById("gridBatch");
+  if (!gridBatchSelect) return;
+
+  gridBatchSelect.innerHTML = "";
+
+  // Add default option
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Select Q Number";
+  gridBatchSelect.appendChild(defaultOption);
+
+  // Add custom option
+  const customOption = document.createElement("option");
+  customOption.value = "__custom__";
+  customOption.textContent = "+ Enter Custom Q Number";
+  gridBatchSelect.appendChild(customOption);
+
+  // Hide custom input initially
+  const customInput = document.getElementById("gridBatchCustom");
+  if (customInput) {
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
+  }
+}
+
+// Handle grid batch selection changes
+function handleGridBatchChange(selectElement) {
+  const customInput = document.getElementById("gridBatchCustom");
+
+  if (selectElement.value === "__custom__") {
+    // Show custom input field
+    customInput.style.display = "block";
+    customInput.required = true;
+  } else {
+    // Hide custom input field
+    customInput.style.display = "none";
+    customInput.required = false;
+    customInput.value = "";
+  }
+}
+
+// Make functions globally accessible for onclick handlers
+window.handleGridTypeChange = handleGridTypeChange;
+window.handleGridBatchChange = handleGridBatchChange;

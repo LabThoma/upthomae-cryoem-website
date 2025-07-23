@@ -98,9 +98,11 @@ export async function saveUpdate(event) {
 
     // First check if a session with this grid box name already exists for this user
     const checkResponse = await fetch(
-      `http://localhost:3000/api/sessions/check?user_name=${encodeURIComponent(sessionData.user_name)}&grid_box_name=${encodeURIComponent(sessionData.grid_box_name)}`
+      `http://localhost:3000/api/sessions/check?user_name=${encodeURIComponent(
+        sessionData.user_name
+      )}&grid_box_name=${encodeURIComponent(sessionData.grid_box_name)}`
     );
-    
+
     let existingSession = null;
     if (checkResponse.ok) {
       const checkResult = await checkResponse.json();
@@ -108,17 +110,20 @@ export async function saveUpdate(event) {
     }
 
     let response, result;
-    
+
     if (existingSession) {
       // Update existing session
       console.log("Updating existing session:", existingSession.session_id);
-      response = await fetch(`http://localhost:3000/api/sessions/${existingSession.session_id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      response = await fetch(
+        `http://localhost:3000/api/sessions/${existingSession.session_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
       result = await response.json();
       if (!response.ok) {
         throw new Error(
@@ -155,7 +160,26 @@ export async function saveUpdate(event) {
 // Helper functions for form data extraction
 function getElementValue(id) {
   const element = document.getElementById(id);
-  return element ? element.value : "";
+  if (!element) return "";
+
+  // Handle special cases for grid type and batch dropdowns with custom inputs
+  if (id === "gridType") {
+    if (element.value === "__custom__") {
+      const customInput = document.getElementById("gridTypeCustom");
+      return customInput ? customInput.value : "";
+    }
+    return element.value;
+  }
+
+  if (id === "gridBatch") {
+    if (element.value === "__custom__") {
+      const customInput = document.getElementById("gridBatchCustom");
+      return customInput ? customInput.value : "";
+    }
+    return element.value;
+  }
+
+  return element.value;
 }
 
 function getElementChecked(id) {
