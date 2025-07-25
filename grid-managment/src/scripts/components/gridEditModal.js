@@ -1,6 +1,7 @@
 // This file manages the grid edit modal functionality, including displaying and updating grid details.
 
 import { showAlert } from "./alertSystem.js";
+import { formatDateForInput } from "../utils/dateUtils.js";
 
 // Flag to prevent multiple modal event listener setup
 let isGridEditModalInitialized = false;
@@ -256,30 +257,6 @@ function setChecked(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
     element.checked = !!value;
-  }
-}
-
-function formatDateForInput(dateValue) {
-  if (!dateValue) return "";
-
-  try {
-    if (typeof dateValue === "string") {
-      if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return dateValue;
-      } else if (dateValue.includes("T")) {
-        return dateValue.split("T")[0];
-      }
-    }
-
-    const dateObj = new Date(dateValue);
-    if (!isNaN(dateObj.getTime())) {
-      return dateObj.toISOString().split("T")[0];
-    }
-
-    return "";
-  } catch (e) {
-    console.warn("Error formatting date for input:", dateValue, e);
-    return "";
   }
 }
 

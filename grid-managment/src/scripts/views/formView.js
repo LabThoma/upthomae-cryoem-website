@@ -2,6 +2,7 @@
 
 import { showAlert } from "../components/alertSystem.js";
 import { validateForm, clearFormFields } from "../utils/formUtils.js";
+import { getCurrentDateForInput } from "../utils/dateUtils.js";
 
 export function setupFormView() {
   initializeForm();
@@ -112,7 +113,7 @@ function populateUserDropdown(users) {
 export function setDefaultDate() {
   const sessionDateElement = document.getElementById("sessionDate");
   if (sessionDateElement) {
-    sessionDateElement.value = new Date().toISOString().split("T")[0];
+    sessionDateElement.value = getCurrentDateForInput();
   }
 }
 

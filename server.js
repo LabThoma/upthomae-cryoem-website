@@ -56,7 +56,11 @@ const sanitizeBigInt = (obj) => {
 
     // Handle JS Date objects
     if (obj instanceof Date) {
-      return obj.toISOString().split("T")[0];
+      // Use local date methods to avoid timezone conversion
+      const year = obj.getFullYear();
+      const month = String(obj.getMonth() + 1).padStart(2, "0");
+      const day = String(obj.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
 
     // Handle regular objects

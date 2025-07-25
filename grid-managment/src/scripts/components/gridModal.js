@@ -2,6 +2,7 @@
 // It exports functions like showGridModal and setupGridModalEventListeners.
 
 import { showAlert } from "./alertSystem.js";
+import { formatDate } from "../utils/dateUtils.js";
 
 export function showGridModal(sessionId, slotNumber) {
   fetch(`http://localhost:3000/api/sessions/${sessionId}`)
@@ -223,28 +224,4 @@ export function setupGridModalEventListeners() {
   });
 
   isGridModalInitialized = true;
-}
-
-function formatDate(dateValue) {
-  if (!dateValue) return "N/A";
-
-  try {
-    if (typeof dateValue === "string") {
-      if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return dateValue;
-      } else if (dateValue.includes("T")) {
-        return dateValue.split("T")[0];
-      }
-    }
-
-    const dateObj = new Date(dateValue);
-    if (!isNaN(dateObj.getTime())) {
-      return dateObj.toISOString().split("T")[0];
-    }
-
-    return String(dateValue);
-  } catch (e) {
-    console.warn("Error formatting date:", dateValue, e);
-    return "Invalid date";
-  }
 }
