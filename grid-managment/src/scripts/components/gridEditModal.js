@@ -424,8 +424,9 @@ async function handleEditSubmit() {
         temperature_c: parseFloat(formData.get("temperature_c")) || null,
         wait_time_seconds:
           parseFloat(formData.get("wait_time_seconds")) || null,
-        // blot_force and blot_time_seconds are NOT updated here
-        // since they have override columns and should only affect this grid
+        // Preserve existing session-wide blot settings to prevent NULL
+        blot_force: sessionData.settings?.blot_force || null,
+        blot_time_seconds: sessionData.settings?.blot_time_seconds || null,
       },
       // Only update grid_info if grid-specific fields changed
       grid_info: {
