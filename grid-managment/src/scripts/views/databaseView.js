@@ -279,8 +279,12 @@ export function updateDatabaseTable(sessions) {
         const gridType =
           gridData.grid_type || gridData.type || sessionGridType || "N/A";
 
+        // Check if grid is trashed
+        const isTrashed = gridData.trashed === true || gridData.trashed === 1;
+        const trashedClass = isTrashed ? ' class="trashed-grid"' : "";
+
         gridTableHTML += `
-          <tr>
+          <tr${trashedClass}>
             <td>${i}</td>
             <td>${gridType}</td>
             <td>${blotTime}</td>
@@ -295,6 +299,11 @@ export function updateDatabaseTable(sessions) {
               <button class="btn btn-small btn-secondary edit-grid-btn" data-session-id="${
                 session.session_id
               }" data-slot="${i}">Edit</button>
+              ${
+                isTrashed
+                  ? `<button class="btn btn-small btn-success untrash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}">Untrash</button>`
+                  : `<button class="btn btn-small btn-danger trash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}">Trash</button>`
+              }
             </td>
           </tr>
         `;
@@ -330,6 +339,7 @@ export function updateDatabaseTable(sessions) {
   // Set up grid modal event listeners once after all rows are created
   setupGridModalEventListeners();
   setupGridEditModalEventListeners();
+  setupTrashEventListeners();
 }
 
 export function updateUsersTable(users) {
@@ -397,5 +407,105 @@ export function showUsersTable() {
   const tableBody = document.getElementById("databaseTableBody");
   if (tableBody) {
     tableBody.innerHTML = "";
+  }
+}
+
+function setupTrashEventListeners() {
+  // Event listeners for trash buttons
+  document.addEventListener("click", async function (event) {
+    if (event.target.classList.contains("trash-grid-btn")) {
+      const prepId = event.target.getAttribute("data-prep-id");
+      const sessionId = event.target.getAttribute("data-session-id");
+      const slot = event.target.getAttribute("data-slot");
+
+      if (confirm(`Are you sure you want to trash the grid in slot ${slot}?`)) {
+        await trashGrid(prepId, sessionId, slot);
+      }
+    }
+  });
+
+  // Event listeners for untrash buttons
+  document.addEventListener("click", async function (event) {
+    if (event.target.classList.contains("untrash-grid-btn")) {
+      const prepId = event.target.getAttribute("data-prep-id");
+      const sessionId = event.target.getAttribute("data-session-id");
+      const slot = event.target.getAttribute("data-slot");
+
+      if (
+        confirm(`Are you sure you want to restore the grid in slot ${slot}?`)
+      ) {
+        await untrashGrid(prepId, sessionId, slot);
+      }
+    }
+  });
+}
+
+async function trashGrid(prepId, sessionId, slot) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/grid-preparations/${prepId}/trash`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to trash grid: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(`Grid in slot ${slot} has been trashed`, "success");
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error trashing grid:", error);
+    showAlert(`Error trashing grid: ${error.message}`, "error");
+  }
+}
+
+async function untrashGrid(prepId, sessionId, slot) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/grid-preparations/${prepId}/untrash`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to restore grid: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(`Grid in slot ${slot} has been restored`, "success");
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error restoring grid:", error);
+    showAlert(`Error restoring grid: ${error.message}`, "error");
+  }
+}
+
+function refreshCurrentView() {
+  // Check if we're viewing a specific user's grids or all grids
+  const gridDatabase = document.getElementById("grid-database");
+  if (gridDatabase && gridDatabase.style.display !== "none") {
+    const titleElement = gridDatabase.querySelector(".section-title");
+    if (titleElement && titleElement.textContent.includes(" - ")) {
+      // We're viewing a specific user's grids
+      const username = titleElement.textContent.split(" - ")[1];
+      fetchUserGridData(username);
+    } else {
+      // We're viewing all grids
+      fetchGridData();
+    }
   }
 }

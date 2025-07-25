@@ -446,6 +446,58 @@ app.patch("/api/grid-types/:id/mark-in-use", async (req, res) => {
   }
 });
 
+// ===== GRID PREPARATION ENDPOINTS =====
+
+// Mark grid preparation as trashed
+app.patch("/api/grid-preparations/:id/trash", async (req, res) => {
+  const prepId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "UPDATE grid_preparations SET trashed = TRUE, trashed_at = NOW(), updated_at = NOW() WHERE prep_id = ?",
+      [prepId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid preparation not found" });
+    }
+
+    res.json({ message: "Grid preparation marked as trashed successfully" });
+  } catch (err) {
+    console.error("Error marking grid preparation as trashed:", err);
+    res
+      .status(500)
+      .json({
+        error: "Error marking grid preparation as trashed: " + err.message,
+      });
+  }
+});
+
+// Untrash grid preparation
+app.patch("/api/grid-preparations/:id/untrash", async (req, res) => {
+  const prepId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "UPDATE grid_preparations SET trashed = FALSE, trashed_at = NULL, updated_at = NOW() WHERE prep_id = ?",
+      [prepId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Grid preparation not found" });
+    }
+
+    res.json({ message: "Grid preparation untrashed successfully" });
+  } catch (err) {
+    console.error("Error untrashing grid preparation:", err);
+    res
+      .status(500)
+      .json({ error: "Error untrashing grid preparation: " + err.message });
+  }
+});
+
 // ===== SESSION ENDPOINTS =====
 
 // Get all sessions with basic info
@@ -706,8 +758,10 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
         grid_batch_override, 
         comments, 
         additives_override, 
-        include_in_session
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        include_in_session,
+        trashed,
+        trashed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
@@ -720,6 +774,8 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
             grid.comments || null,
             grid.additives_override || null,
             grid.include_in_session,
+            grid.trashed || 0, // Default to not trashed for new grids
+            grid.trashed_at || null, // Default to null for new grids
           ]
         );
         console.log(
@@ -928,8 +984,10 @@ app.put("/api/sessions/:id", async (req, res) => {
       grid_batch_override, 
       comments, 
       additives_override,
-      include_in_session
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      include_in_session,
+      trashed,
+      trashed_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
@@ -942,6 +1000,8 @@ app.put("/api/sessions/:id", async (req, res) => {
             grid.comments || null,
             grid.additives_override || null,
             grid.include_in_session,
+            grid.trashed || 0,
+            grid.trashed_at || null,
           ]
         );
       }
@@ -1171,6 +1231,12 @@ app.listen(port, () => {
   console.log(`  GET  /api/users - Get all users with statistics`);
   console.log(
     `  GET  /api/users/:username/sessions - Get sessions for a specific user`
+  );
+  console.log(
+    `  PATCH /api/grid-preparations/:id/trash - Mark grid as trashed`
+  );
+  console.log(
+    `  PATCH /api/grid-preparations/:id/untrash - Restore trashed grid`
   );
   console.log(`  GET  /api/dashboard - Get dashboard stats`);
   console.log(`  GET  /api/health - Health check`);

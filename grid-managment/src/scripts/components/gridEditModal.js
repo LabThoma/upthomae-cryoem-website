@@ -69,6 +69,8 @@ function createEditFormInline() {
     <form id="editGridForm" class="admin-form">
       <input type="hidden" id="editSessionId" name="sessionId">
       <input type="hidden" id="editSlotNumber" name="slotNumber">
+      <input type="hidden" id="editTrashed" name="trashed">
+      <input type="hidden" id="editTrashedAt" name="trashed_at">
       
       <!-- Session Information Section -->
       <div class="form-section">
@@ -204,6 +206,8 @@ function populateEditForm(sessionData, gridData, slotNumber) {
   // Set hidden fields
   setValue("editSessionId", session.session_id);
   setValue("editSlotNumber", slotNumber);
+  setValue("editTrashed", gridData.trashed ? "1" : "0");
+  setValue("editTrashedAt", gridData.trashed_at || "");
 
   // Populate session information
   setValue("editUserName", session.user_name);
@@ -385,6 +389,8 @@ async function handleEditSubmit() {
           additives_override: additivesOverride,
           comments: formData.get("comments"),
           include_in_session: true,
+          trashed: formData.get("trashed") === "1" ? 1 : 0,
+          trashed_at: formData.get("trashed_at") || null,
         });
       } else if (existingGrid && existingGrid.include_in_session) {
         // This is an existing slot that should be preserved
@@ -401,6 +407,8 @@ async function handleEditSubmit() {
           additives_override: existingGrid.additives_override,
           comments: existingGrid.comments,
           include_in_session: true,
+          trashed: existingGrid.trashed || 0,
+          trashed_at: existingGrid.trashed_at || null,
         });
       }
       // If slot doesn't exist or isn't included, don't add it (it will remain empty)
@@ -461,9 +469,20 @@ async function handleEditSubmit() {
     delete window.currentEditGridData;
 
     // Refresh the database view
-    if (window.currentView === "database") {
-      const databaseView = await import("../views/databaseView.js");
-      databaseView.fetchGridData();
+    const databaseView = await import("../views/databaseView.js");
+    
+    // Check if we're viewing a specific user's grids or all grids
+    const gridDatabase = document.getElementById("grid-database");
+    if (gridDatabase && gridDatabase.style.display !== "none") {
+      const titleElement = gridDatabase.querySelector(".section-title");
+      if (titleElement && titleElement.textContent.includes(" - ")) {
+        // We're viewing a specific user's grids
+        const username = titleElement.textContent.split(" - ")[1];
+        databaseView.fetchUserGridData(username);
+      } else {
+        // We're viewing all grids
+        databaseView.fetchGridData();
+      }
     }
   } catch (error) {
     console.error("Error updating grid details:", error);
