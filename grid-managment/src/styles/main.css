@@ -983,3 +983,28 @@ body {
     border-radius: 4px;
     font-size: 14px;
 }
+
+/* Edit Modal Specific Styles */
+.modal-large {
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.edit-grid-btn {
+    margin-left: 5px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.form-actions .btn {
+    min-width: 120px;
+}

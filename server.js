@@ -856,7 +856,26 @@ app.put("/api/sessions/:id", async (req, res) => {
         // Handle sample creation/lookup based on sample_name
         let sampleId = null;
 
-        if (grid.sample_name) {
+        if (grid.sample_id) {
+          // If we have an existing sample_id, use it and update the sample details
+          sampleId = grid.sample_id;
+
+          // Update the existing sample with new information
+          if (grid.sample_name) {
+            await connection.query(
+              "UPDATE samples SET sample_name = ?, sample_concentration = ?, additives = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
+              [
+                grid.sample_name,
+                grid.sample_concentration,
+                grid.additives || null,
+                sampleId,
+              ]
+            );
+            console.log(
+              `Updated existing sample ID ${sampleId} for "${grid.sample_name}" in session ${sessionId}`
+            );
+          }
+        } else if (grid.sample_name) {
           // Check if this sample already exists FOR THIS SESSION/GRID BOX
           const existingSamples = await connection.query(
             `SELECT s.sample_id FROM samples s 
