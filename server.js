@@ -1119,6 +1119,146 @@ app.get("/api/users/:username/sessions", async (req, res) => {
 
 // ===== USER ENDPOINTS =====
 
+// Helper function to generate initials from username
+function generateInitials(username) {
+  const parts = username.trim().split(/\s+/);
+  if (parts.length >= 3) {
+    // For names with middle names (first, middle, last initials)
+    return parts
+      .slice(0, 3)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  } else if (parts.length === 2) {
+    // For names without middle names (first and last initials)
+    return parts
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  } else {
+    // Other names
+    return parts[0].substring(0, 2).toUpperCase().padEnd(2, "X");
+  }
+}
+
+// Helper function to generate next box name
+async function generateNextBoxName(username, connection) {
+  try {
+    // Get all existing grid box names to check for patterns
+    const existingBoxes = await connection.query(`
+      SELECT DISTINCT grid_box_name 
+      FROM sessions 
+      WHERE grid_box_name IS NOT NULL AND grid_box_name != ''
+      ORDER BY grid_box_name
+    `);
+
+    const existingBoxNames = existingBoxes.map((box) => box.grid_box_name);
+
+    // Generate possible initials patterns
+    const parts = username.trim().split(/\s+/);
+    const twoLetterInitials =
+      parts.length === 2
+        ? parts
+            .slice(0, 2)
+            .map((part) => part.charAt(0).toUpperCase())
+            .join("")
+        : null;
+    const threeLetterInitials =
+      parts.length >= 3
+        ? parts
+            .slice(0, 3)
+            .map((part) => part.charAt(0).toUpperCase())
+            .join("")
+        : null;
+
+    // Priority 1: Check for three-letter initials pattern (ASK008) for users with 3+ names
+    if (threeLetterInitials) {
+      const threeLetterPattern = new RegExp(`^${threeLetterInitials}(\\d{3})$`);
+      const threeLetterMatches = existingBoxNames
+        .filter((name) => threeLetterPattern.test(name))
+        .map((name) => parseInt(name.match(threeLetterPattern)[1]))
+        .sort((a, b) => b - a); // Sort descending to get highest number first
+
+      if (threeLetterMatches.length > 0) {
+        const nextNumber = (threeLetterMatches[0] + 1)
+          .toString()
+          .padStart(3, "0");
+        return `${threeLetterInitials}${nextNumber}`;
+      }
+    }
+
+    // Priority 2: Check for two-letter initials pattern (AJ008) for users with 2 names
+    if (twoLetterInitials) {
+      const twoLetterPattern = new RegExp(`^${twoLetterInitials}(\\d{3})$`);
+      const twoLetterMatches = existingBoxNames
+        .filter((name) => twoLetterPattern.test(name))
+        .map((name) => parseInt(name.match(twoLetterPattern)[1]))
+        .sort((a, b) => b - a); // Sort descending to get highest number first
+
+      if (twoLetterMatches.length > 0) {
+        const nextNumber = (twoLetterMatches[0] + 1)
+          .toString()
+          .padStart(3, "0");
+        return `${twoLetterInitials}${nextNumber}`;
+      }
+    }
+
+    // Priority 3: Look for any letter patterns followed by numbers
+    const userBoxNames = await connection.query(
+      `
+      SELECT DISTINCT grid_box_name 
+      FROM sessions 
+      WHERE user_name = ? AND grid_box_name IS NOT NULL AND grid_box_name != ''
+      ORDER BY grid_box_name
+    `,
+      [username]
+    );
+
+    const userBoxNamesList = userBoxNames.map((box) => box.grid_box_name);
+
+    const letterNumberPattern = /^([A-Z]+)(\d+)$/;
+    const letterNumberMatches = userBoxNamesList
+      .filter((name) => letterNumberPattern.test(name))
+      .map((name) => {
+        const match = name.match(letterNumberPattern);
+        return {
+          letters: match[1],
+          number: parseInt(match[2]),
+        };
+      })
+      .sort((a, b) => b.number - a.number); // Sort by number descending to get highest
+
+    if (letterNumberMatches.length > 0) {
+      // Use the highest number found + 1, with the same letter pattern as the highest
+      const highestMatch = letterNumberMatches[0];
+      const nextNumber = (highestMatch.number + 1).toString().padStart(3, "0");
+      return `${highestMatch.letters}${nextNumber}`;
+    }
+
+    // Priority 4: Look for any box names ending with numbers and use the highest
+    const numberPattern = /^.*?(\d+)$/;
+    const allNumberMatches = existingBoxNames
+      .filter((name) => numberPattern.test(name))
+      .map((name) => parseInt(name.match(numberPattern)[1]))
+      .sort((a, b) => b - a); // Sort descending to get highest number first
+
+    let startNumber = 1;
+    if (allNumberMatches.length > 0) {
+      startNumber = allNumberMatches[0] + 1;
+    }
+
+    // Use three-letter initials if available, otherwise two-letter, otherwise fallback
+    const preferredInitials =
+      threeLetterInitials || twoLetterInitials || generateInitials(username);
+    const nextNumber = startNumber.toString().padStart(3, "0");
+    return `${preferredInitials}${nextNumber}`;
+  } catch (error) {
+    console.error("Error generating next box name:", error);
+    // Fallback to simple pattern
+    const initials = generateInitials(username);
+    return `${initials}001`;
+  }
+}
+
 // Get all users
 app.get("/api/users", async (req, res) => {
   try {
@@ -1169,16 +1309,18 @@ app.get("/api/users", async (req, res) => {
     });
 
     // Process the results to add computed fields
-    const processedUsers = users.map((user) => ({
-      username: user.user_name,
-      totalSessions: user.total_sessions || 0,
-      totalGrids: user.total_grids || 0,
-      sessionDays: user.session_days || 0,
-      lastSessionDate: user.last_session_date,
-      firstSessionDate: user.first_session_date,
-      activeGridBoxes: activeBoxesMap[user.user_name] || 0,
-      nextBoxName: `${user.user_name}_Box_${(user.total_sessions || 0) + 1}`, // Simple naming convention
-    }));
+    const processedUsers = await Promise.all(
+      users.map(async (user) => ({
+        username: user.user_name,
+        totalSessions: user.total_sessions || 0,
+        totalGrids: user.total_grids || 0,
+        sessionDays: user.session_days || 0,
+        lastSessionDate: user.last_session_date,
+        firstSessionDate: user.first_session_date,
+        activeGridBoxes: activeBoxesMap[user.user_name] || 0,
+        nextBoxName: await generateNextBoxName(user.user_name, connection),
+      }))
+    );
 
     res.json(sanitizeBigInt(processedUsers));
   } catch (err) {
