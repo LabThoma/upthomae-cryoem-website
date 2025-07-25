@@ -466,11 +466,9 @@ app.patch("/api/grid-preparations/:id/trash", async (req, res) => {
     res.json({ message: "Grid preparation marked as trashed successfully" });
   } catch (err) {
     console.error("Error marking grid preparation as trashed:", err);
-    res
-      .status(500)
-      .json({
-        error: "Error marking grid preparation as trashed: " + err.message,
-      });
+    res.status(500).json({
+      error: "Error marking grid preparation as trashed: " + err.message,
+    });
   }
 });
 
@@ -1126,6 +1124,7 @@ app.get("/api/users", async (req, res) => {
   try {
     const connection = await pool.getConnection();
 
+    // Get basic user statistics
     const users = await connection.query(`
       SELECT 
         s.user_name,
@@ -1140,7 +1139,34 @@ app.get("/api/users", async (req, res) => {
       ORDER BY s.user_name
     `);
 
+    // Calculate active grid boxes for each user
+    // A grid box is "active" if it contains grids that are present (included and not trashed)
+    const activeGridBoxes = await connection.query(`
+      SELECT 
+        s.user_name,
+        s.grid_box_name,
+        COUNT(CASE 
+          WHEN gp.include_in_session = 1 AND (gp.trashed = 0 OR gp.trashed IS NULL)
+          THEN 1 
+          ELSE NULL 
+        END) as active_grids
+      FROM sessions s
+      LEFT JOIN grid_preparations gp ON s.session_id = gp.session_id
+      WHERE s.grid_box_name IS NOT NULL AND s.grid_box_name != ''
+      GROUP BY s.user_name, s.grid_box_name
+      HAVING active_grids > 0
+    `);
+
     connection.release();
+
+    // Create a map of active grid boxes per user
+    const activeBoxesMap = {};
+    activeGridBoxes.forEach((box) => {
+      if (!activeBoxesMap[box.user_name]) {
+        activeBoxesMap[box.user_name] = 0;
+      }
+      activeBoxesMap[box.user_name]++;
+    });
 
     // Process the results to add computed fields
     const processedUsers = users.map((user) => ({
@@ -1150,8 +1176,7 @@ app.get("/api/users", async (req, res) => {
       sessionDays: user.session_days || 0,
       lastSessionDate: user.last_session_date,
       firstSessionDate: user.first_session_date,
-      // Dummy values that can be replaced with real logic later
-      activeGridBoxes: 0, // Could be calculated based on recent sessions
+      activeGridBoxes: activeBoxesMap[user.user_name] || 0,
       nextBoxName: `${user.user_name}_Box_${(user.total_sessions || 0) + 1}`, // Simple naming convention
     }));
 
