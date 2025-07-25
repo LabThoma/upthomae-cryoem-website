@@ -236,48 +236,64 @@ export function updateDatabaseTable(sessions) {
 
       console.log(`Grid data for slot ${i}:`, gridData);
 
-      // Use session values as fallbacks if grid-specific values are missing
-      const blotTime =
-        gridData.blot_time_override ||
-        gridData.blot_time ||
-        gridData.blot_time_seconds ||
-        sessionBlotTime ||
-        "N/A";
+      // Check if this slot is actually used (include_in_session should be true)
+      const isSlotUsed =
+        gridData.include_in_session === true ||
+        gridData.include_in_session === 1;
 
-      const blotForce =
-        gridData.blot_force_override ||
-        gridData.blot_force ||
-        sessionBlotForce ||
-        "N/A";
+      if (!isSlotUsed) {
+        // Show "Slot not used" for unused slots
+        gridTableHTML += `
+          <tr class="unused-slot">
+            <td>${i}</td>
+            <td colspan="6" style="text-align: center; font-style: italic; color: #666;">Slot not used</td>
+            <td></td>
+          </tr>
+        `;
+      } else {
+        // Use session values as fallbacks if grid-specific values are missing
+        const blotTime =
+          gridData.blot_time_override ||
+          gridData.blot_time ||
+          gridData.blot_time_seconds ||
+          sessionBlotTime ||
+          "N/A";
 
-      const volume =
-        gridData.volume_ul_override ||
-        gridData.default_volume_ul ||
-        sessionDefaultVolume ||
-        "N/A";
+        const blotForce =
+          gridData.blot_force_override ||
+          gridData.blot_force ||
+          sessionBlotForce ||
+          "N/A";
 
-      const additives =
-        gridData.additives_override || gridData.additives || "N/A";
+        const volume =
+          gridData.volume_ul_override ||
+          gridData.default_volume_ul ||
+          sessionDefaultVolume ||
+          "N/A";
 
-      const gridType =
-        gridData.grid_type || gridData.type || sessionGridType || "N/A";
+        const additives =
+          gridData.additives_override || gridData.additives || "N/A";
 
-      gridTableHTML += `
-        <tr>
-          <td>${i}</td>
-          <td>${gridType}</td>
-          <td>${blotTime}</td>
-          <td>${blotForce}</td>
-          <td>${volume}</td>
-          <td>${additives}</td>
-          <td class="comments-col">${gridData.comments || "No comments"}</td>
-          <td>
-            <button class="btn btn-small view-grid-btn" data-session-id="${
-              session.session_id
-            }" data-slot="${i}">View</button>
-          </td>
-        </tr>
-      `;
+        const gridType =
+          gridData.grid_type || gridData.type || sessionGridType || "N/A";
+
+        gridTableHTML += `
+          <tr>
+            <td>${i}</td>
+            <td>${gridType}</td>
+            <td>${blotTime}</td>
+            <td>${blotForce}</td>
+            <td>${volume}</td>
+            <td>${additives}</td>
+            <td class="comments-col">${gridData.comments || "No comments"}</td>
+            <td>
+              <button class="btn btn-small view-grid-btn" data-session-id="${
+                session.session_id
+              }" data-slot="${i}">View</button>
+            </td>
+          </tr>
+        `;
+      }
     }
 
     gridTableHTML += `

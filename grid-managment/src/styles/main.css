@@ -482,6 +482,21 @@ body {
   width: 30%;
 }
 
+/* Style for unused slots */
+.grid-detail-table tr.unused-slot {
+  background-color: #f8f9fa;
+  opacity: 0.7;
+}
+
+.grid-detail-table tr.unused-slot:hover {
+  background-color: #f8f9fa;
+}
+
+.grid-detail-table tr.unused-slot td {
+  color: #6c757d;
+  font-style: italic;
+}
+
 .session-info {
   margin-top: 15px;
   display: grid;
