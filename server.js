@@ -824,38 +824,41 @@ app.put("/api/sessions/:id", async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Update session
-    await connection.query(
-      `UPDATE sessions SET user_name = ?, date = ?, grid_box_name = ?, loading_order = ?, puck_name = ?, puck_position = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE session_id = ?`,
-      [
-        session.user_name,
-        session.date,
-        session.grid_box_name,
-        session.loading_order,
-        session.puck_name,
-        session.puck_position,
-        sessionId,
-      ]
-    );
-
-    // Update grid info
-    const existingGridInfo = await connection.query(
-      "SELECT * FROM grids WHERE session_id = ?",
-      [sessionId]
-    );
-
-    if (existingGridInfo.length > 0) {
-      // Update existing grid info
+    // Update session only if session data is provided
+    if (session) {
       await connection.query(
-        `UPDATE grids SET 
-          grid_type = ?, grid_batch = ?, glow_discharge_applied = ?,
-          glow_discharge_current = ?, glow_discharge_time = ?, 
-          updated_at = CURRENT_TIMESTAMP
+        `UPDATE sessions SET user_name = ?, date = ?, grid_box_name = ?, loading_order = ?, puck_name = ?, puck_position = ?, updated_at = CURRENT_TIMESTAMP
          WHERE session_id = ?`,
         [
-          grid_info.grid_type || null,
-          grid_info.grid_batch || null,
+          session.user_name,
+          session.date,
+          session.grid_box_name,
+          session.loading_order,
+          session.puck_name,
+          session.puck_position,
+          sessionId,
+        ]
+      );
+    }
+
+    // Update grid info only if grid_info data is provided
+    if (grid_info) {
+      const existingGridInfo = await connection.query(
+        "SELECT * FROM grids WHERE session_id = ?",
+        [sessionId]
+      );
+
+      if (existingGridInfo.length > 0) {
+        // Update existing grid info
+        await connection.query(
+          `UPDATE grids SET 
+            grid_type = ?, grid_batch = ?, glow_discharge_applied = ?,
+            glow_discharge_current = ?, glow_discharge_time = ?, 
+            updated_at = CURRENT_TIMESTAMP
+           WHERE session_id = ?`,
+          [
+            grid_info.grid_type || null,
+            grid_info.grid_batch || null,
           grid_info.glow_discharge_applied || false,
           grid_info.glow_discharge_current || null,
           grid_info.glow_discharge_time || null,
@@ -879,21 +882,24 @@ app.put("/api/sessions/:id", async (req, res) => {
         ]
       );
     }
+    }
 
-    // Update vitrobot settings
-    await connection.query(
-      `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE session_id = ?`,
-      [
-        vitrobot_settings.humidity_percent || null,
-        vitrobot_settings.temperature_c || null,
-        vitrobot_settings.blot_force || null,
-        vitrobot_settings.blot_time_seconds || null,
-        vitrobot_settings.wait_time_seconds || null,
-        vitrobot_settings.glow_discharge_applied || false,
-        sessionId,
-      ]
-    );
+    // Update vitrobot settings only if vitrobot_settings data is provided
+    if (vitrobot_settings) {
+      await connection.query(
+        `UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE session_id = ?`,
+        [
+          vitrobot_settings.humidity_percent || null,
+          vitrobot_settings.temperature_c || null,
+          vitrobot_settings.blot_force || null,
+          vitrobot_settings.blot_time_seconds || null,
+          vitrobot_settings.wait_time_seconds || null,
+          vitrobot_settings.glow_discharge_applied || false,
+          sessionId,
+        ]
+      );
+    }
 
     // Delete existing grid preparations and re-insert
     await connection.query(

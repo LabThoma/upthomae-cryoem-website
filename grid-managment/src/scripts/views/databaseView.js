@@ -3,7 +3,6 @@
 // Import the showAlert function
 import { showAlert } from "../components/alertSystem.js";
 import { setupGridModalEventListeners } from "../components/gridModal.js";
-import { setupGridEditModalEventListeners } from "../components/gridEditModal.js";
 import { formatDate } from "../utils/dateUtils.js";
 
 // Flag to prevent multiple initialization
@@ -296,9 +295,6 @@ export function updateDatabaseTable(sessions) {
               <button class="btn btn-small view-grid-btn" data-session-id="${
                 session.session_id
               }" data-slot="${i}">View</button>
-              <button class="btn btn-small btn-secondary edit-grid-btn" data-session-id="${
-                session.session_id
-              }" data-slot="${i}">Edit</button>
               ${
                 isTrashed
                   ? `<button class="btn btn-small btn-success untrash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}">Untrash</button>`
@@ -338,7 +334,6 @@ export function updateDatabaseTable(sessions) {
 
   // Set up grid modal event listeners once after all rows are created
   setupGridModalEventListeners();
-  setupGridEditModalEventListeners();
   setupTrashEventListeners();
 }
 

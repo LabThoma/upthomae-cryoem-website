@@ -677,6 +677,104 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25) !important;
 }
 
+/* =================
+   INLINE EDITING STYLES
+   ================= */
+
+.grid-detail-value-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+}
+
+.edit-icon {
+    font-size: 14px;
+    color: #4facfe;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.edit-icon:hover {
+    opacity: 1;
+    background-color: rgba(79, 172, 254, 0.1);
+}
+
+.edit-field-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+
+.inline-edit-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: white;
+    min-width: 120px;
+}
+
+.inline-edit-input:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+}
+
+.inline-edit-input[type="number"] {
+    min-width: 80px;
+}
+
+.inline-edit-input[type="textarea"] {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.inline-edit-checkbox {
+    transform: scale(1.2);
+    margin: 0 8px;
+}
+
+.save-edit-btn,
+.cancel-edit-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.save-edit-btn {
+    background-color: #27ae60;
+    color: white;
+}
+
+.save-edit-btn:hover {
+    background-color: #229954;
+    transform: scale(1.1);
+}
+
+.cancel-edit-btn {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.cancel-edit-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.1);
+}
+
 .error:focus {
     border-color: #e74c3c !important;
     box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.5) !important;
@@ -1005,29 +1103,4 @@ body {
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 14px;
-}
-
-/* Edit Modal Specific Styles */
-.modal-large {
-    width: 90%;
-    max-width: 1200px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.edit-grid-btn {
-    margin-left: 5px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.form-actions .btn {
-    min-width: 120px;
 }
