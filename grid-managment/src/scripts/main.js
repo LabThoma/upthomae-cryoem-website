@@ -61,6 +61,11 @@ function setupEventListeners() {
   if (clearFormButton) {
     clearFormButton.addEventListener("click", formUtils.clearFormFields);
   }
+
+  const nextBoxButton = document.getElementById("nextBoxButton");
+  if (nextBoxButton) {
+    nextBoxButton.addEventListener("click", sessionController.nextBox);
+  }
 }
 
 // document.addEventListener("DOMContentLoaded", () => {

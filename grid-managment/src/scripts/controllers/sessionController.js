@@ -208,3 +208,64 @@ export async function fetchGridData() {
     throw error;
   }
 }
+
+export async function nextBox(event) {
+  // Prevent default form submission behavior
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
+
+  try {
+    // Get selected user
+    const userName = getElementValue("userName");
+    if (!userName) {
+      alertSystem.showAlert("Please select a user first.", "error");
+      return;
+    }
+
+    // Fetch user data to get next box name
+    const response = await fetch("http://localhost:3000/api/users");
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+
+    const users = await response.json();
+    const user = users.find((u) => u.username === userName);
+
+    if (!user) {
+      alertSystem.showAlert("User not found.", "error");
+      return;
+    }
+
+    // Set the next box name
+    const gridBoxNameElement = document.getElementById("gridBoxName");
+    if (gridBoxNameElement) {
+      gridBoxNameElement.value = user.nextBoxName;
+    }
+
+    // Clear puck position field
+    const puckPositionElement = document.getElementById("puckPosition");
+    if (puckPositionElement) {
+      puckPositionElement.value = "";
+    }
+
+    // Clear and re-populate grid details table
+    const gridTableBody = document.getElementById("grid-tbody");
+    if (gridTableBody) {
+      // Import and use gridTable module
+      const { setupGridTable } = await import("../components/gridTable.js");
+      setupGridTable();
+    }
+
+    alertSystem.showAlert(
+      `Next box "${user.nextBoxName}" prepared for ${userName}`,
+      "success"
+    );
+  } catch (error) {
+    console.error("Error preparing next box:", error);
+    alertSystem.showAlert(
+      `Error preparing next box: ${error.message}`,
+      "error"
+    );
+  }
+}
