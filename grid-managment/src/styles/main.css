@@ -49,22 +49,38 @@ body {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     font-weight: 700;
     letter-spacing: 2px;
-    position: relative;
     color: var(--primary-dark);
     text-transform: uppercase;
+    
+    /* Modern approach: Let CSS handle the measurements */
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+}
+
+#header h1::before {
+    content: '';
+    width: 120px;
+    height: 60px;
+    background: url('../images/mountains.svg') right bottom / contain no-repeat;
+    flex-shrink: 0;
+}
+
+.header-title h1 span {
+    position: relative;
+    border-bottom: 4px solid var(--accent-orange);
+    padding-bottom: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 #header h1::after {
     content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent-orange) 0%, #F4B366 100%);
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(217, 152, 74, 0.3);
+    width: 140px;
+    height: 60px;
+    background: url('../images/microscope.svg') left bottom / contain no-repeat;
+    flex-shrink: 0;
 }
 
 /* Navigation tabs styling */

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -4 280 108">
+  <style>
+    .mountain-line {
+      fill: none;
+      stroke: #D9984A;
+      stroke-miterlimit: 10;
+      stroke-width: 8px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+  <!-- Mountain silhouette with connection line as one continuous path -->
+  <path class="mountain-line" d="M16 100 L54 48 L65 62 L105 10 L138 46 L150 37 L220 100 L280 100"/>
+</svg>
