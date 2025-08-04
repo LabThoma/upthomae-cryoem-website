@@ -363,6 +363,67 @@ body {
     min-width: auto;
 }
 
+/* Icon button styles for database actions */
+.btn-icon {
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 3px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.btn-icon:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-icon i {
+    font-size: 14px;
+}
+
+/* Default icon button styling (for view button) */
+.btn-icon.view-grid-btn,
+.btn-icon.view-user-grids-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+.btn-icon.view-grid-btn:hover,
+.btn-icon.view-user-grids-btn:hover {
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+/* Danger button styling (for trash button) */
+.btn-icon.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.btn-icon.btn-danger:hover {
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* Success button styling (for untrash button) */
+.btn-icon.btn-success {
+    background: linear-gradient(135deg, #51cf66 0%, #69db7c 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(81, 207, 102, 0.3);
+}
+
+.btn-icon.btn-success:hover {
+    box-shadow: 0 4px 12px rgba(81, 207, 102, 0.4);
+}
+
 .alert {
     padding: 15px 20px;
     border-radius: 10px;
@@ -503,6 +564,32 @@ body {
 .grid-detail-table .comments-col {
   min-width: 200px;
   width: 30%;
+}
+
+/* Style for actions column to display buttons inline */
+.grid-detail-table td:last-child {
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.grid-detail-table td:last-child .btn-icon {
+  margin: 0 2px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Responsive: Stack buttons vertically on narrow screens */
+@media (max-width: 768px) {
+  .grid-detail-table td:last-child {
+    white-space: normal;
+    min-width: 40px;
+  }
+  
+  .grid-detail-table td:last-child .btn-icon {
+    display: block;
+    margin: 2px auto;
+    width: 32px;
+  }
 }
 
 /* Style for unused slots */

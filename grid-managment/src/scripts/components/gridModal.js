@@ -291,9 +291,11 @@ export function setupGridModalEventListeners() {
 
   // Use event delegation for grid view buttons
   document.addEventListener("click", function (event) {
-    if (event.target.classList.contains("view-grid-btn")) {
-      const sessionId = event.target.getAttribute("data-session-id");
-      const slotNumber = event.target.getAttribute("data-slot");
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".view-grid-btn");
+    if (button) {
+      const sessionId = button.getAttribute("data-session-id");
+      const slotNumber = button.getAttribute("data-slot");
       showGridModal(sessionId, slotNumber);
     }
   });

@@ -24,8 +24,10 @@ export function setupDatabaseView() {
 function setupDatabaseEventListeners() {
   // Event delegation for dynamically created user view buttons
   document.addEventListener("click", function (event) {
-    if (event.target.classList.contains("view-user-grids-btn")) {
-      const username = event.target.getAttribute("data-username");
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".view-user-grids-btn");
+    if (button) {
+      const username = button.getAttribute("data-username");
       showUserGrids(username);
     }
   });
@@ -292,13 +294,19 @@ export function updateDatabaseTable(sessions) {
             <td>${additives}</td>
             <td class="comments-col">${gridData.comments || "No comments"}</td>
             <td>
-              <button class="btn btn-small view-grid-btn" data-session-id="${
+              <button class="btn-icon view-grid-btn" data-session-id="${
                 session.session_id
-              }" data-slot="${i}">View</button>
+              }" data-slot="${i}" title="View & Edit">
+                <i class="fas fa-book-open"></i>
+              </button>
               ${
                 isTrashed
-                  ? `<button class="btn btn-small btn-success untrash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}">Untrash</button>`
-                  : `<button class="btn btn-small btn-danger trash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}">Trash</button>`
+                  ? `<button class="btn-icon btn-success untrash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Restore Grid">
+                      <i class="fas fa-undo"></i>
+                    </button>`
+                  : `<button class="btn-icon btn-danger trash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Trash Grid">
+                      <i class="fas fa-trash"></i>
+                    </button>`
               }
             </td>
           </tr>
@@ -355,8 +363,8 @@ export function updateUsersTable(users) {
       <td>${user.activeGridBoxes}</td>
       <td>${user.nextBoxName}</td>
       <td>
-        <button class="btn btn-small view-user-grids-btn" data-username="${user.username}">
-          View Grids
+        <button class="btn-icon view-user-grids-btn" data-username="${user.username}" title="View User's Grids">
+          <i class="fas fa-table"></i>
         </button>
       </td>
     `;
@@ -408,10 +416,12 @@ export function showUsersTable() {
 function setupTrashEventListeners() {
   // Event listeners for trash buttons
   document.addEventListener("click", async function (event) {
-    if (event.target.classList.contains("trash-grid-btn")) {
-      const prepId = event.target.getAttribute("data-prep-id");
-      const sessionId = event.target.getAttribute("data-session-id");
-      const slot = event.target.getAttribute("data-slot");
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".trash-grid-btn");
+    if (button) {
+      const prepId = button.getAttribute("data-prep-id");
+      const sessionId = button.getAttribute("data-session-id");
+      const slot = button.getAttribute("data-slot");
 
       if (confirm(`Are you sure you want to trash the grid in slot ${slot}?`)) {
         await trashGrid(prepId, sessionId, slot);
@@ -421,10 +431,12 @@ function setupTrashEventListeners() {
 
   // Event listeners for untrash buttons
   document.addEventListener("click", async function (event) {
-    if (event.target.classList.contains("untrash-grid-btn")) {
-      const prepId = event.target.getAttribute("data-prep-id");
-      const sessionId = event.target.getAttribute("data-session-id");
-      const slot = event.target.getAttribute("data-slot");
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".untrash-grid-btn");
+    if (button) {
+      const prepId = button.getAttribute("data-prep-id");
+      const sessionId = button.getAttribute("data-session-id");
+      const slot = button.getAttribute("data-slot");
 
       if (
         confirm(`Are you sure you want to restore the grid in slot ${slot}?`)
