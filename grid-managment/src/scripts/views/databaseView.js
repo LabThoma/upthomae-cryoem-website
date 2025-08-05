@@ -136,7 +136,7 @@ export function updateDatabaseTable(sessions) {
   tableBody.innerHTML = "";
 
   if (!sessions || sessions.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="6">No sessions found</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7">No sessions found</td></tr>';
     return;
   }
 
@@ -162,6 +162,22 @@ export function updateDatabaseTable(sessions) {
       }
     }
 
+    // Check if any grids in this session are in use and not already trashed
+    const hasUsedGrids =
+      session.grid_preparations &&
+      session.grid_preparations.some(
+        (grid) =>
+          grid.include_in_session === true || grid.include_in_session === 1
+      );
+
+    const hasUntrashedGrids =
+      session.grid_preparations &&
+      session.grid_preparations.some(
+        (grid) =>
+          (grid.include_in_session === true || grid.include_in_session === 1) &&
+          !(grid.trashed === true || grid.trashed === 1)
+      );
+
     row.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-id="${
@@ -170,7 +186,20 @@ export function updateDatabaseTable(sessions) {
         ${session.grid_box_name || "N/A"}
       </td>
       <td>${dateDisplay}</td> 
-      <td>${sampleName}</td> 
+      <td>${sampleName}</td>
+      <td>
+        ${
+          hasUsedGrids && hasUntrashedGrids
+            ? `
+          <button class="btn-icon btn-danger trash-gridbox-btn" 
+                  data-session-id="${session.session_id}" 
+                  title="Trash whole grid box">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        `
+            : ""
+        }
+      </td>
     `;
     tableBody.appendChild(row);
 
@@ -178,7 +207,7 @@ export function updateDatabaseTable(sessions) {
     detailRow.className = "expandable-row";
 
     const detailCell = document.createElement("td");
-    detailCell.colSpan = 3;
+    detailCell.colSpan = 4;
 
     let gridTableHTML = `
       <div class="expandable-content" id="details-${session.session_id}">
@@ -429,6 +458,23 @@ function setupTrashEventListeners() {
     }
   });
 
+  // Event listeners for trash whole gridbox buttons
+  document.addEventListener("click", async function (event) {
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".trash-gridbox-btn");
+    if (button) {
+      const sessionId = button.getAttribute("data-session-id");
+
+      if (
+        confirm(
+          `Are you sure you want to trash ALL grids in this grid box? This will mark all used slots as trashed.`
+        )
+      ) {
+        await trashWholeGridBox(sessionId);
+      }
+    }
+  });
+
   // Event listeners for untrash buttons
   document.addEventListener("click", async function (event) {
     // Handle clicks on the button or its icon
@@ -498,6 +544,36 @@ async function untrashGrid(prepId, sessionId, slot) {
   } catch (error) {
     console.error("Error restoring grid:", error);
     showAlert(`Error restoring grid: ${error.message}`, "error");
+  }
+}
+
+async function trashWholeGridBox(sessionId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/sessions/${sessionId}/trash-all-grids`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to trash grid box: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(
+      `All grids in grid box have been trashed (${result.affectedRows} grids affected)`,
+      "success"
+    );
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error trashing grid box:", error);
+    showAlert(`Error trashing grid box: ${error.message}`, "error");
   }
 }
 

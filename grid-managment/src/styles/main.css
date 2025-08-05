@@ -618,6 +618,13 @@ h2 {
   min-width: 80px;
 }
 
+/* Style for actions column in overview table */
+.grid-table td:nth-child(4) {
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: center;
+}
+
 .grid-detail-table td:last-child .btn-icon {
   margin: 0 2px;
   display: inline-block;

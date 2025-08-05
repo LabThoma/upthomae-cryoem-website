@@ -530,6 +530,38 @@ app.patch("/api/grid-preparations/:id/untrash", async (req, res) => {
   }
 });
 
+// Mark all used grids in a session (grid box) as trashed
+app.patch("/api/sessions/:id/trash-all-grids", async (req, res) => {
+  const sessionId = req.params.id;
+  try {
+    const connection = await pool.getConnection();
+    const result = await connection.query(
+      "UPDATE grid_preparations SET trashed = TRUE, trashed_at = NOW(), updated_at = NOW() WHERE session_id = ? AND include_in_session = TRUE",
+      [sessionId]
+    );
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({
+          error:
+            "No grid preparations found for this session or already trashed",
+        });
+    }
+
+    res.json({
+      message: "All grids in grid box marked as trashed successfully",
+      affectedRows: result.affectedRows,
+    });
+  } catch (err) {
+    console.error("Error marking all grids in session as trashed:", err);
+    res.status(500).json({
+      error: "Error marking all grids in session as trashed: " + err.message,
+    });
+  }
+});
+
 // ===== SESSION ENDPOINTS =====
 
 // Get all sessions with basic info
@@ -1444,6 +1476,9 @@ app.listen(port, () => {
   );
   console.log(
     `  PATCH /api/grid-preparations/:id/untrash - Restore trashed grid`
+  );
+  console.log(
+    `  PATCH /api/sessions/:id/trash-all-grids - Trash all grids in grid box`
   );
   console.log(`  GET  /api/dashboard - Get dashboard stats`);
   console.log(`  GET  /api/health - Health check`);
