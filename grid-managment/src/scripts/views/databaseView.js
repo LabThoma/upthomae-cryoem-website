@@ -38,6 +38,13 @@ function setupDatabaseEventListeners() {
       showUsersTable();
     }
   });
+
+  // Show trashed grid boxes checkbox
+  document.addEventListener("change", function (event) {
+    if (event.target.id === "showTrashedGridBoxes") {
+      refreshCurrentView();
+    }
+  });
 }
 
 export async function fetchUserGridData(username) {
@@ -74,7 +81,9 @@ export async function fetchUserGridData(username) {
           '<tr><td colspan="3">No sessions found for this user</td></tr>';
       }
     } else {
-      updateDatabaseTable(sessions);
+      const showTrashed =
+        document.getElementById("showTrashedGridBoxes")?.checked || false;
+      updateDatabaseTable(sessions, showTrashed);
       showAlert(
         `Displaying ${sessions.length} grids for ${username}`,
         "success"
@@ -100,7 +109,9 @@ export async function fetchGridData() {
     const sessions = await response.json();
     console.log(`Received ${sessions.length} total sessions`);
 
-    updateDatabaseTable(sessions);
+    const showTrashed =
+      document.getElementById("showTrashedGridBoxes")?.checked || false;
+    updateDatabaseTable(sessions, showTrashed);
     showAlert("Displaying all grids", "success");
   } catch (error) {
     console.error("Error fetching all grid data:", error);
@@ -128,7 +139,7 @@ export async function fetchUsersData() {
   }
 }
 
-export function updateDatabaseTable(sessions) {
+export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
   console.log("Sessions data structure:", JSON.stringify(sessions, null, 2));
   const tableBody = document.getElementById("databaseTableBody");
   if (!tableBody) return;
@@ -140,7 +151,43 @@ export function updateDatabaseTable(sessions) {
     return;
   }
 
-  sessions.forEach((session) => {
+  // Filter sessions based on whether to show trashed grid boxes
+  const filteredSessions = sessions.filter((session) => {
+    if (showTrashedGridBoxes) {
+      return true; // Show all sessions
+    }
+
+    // Check if this grid box is completely trashed
+    const hasUsedGrids =
+      session.grid_preparations &&
+      session.grid_preparations.some(
+        (grid) =>
+          grid.include_in_session === true || grid.include_in_session === 1
+      );
+
+    const hasUntrashedGrids =
+      session.grid_preparations &&
+      session.grid_preparations.some(
+        (grid) =>
+          (grid.include_in_session === true || grid.include_in_session === 1) &&
+          !(grid.trashed === true || grid.trashed === 1)
+      );
+
+    const isCompletelyTrashed = hasUsedGrids && !hasUntrashedGrids;
+
+    // Only show sessions that are not completely trashed
+    return !isCompletelyTrashed;
+  });
+
+  if (filteredSessions.length === 0) {
+    const message = showTrashedGridBoxes
+      ? "No sessions found"
+      : "No active sessions found (check 'Show also trashed grid boxes' to see all)";
+    tableBody.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
+    return;
+  }
+
+  filteredSessions.forEach((session) => {
     console.log("Session data:", session);
     console.log("Grid preparations:", session.grid_preparations);
     const row = document.createElement("tr");
@@ -178,6 +225,14 @@ export function updateDatabaseTable(sessions) {
           !(grid.trashed === true || grid.trashed === 1)
       );
 
+    // Check if this grid box is completely trashed (all used grids are trashed)
+    const isCompletelyTrashed = hasUsedGrids && !hasUntrashedGrids;
+
+    // Add CSS class for completely trashed grid boxes
+    if (isCompletelyTrashed) {
+      row.classList.add("trashed-gridbox");
+    }
+
     row.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-id="${
@@ -189,7 +244,7 @@ export function updateDatabaseTable(sessions) {
       <td>${sampleName}</td>
       <td>
         ${
-          hasUsedGrids && hasUntrashedGrids
+          hasUsedGrids && !isCompletelyTrashed
             ? `
           <button class="btn-icon btn-danger trash-gridbox-btn" 
                   data-session-id="${session.session_id}" 
