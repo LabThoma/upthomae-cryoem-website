@@ -201,12 +201,24 @@ app.get("/api/grid-types/summary", async (req, res) => {
       FROM grid_types gt
       LEFT JOIN (
         SELECT 
-          g.grid_batch as q_number,
+          batch_q_number as q_number,
           COUNT(*) as total_used,
-          COUNT(CASE WHEN g.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH) THEN 1 END) as used_last_3_months
-        FROM grids g
-        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
-        GROUP BY g.grid_batch
+          COUNT(CASE WHEN gp.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH) THEN 1 END) as used_last_3_months
+        FROM (
+          SELECT 
+            gp.prep_id,
+            gp.created_at,
+            CASE 
+              WHEN gp.grid_batch_override IS NOT NULL AND gp.grid_batch_override != '' 
+              THEN gp.grid_batch_override
+              ELSE g.grid_batch
+            END as batch_q_number
+          FROM grid_preparations gp
+          JOIN grids g ON gp.grid_id = g.grid_id
+          WHERE gp.include_in_session = 1
+        ) gp
+        WHERE batch_q_number IS NOT NULL AND batch_q_number != ''
+        GROUP BY batch_q_number
       ) usage_counts ON gt.q_number = usage_counts.q_number
       GROUP BY gt.grid_type_name
       ORDER BY gt.grid_type_name
@@ -244,11 +256,22 @@ app.get("/api/grid-types/batches/:gridTypeName", async (req, res) => {
       FROM grid_types gt
       LEFT JOIN (
         SELECT 
-          g.grid_batch as q_number,
+          batch_q_number as q_number,
           COUNT(*) as used_grids
-        FROM grids g
-        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
-        GROUP BY g.grid_batch
+        FROM (
+          SELECT 
+            gp.prep_id,
+            CASE 
+              WHEN gp.grid_batch_override IS NOT NULL AND gp.grid_batch_override != '' 
+              THEN gp.grid_batch_override
+              ELSE g.grid_batch
+            END as batch_q_number
+          FROM grid_preparations gp
+          JOIN grids g ON gp.grid_id = g.grid_id
+          WHERE gp.include_in_session = 1
+        ) gp
+        WHERE batch_q_number IS NOT NULL AND batch_q_number != ''
+        GROUP BY batch_q_number
       ) usage_counts ON gt.q_number = usage_counts.q_number
       WHERE gt.grid_type_name = ?
       ORDER BY gt.created_at DESC
@@ -289,11 +312,22 @@ app.get("/api/grid-types/:id/details", async (req, res) => {
       FROM grid_types gt
       LEFT JOIN (
         SELECT 
-          g.grid_batch as q_number,
+          batch_q_number as q_number,
           COUNT(*) as used_grids
-        FROM grids g
-        WHERE g.grid_batch IS NOT NULL AND g.grid_batch != ''
-        GROUP BY g.grid_batch
+        FROM (
+          SELECT 
+            gp.prep_id,
+            CASE 
+              WHEN gp.grid_batch_override IS NOT NULL AND gp.grid_batch_override != '' 
+              THEN gp.grid_batch_override
+              ELSE g.grid_batch
+            END as batch_q_number
+          FROM grid_preparations gp
+          JOIN grids g ON gp.grid_id = g.grid_id
+          WHERE gp.include_in_session = 1
+        ) gp
+        WHERE batch_q_number IS NOT NULL AND batch_q_number != ''
+        GROUP BY batch_q_number
       ) usage_counts ON gt.q_number = usage_counts.q_number
       WHERE gt.grid_type_id = ?
     `,
@@ -859,29 +893,29 @@ app.put("/api/sessions/:id", async (req, res) => {
           [
             grid_info.grid_type || null,
             grid_info.grid_batch || null,
-          grid_info.glow_discharge_applied || false,
-          grid_info.glow_discharge_current || null,
-          grid_info.glow_discharge_time || null,
-          sessionId,
-        ]
-      );
-    } else {
-      // Insert new grid info
-      await connection.query(
-        `INSERT INTO grids (
+            grid_info.glow_discharge_applied || false,
+            grid_info.glow_discharge_current || null,
+            grid_info.glow_discharge_time || null,
+            sessionId,
+          ]
+        );
+      } else {
+        // Insert new grid info
+        await connection.query(
+          `INSERT INTO grids (
           session_id, grid_type, grid_batch, glow_discharge_applied, 
           glow_discharge_current, glow_discharge_time
         ) VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          sessionId,
-          grid_info.grid_type || null,
-          grid_info.grid_batch || null,
-          grid_info.glow_discharge_applied || false,
-          grid_info.glow_discharge_current || null,
-          grid_info.glow_discharge_time || null,
-        ]
-      );
-    }
+          [
+            sessionId,
+            grid_info.grid_type || null,
+            grid_info.grid_batch || null,
+            grid_info.glow_discharge_applied || false,
+            grid_info.glow_discharge_current || null,
+            grid_info.glow_discharge_time || null,
+          ]
+        );
+      }
     }
 
     // Update vitrobot settings only if vitrobot_settings data is provided
