@@ -72,6 +72,29 @@ const sanitizeBigInt = (obj) => {
   return obj;
 };
 
+// Helper function to look up grid type name by q_number/batch number
+async function getGridTypeByBatch(connection, batchNumber) {
+  try {
+    if (!batchNumber || batchNumber.trim() === "") {
+      return null;
+    }
+
+    const rows = await connection.query(
+      "SELECT grid_type_name FROM grid_types WHERE q_number = ? LIMIT 1",
+      [batchNumber.trim()]
+    );
+
+    if (rows.length > 0) {
+      return rows[0].grid_type_name;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error looking up grid type by batch number:", error);
+    return null;
+  }
+}
+
 // ===== REFERENCE DATA ENDPOINTS =====
 
 // Get all samples for dropdown
@@ -542,12 +565,9 @@ app.patch("/api/sessions/:id/trash-all-grids", async (req, res) => {
     connection.release();
 
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({
-          error:
-            "No grid preparations found for this session or already trashed",
-        });
+      return res.status(404).json({
+        error: "No grid preparations found for this session or already trashed",
+      });
     }
 
     res.json({
@@ -809,6 +829,28 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
           `Inserting grid preparation for slot ${grid.slot_number} with grid_id: ${gridId}`
         );
 
+        // Look up grid type if grid_batch_override is provided
+        let gridTypeOverride = null;
+        if (grid.grid_batch_override && grid.grid_batch_override.trim()) {
+          gridTypeOverride = await getGridTypeByBatch(
+            connection,
+            grid.grid_batch_override
+          );
+          if (gridTypeOverride) {
+            console.log(
+              `Found grid type "${gridTypeOverride}" for batch override "${grid.grid_batch_override}"`
+            );
+          } else {
+            console.log(
+              `No grid type found for batch override "${grid.grid_batch_override}"`
+            );
+          }
+        }
+
+        // Use manual override if provided, otherwise use auto-populated value
+        const finalGridTypeOverride =
+          grid.grid_type_override || gridTypeOverride;
+
         // Then use the resolved sampleId in the grid preparation insert
         const insertResult = await connection.query(
           `INSERT INTO grid_preparations (
@@ -820,12 +862,13 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
         blot_time_override, 
         blot_force_override, 
         grid_batch_override, 
+        grid_type_override,
         comments, 
         additives_override, 
         include_in_session,
         trashed,
         trashed_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
@@ -835,6 +878,7 @@ app.post("/api/sessions", validateSessionMiddleware, async (req, res) => {
             grid.blot_time_override || null,
             grid.blot_force_override || null,
             grid.grid_batch_override || null,
+            finalGridTypeOverride, // Manual override takes priority over auto-populated
             grid.comments || null,
             grid.additives_override || null,
             grid.include_in_session,
@@ -1042,6 +1086,28 @@ app.put("/api/sessions/:id", async (req, res) => {
           sampleId = grid.sample_id;
         }
 
+        // Look up grid type if grid_batch_override is provided
+        let gridTypeOverride = null;
+        if (grid.grid_batch_override && grid.grid_batch_override.trim()) {
+          gridTypeOverride = await getGridTypeByBatch(
+            connection,
+            grid.grid_batch_override
+          );
+          if (gridTypeOverride) {
+            console.log(
+              `Found grid type "${gridTypeOverride}" for batch override "${grid.grid_batch_override}" in session update`
+            );
+          } else {
+            console.log(
+              `No grid type found for batch override "${grid.grid_batch_override}" in session update`
+            );
+          }
+        }
+
+        // Use manual override if provided, otherwise use auto-populated value
+        const finalGridTypeOverride =
+          grid.grid_type_override || gridTypeOverride;
+
         await connection.query(
           `INSERT INTO grid_preparations (
       session_id, 
@@ -1052,12 +1118,13 @@ app.put("/api/sessions/:id", async (req, res) => {
       blot_time_override, 
       blot_force_override, 
       grid_batch_override, 
+      grid_type_override,
       comments, 
       additives_override,
       include_in_session,
       trashed,
       trashed_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             sessionId,
             grid.slot_number,
@@ -1067,6 +1134,7 @@ app.put("/api/sessions/:id", async (req, res) => {
             grid.blot_time_override || null,
             grid.blot_force_override || null,
             grid.grid_batch_override || null,
+            finalGridTypeOverride, // Manual override takes priority over auto-populated
             grid.comments || null,
             grid.additives_override || null,
             grid.include_in_session,

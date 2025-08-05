@@ -387,7 +387,11 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
           gridData.additives_override || gridData.additives || "N/A";
 
         const gridType =
-          gridData.grid_type || gridData.type || sessionGridType || "N/A";
+          gridData.grid_type_override ||
+          gridData.grid_type ||
+          gridData.type ||
+          sessionGridType ||
+          "N/A";
 
         // Check if grid is trashed
         const isTrashed = gridData.trashed === true || gridData.trashed === 1;

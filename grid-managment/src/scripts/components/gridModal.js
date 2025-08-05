@@ -112,8 +112,9 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Grid Type",
               "grid_type",
-              grid_info.grid_type,
-              "grid_info"
+              gridData.grid_type_override || grid_info.grid_type,
+              "grid",
+              "grid_type"
             )}
             ${createEditableField(
               "Grid Batch",
@@ -551,6 +552,11 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
             newValue && newValue !== originalGridInfo.grid_batch
               ? newValue
               : null;
+        } else if (overrideField === "grid_type") {
+          updatedGrid.grid_type_override =
+            newValue && newValue !== originalGridInfo.grid_type
+              ? newValue
+              : null;
         } else if (overrideField === "blot_force") {
           updatedGrid.blot_force_override =
             newValue && newValue !== originalSettings.blot_force
@@ -577,6 +583,7 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         blot_force_override: updatedGrid.blot_force_override,
         blot_time_override: updatedGrid.blot_time_override,
         grid_batch_override: updatedGrid.grid_batch_override,
+        grid_type_override: updatedGrid.grid_type_override,
         additives_override: updatedGrid.additives_override,
         comments: updatedGrid.comments,
         include_in_session: true,
@@ -593,6 +600,7 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         blot_force_override: existingGrid.blot_force_override,
         blot_time_override: existingGrid.blot_time_override,
         grid_batch_override: existingGrid.grid_batch_override,
+        grid_type_override: existingGrid.grid_type_override,
         additives_override: existingGrid.additives_override,
         comments: existingGrid.comments,
         include_in_session: true,
