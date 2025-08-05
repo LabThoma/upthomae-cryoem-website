@@ -234,8 +234,9 @@ h2 {
     accent-color: #609BBF;
 }
 
-/* Special styling for database view checkbox */
-#showTrashedGridBoxes {
+/* Special styling for database view checkboxes */
+#showTrashedGridBoxes,
+#showInactiveUsers {
     margin: 0;
     width: 18px;
     height: 18px;
@@ -248,18 +249,21 @@ h2 {
     transition: all 0.3s ease;
 }
 
-#showTrashedGridBoxes:hover {
+#showTrashedGridBoxes:hover,
+#showInactiveUsers:hover {
     border-color: var(--accent-orange);
     box-shadow: 0 0 0 2px rgba(217, 152, 74, 0.1);
 }
 
-#showTrashedGridBoxes:checked {
+#showTrashedGridBoxes:checked,
+#showInactiveUsers:checked {
     background-color: var(--accent-orange);
     border-color: var(--accent-orange);
     box-shadow: 0 0 0 2px rgba(217, 152, 74, 0.2);
 }
 
-#showTrashedGridBoxes:checked::after {
+#showTrashedGridBoxes:checked::after,
+#showInactiveUsers:checked::after {
     content: '✓';
     position: absolute;
     top: 50%;
@@ -270,7 +274,8 @@ h2 {
     font-weight: bold;
 }
 
-#showTrashedGridBoxes + label {
+#showTrashedGridBoxes + label,
+#showInactiveUsers + label {
     margin: 0;
     font-size: 0.9rem;
     color: #555;
@@ -280,7 +285,8 @@ h2 {
     user-select: none;
 }
 
-#showTrashedGridBoxes:checked + label {
+#showTrashedGridBoxes:checked + label,
+#showInactiveUsers:checked + label {
     color: var(--accent-orange);
 }
 

@@ -8,6 +8,9 @@ import { formatDate } from "../utils/dateUtils.js";
 // Flag to prevent multiple initialization
 let isDatabaseViewInitialized = false;
 
+// Cache for users data to avoid re-fetching when toggling filters
+let cachedUsersData = null;
+
 export function setupDatabaseView() {
   // Prevent multiple initialization
   if (isDatabaseViewInitialized) {
@@ -43,6 +46,13 @@ function setupDatabaseEventListeners() {
   document.addEventListener("change", function (event) {
     if (event.target.id === "showTrashedGridBoxes") {
       refreshCurrentView();
+    }
+  });
+
+  // Show inactive users checkbox
+  document.addEventListener("change", function (event) {
+    if (event.target.id === "showInactiveUsers") {
+      refreshUsersTable(); // Refresh the users table with new filter
     }
   });
 }
@@ -130,13 +140,28 @@ export async function fetchUsersData() {
 
     const users = await response.json();
 
-    // The users data now comes directly from the API with proper statistics
-    updateUsersTable(users);
+    // Cache the users data
+    cachedUsersData = users;
+
+    // Update the table with current filter
+    refreshUsersTable();
     showAlert(`Found ${users.length} users`, "info");
   } catch (error) {
     console.error("Error fetching users data:", error);
     showAlert(`Error fetching users: ${error.message}`, "error");
   }
+}
+
+function refreshUsersTable() {
+  if (!cachedUsersData) {
+    fetchUsersData();
+    return;
+  }
+
+  // Check the show inactive users checkbox state
+  const showInactive =
+    document.getElementById("showInactiveUsers")?.checked || false;
+  updateUsersTable(cachedUsersData, showInactive);
 }
 
 export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
@@ -429,7 +454,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
   setupTrashEventListeners();
 }
 
-export function updateUsersTable(users) {
+export function updateUsersTable(users, showInactiveUsers = false) {
   const tableBody = document.getElementById("usersTableBody");
   if (!tableBody) return;
 
@@ -440,7 +465,23 @@ export function updateUsersTable(users) {
     return;
   }
 
-  users.forEach((user) => {
+  // Filter users based on checkbox state
+  let filteredUsers;
+  if (showInactiveUsers) {
+    filteredUsers = users; // Show all users
+  } else {
+    filteredUsers = users.filter((user) => user.activeGridBoxes > 0); // Only show users with active grid boxes
+  }
+
+  if (filteredUsers.length === 0) {
+    const message = showInactiveUsers
+      ? "No users found"
+      : "No active users found (check 'Show inactive users' to see all)";
+    tableBody.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
+    return;
+  }
+
+  filteredUsers.forEach((user) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${user.username}</td>
@@ -494,6 +535,13 @@ export function showUsersTable() {
   const tableBody = document.getElementById("databaseTableBody");
   if (tableBody) {
     tableBody.innerHTML = "";
+  }
+
+  // Refresh users table if we have cached data, otherwise fetch it
+  if (cachedUsersData) {
+    refreshUsersTable();
+  } else {
+    fetchUsersData();
   }
 }
 
