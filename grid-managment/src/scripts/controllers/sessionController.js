@@ -179,6 +179,21 @@ function getElementValue(id) {
     return element.value;
   }
 
+  // For numeric fields that should be null when empty, convert empty strings to null
+  const numericFields = [
+    "volume",
+    "humidity",
+    "temperature",
+    "blotForce",
+    "blotTime",
+    "waitTime",
+    "glowCurrent",
+    "glowTime",
+  ];
+  if (numericFields.includes(id) && element.value.trim() === "") {
+    return null;
+  }
+
   return element.value;
 }
 

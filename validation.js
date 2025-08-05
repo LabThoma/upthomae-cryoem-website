@@ -6,56 +6,131 @@
 // Validation schemas based on your database structure
 const VALIDATION_SCHEMAS = {
   sessions: {
-    user_name: { type: 'string', required: true, maxLength: 255, minLength: 1 },
-    date: { type: 'date', required: true },
-    grid_box_name: { type: 'string', required: false, maxLength: 255 },
-    loading_order: { type: 'string', required: false, maxLength: 255 },
-    puck_name: { type: 'string', required: false, maxLength: 255 },
-    puck_position: { type: 'string', required: false, maxLength: 255 }
+    user_name: { type: "string", required: true, maxLength: 255, minLength: 1 },
+    date: { type: "date", required: true },
+    grid_box_name: { type: "string", required: false, maxLength: 255 },
+    loading_order: { type: "string", required: false, maxLength: 255 },
+    puck_name: { type: "string", required: false, maxLength: 255 },
+    puck_position: { type: "string", required: false, maxLength: 255 },
   },
-  
+
   vitrobot_settings: {
-    humidity_percent: { type: 'decimal', required: false, min: 0, max: 100, precision: 2 },
-    temperature_c: { type: 'decimal', required: false, min: -50, max: 50, precision: 2 },
-    blot_force: { type: 'integer', required: false, min: -100, max: 100 },
-    blot_time_seconds: { type: 'decimal', required: false, min: 0, max: 60, precision: 2 },
-    wait_time_seconds: { type: 'decimal', required: false, min: 0, max: 300, precision: 2 },
-    glow_discharge_applied: { type: 'boolean', required: false }
+    humidity_percent: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 100,
+      precision: 2,
+    },
+    temperature_c: {
+      type: "decimal",
+      required: false,
+      min: -50,
+      max: 50,
+      precision: 2,
+    },
+    blot_force: { type: "integer", required: false, min: -100, max: 100 },
+    blot_time_seconds: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 60,
+      precision: 2,
+    },
+    wait_time_seconds: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 300,
+      precision: 2,
+    },
+    glow_discharge_applied: { type: "boolean", required: false },
   },
-  
+
   grids: {
-    grid_type: { type: 'string', required: true, maxLength: 255 },
-    grid_batch: { type: 'string', required: false, maxLength: 100 },
-    glow_discharge_applied: { type: 'boolean', required: false },
-    glow_discharge_current: { type: 'decimal', required: false, min: 0, max: 100, precision: 2 },
-    glow_discharge_time: { type: 'integer', required: false, min: 0, max: 3600 }
+    grid_type: { type: "string", required: true, maxLength: 255 },
+    grid_batch: { type: "string", required: false, maxLength: 100 },
+    glow_discharge_applied: { type: "boolean", required: false },
+    glow_discharge_current: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 100,
+      precision: 2,
+    },
+    glow_discharge_time: {
+      type: "integer",
+      required: false,
+      min: 0,
+      max: 3600,
+    },
   },
-  
+
   grid_preparations: {
-    slot_number: { type: 'integer', required: false, min: 1, max: 48 },
-    volume_ul_override: { type: 'decimal', required: false, min: 0, max: 99.99, precision: 2 },
-    incubation_time_seconds: { type: 'decimal', required: false, min: 0, max: 9999.99, precision: 2 },
-    blot_time_override: { type: 'decimal', required: false, min: 0, max: 99.99, precision: 2 },
-    blot_force_override: { type: 'decimal', required: false, min: -99.99, max: 99.99, precision: 2 },
-    grid_batch_override: { type: 'string', required: false, maxLength: 100 },
-    additives_override: { type: 'string', required: false, maxLength: 100 },
-    comments: { type: 'text', required: false, maxLength: 1000 },
-    include_in_session: { type: 'boolean', required: false }
+    slot_number: { type: "integer", required: false, min: 1, max: 48 },
+    volume_ul_override: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 99.99,
+      precision: 2,
+    },
+    incubation_time_seconds: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 9999.99,
+      precision: 2,
+    },
+    blot_time_override: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 99.99,
+      precision: 2,
+    },
+    blot_force_override: {
+      type: "decimal",
+      required: false,
+      min: -99.99,
+      max: 99.99,
+      precision: 2,
+    },
+    grid_batch_override: { type: "string", required: false, maxLength: 100 },
+    additives_override: { type: "string", required: false, maxLength: 100 },
+    comments: { type: "text", required: false, maxLength: 1000 },
+    include_in_session: { type: "boolean", required: false },
   },
-  
+
   samples: {
-    sample_name: { type: 'string', required: true, maxLength: 255, minLength: 1 },
-    sample_concentration: { type: 'string', required: false, maxLength: 100 },
-    additives: { type: 'text', required: false, maxLength: 1000 },
-    default_volume_ul: { type: 'decimal', required: false, min: 0, max: 99.99, precision: 2 }
+    sample_name: {
+      type: "string",
+      required: true,
+      maxLength: 255,
+      minLength: 1,
+    },
+    sample_concentration: { type: "string", required: false, maxLength: 100 },
+    additives: { type: "text", required: false, maxLength: 1000 },
+    default_volume_ul: {
+      type: "decimal",
+      required: false,
+      min: 0,
+      max: 99.99,
+      precision: 2,
+    },
   },
-  
+
   grid_types: {
-    grid_type_name: { type: 'string', required: true, maxLength: 255, minLength: 1 },
-    grid_batch: { type: 'string', required: false, maxLength: 255 },
-    manufacturer: { type: 'string', required: false, maxLength: 255 },
-    specifications: { type: 'text', required: false, maxLength: 1000 }
-  }
+    grid_type_name: {
+      type: "string",
+      required: true,
+      maxLength: 255,
+      minLength: 1,
+    },
+    grid_batch: { type: "string", required: false, maxLength: 255 },
+    manufacturer: { type: "string", required: false, maxLength: 255 },
+    specifications: { type: "text", required: false, maxLength: 1000 },
+  },
 };
 
 /**
@@ -63,41 +138,47 @@ const VALIDATION_SCHEMAS = {
  */
 function validateField(fieldName, value, schema) {
   const errors = [];
-  
+
   // Handle null/undefined values
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     if (schema.required) {
       errors.push(`${fieldName} is required`);
     }
     return errors; // Early return for null/empty values
   }
-  
+
   // Type validation
   switch (schema.type) {
-    case 'string':
-      if (typeof value !== 'string') {
+    case "string":
+      if (typeof value !== "string") {
         errors.push(`${fieldName} must be a string`);
         break;
       }
       if (schema.minLength && value.length < schema.minLength) {
-        errors.push(`${fieldName} must be at least ${schema.minLength} characters long`);
+        errors.push(
+          `${fieldName} must be at least ${schema.minLength} characters long`
+        );
       }
       if (schema.maxLength && value.length > schema.maxLength) {
-        errors.push(`${fieldName} must be no more than ${schema.maxLength} characters long`);
+        errors.push(
+          `${fieldName} must be no more than ${schema.maxLength} characters long`
+        );
       }
       break;
-      
-    case 'text':
-      if (typeof value !== 'string') {
+
+    case "text":
+      if (typeof value !== "string") {
         errors.push(`${fieldName} must be a string`);
         break;
       }
       if (schema.maxLength && value.length > schema.maxLength) {
-        errors.push(`${fieldName} must be no more than ${schema.maxLength} characters long`);
+        errors.push(
+          `${fieldName} must be no more than ${schema.maxLength} characters long`
+        );
       }
       break;
-      
-    case 'integer':
+
+    case "integer":
       const intValue = parseInt(value);
       if (isNaN(intValue) || !Number.isInteger(intValue)) {
         errors.push(`${fieldName} must be a valid integer`);
@@ -110,8 +191,8 @@ function validateField(fieldName, value, schema) {
         errors.push(`${fieldName} must be no more than ${schema.max}`);
       }
       break;
-      
-    case 'decimal':
+
+    case "decimal":
       const floatValue = parseFloat(value);
       if (isNaN(floatValue)) {
         errors.push(`${fieldName} must be a valid number`);
@@ -124,28 +205,36 @@ function validateField(fieldName, value, schema) {
         errors.push(`${fieldName} must be no more than ${schema.max}`);
       }
       if (schema.precision) {
-        const decimalPlaces = (floatValue.toString().split('.')[1] || '').length;
+        const decimalPlaces = (floatValue.toString().split(".")[1] || "")
+          .length;
         if (decimalPlaces > schema.precision) {
-          errors.push(`${fieldName} can have at most ${schema.precision} decimal places`);
+          errors.push(
+            `${fieldName} can have at most ${schema.precision} decimal places`
+          );
         }
       }
       break;
-      
-    case 'boolean':
-      if (typeof value !== 'boolean' && value !== 0 && value !== 1 && 
-          value !== 'true' && value !== 'false') {
+
+    case "boolean":
+      if (
+        typeof value !== "boolean" &&
+        value !== 0 &&
+        value !== 1 &&
+        value !== "true" &&
+        value !== "false"
+      ) {
         errors.push(`${fieldName} must be a boolean value`);
       }
       break;
-      
-    case 'date':
+
+    case "date":
       const dateValue = new Date(value);
       if (isNaN(dateValue.getTime())) {
         errors.push(`${fieldName} must be a valid date`);
       }
       break;
   }
-  
+
   return errors;
 }
 
@@ -157,9 +246,9 @@ function validateTable(tableName, data) {
   if (!schema) {
     throw new Error(`No validation schema found for table: ${tableName}`);
   }
-  
+
   const errors = [];
-  
+
   // Validate each field in the data
   for (const [fieldName, value] of Object.entries(data)) {
     if (schema[fieldName]) {
@@ -167,14 +256,14 @@ function validateTable(tableName, data) {
       errors.push(...fieldErrors);
     }
   }
-  
+
   // Check for missing required fields
   for (const [fieldName, fieldSchema] of Object.entries(schema)) {
     if (fieldSchema.required && !(fieldName in data)) {
       errors.push(`${fieldName} is required`);
     }
   }
-  
+
   return errors;
 }
 
@@ -183,45 +272,57 @@ function validateTable(tableName, data) {
  */
 function validateSessionData(sessionData) {
   const allErrors = [];
-  
+
   // Validate session
   if (sessionData.session) {
-    const sessionErrors = validateTable('sessions', sessionData.session);
-    allErrors.push(...sessionErrors.map(err => `Session: ${err}`));
+    const sessionErrors = validateTable("sessions", sessionData.session);
+    allErrors.push(...sessionErrors.map((err) => `Session: ${err}`));
   }
-  
+
   // Validate vitrobot settings
   if (sessionData.vitrobot_settings) {
-    const vitrobotErrors = validateTable('vitrobot_settings', sessionData.vitrobot_settings);
-    allErrors.push(...vitrobotErrors.map(err => `Vitrobot Settings: ${err}`));
+    const vitrobotErrors = validateTable(
+      "vitrobot_settings",
+      sessionData.vitrobot_settings
+    );
+    allErrors.push(...vitrobotErrors.map((err) => `Vitrobot Settings: ${err}`));
   }
-  
+
   // Validate grid info
   if (sessionData.grid_info) {
-    const gridErrors = validateTable('grids', sessionData.grid_info);
-    allErrors.push(...gridErrors.map(err => `Grid Info: ${err}`));
+    const gridErrors = validateTable("grids", sessionData.grid_info);
+    allErrors.push(...gridErrors.map((err) => `Grid Info: ${err}`));
   }
-  
+
   // Validate grid preparations
   if (sessionData.grids && Array.isArray(sessionData.grids)) {
     sessionData.grids.forEach((grid, index) => {
-      const gridPrepErrors = validateTable('grid_preparations', grid);
-      allErrors.push(...gridPrepErrors.map(err => `Grid ${index + 1}: ${err}`));
-      
+      const gridPrepErrors = validateTable("grid_preparations", grid);
+      allErrors.push(
+        ...gridPrepErrors.map((err) => `Grid ${index + 1}: ${err}`)
+      );
+
       // If grid has sample data, validate it
-      if (grid.sample_name || grid.sample_concentration || grid.additives || grid.default_volume_ul) {
+      if (
+        grid.sample_name ||
+        grid.sample_concentration ||
+        grid.additives ||
+        grid.default_volume_ul
+      ) {
         const sampleData = {
           sample_name: grid.sample_name,
           sample_concentration: grid.sample_concentration,
           additives: grid.additives,
-          default_volume_ul: grid.default_volume_ul
+          default_volume_ul: grid.default_volume_ul,
         };
-        const sampleErrors = validateTable('samples', sampleData);
-        allErrors.push(...sampleErrors.map(err => `Grid ${index + 1} Sample: ${err}`));
+        const sampleErrors = validateTable("samples", sampleData);
+        allErrors.push(
+          ...sampleErrors.map((err) => `Grid ${index + 1} Sample: ${err}`)
+        );
       }
     });
   }
-  
+
   return allErrors;
 }
 
@@ -233,41 +334,53 @@ function sanitizeInput(tableName, data) {
   if (!schema) {
     return data;
   }
-  
+
   const sanitized = {};
-  
+
   for (const [fieldName, value] of Object.entries(data)) {
-    if (schema[fieldName] && value !== null && value !== undefined && value !== '') {
+    if (
+      schema[fieldName] &&
+      value !== null &&
+      value !== undefined &&
+      value !== ""
+    ) {
       const fieldSchema = schema[fieldName];
-      
+
       switch (fieldSchema.type) {
-        case 'integer':
+        case "integer":
           sanitized[fieldName] = parseInt(value);
           break;
-        case 'decimal':
+        case "decimal":
           sanitized[fieldName] = parseFloat(value);
           break;
-        case 'boolean':
-          sanitized[fieldName] = Boolean(value === true || value === 1 || value === 'true');
+        case "boolean":
+          sanitized[fieldName] = Boolean(
+            value === true || value === 1 || value === "true"
+          );
           break;
-        case 'string':
-        case 'text':
+        case "string":
+        case "text":
           sanitized[fieldName] = String(value).trim();
           break;
-        case 'date':
-          sanitized[fieldName] = new Date(value).toISOString().split('T')[0];
+        case "date":
+          // Use local date methods to avoid timezone conversion
+          const dateObj = new Date(value);
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          sanitized[fieldName] = `${year}-${month}-${day}`;
           break;
         default:
           sanitized[fieldName] = value;
       }
-    } else if (value === null || value === undefined || value === '') {
+    } else if (value === null || value === undefined || value === "") {
       // Keep null/undefined values as null for database
       sanitized[fieldName] = null;
     } else {
       sanitized[fieldName] = value;
     }
   }
-  
+
   return sanitized;
 }
 
@@ -278,23 +391,23 @@ function createValidationMiddleware(tableName) {
   return (req, res, next) => {
     try {
       const errors = validateTable(tableName, req.body);
-      
+
       if (errors.length > 0) {
         return res.status(400).json({
           success: false,
-          message: 'Validation failed',
-          errors: errors
+          message: "Validation failed",
+          errors: errors,
         });
       }
-      
+
       // Sanitize the input
       req.body = sanitizeInput(tableName, req.body);
       next();
     } catch (error) {
-      console.error('Validation middleware error:', error);
+      console.error("Validation middleware error:", error);
       return res.status(500).json({
         success: false,
-        message: 'Internal validation error'
+        message: "Internal validation error",
       });
     }
   };
@@ -306,35 +419,43 @@ function createValidationMiddleware(tableName) {
 function validateSessionMiddleware(req, res, next) {
   try {
     const errors = validateSessionData(req.body);
-    
+
     if (errors.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors
+        message: "Validation failed",
+        errors: errors,
       });
     }
-    
+
     // Sanitize all parts of the session data
     if (req.body.session) {
-      req.body.session = sanitizeInput('sessions', req.body.session);
+      req.body.session = sanitizeInput("sessions", req.body.session);
     }
     if (req.body.vitrobot_settings) {
-      req.body.vitrobot_settings = sanitizeInput('vitrobot_settings', req.body.vitrobot_settings);
+      req.body.vitrobot_settings = sanitizeInput(
+        "vitrobot_settings",
+        req.body.vitrobot_settings
+      );
     }
     if (req.body.grid_info) {
-      req.body.grid_info = sanitizeInput('grids', req.body.grid_info);
+      req.body.grid_info = sanitizeInput("grids", req.body.grid_info);
+    }
+    if (req.body.sample) {
+      req.body.sample = sanitizeInput("samples", req.body.sample);
     }
     if (req.body.grids && Array.isArray(req.body.grids)) {
-      req.body.grids = req.body.grids.map(grid => sanitizeInput('grid_preparations', grid));
+      req.body.grids = req.body.grids.map((grid) =>
+        sanitizeInput("grid_preparations", grid)
+      );
     }
-    
+
     next();
   } catch (error) {
-    console.error('Session validation middleware error:', error);
+    console.error("Session validation middleware error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal validation error'
+      message: "Internal validation error",
     });
   }
 }
@@ -345,5 +466,5 @@ module.exports = {
   sanitizeInput,
   createValidationMiddleware,
   validateSessionMiddleware,
-  VALIDATION_SCHEMAS
+  VALIDATION_SCHEMAS,
 };
