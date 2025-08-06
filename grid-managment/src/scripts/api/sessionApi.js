@@ -1,7 +1,7 @@
 // filepath: /grid-management/grid-management/src/scripts/api/sessionApi.js
 
 export async function createSession(requestBody) {
-  const response = await fetch("http://localhost:3000/api/sessions", {
+  const response = await fetch("/api/sessions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +20,7 @@ export async function createSession(requestBody) {
 }
 
 export async function fetchSessions() {
-  const response = await fetch("http://localhost:3000/api/sessions");
+  const response = await fetch("/api/sessions");
 
   if (!response.ok) {
     throw new Error("Failed to fetch sessions");
@@ -30,12 +30,9 @@ export async function fetchSessions() {
 }
 
 export async function deleteSession(sessionId) {
-  const response = await fetch(
-    `http://localhost:3000/api/sessions/${sessionId}`,
-    {
-      method: "DELETE",
-    }
-  );
+  const response = await fetch(`/api/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
 
   if (!response.ok) {
     const result = await response.json();

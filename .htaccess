@@ -1,0 +1,16 @@
+# Redirect all API requests to api.php
+
+RewriteEngine On
+
+# Handle API routes - now using the full API
+
+RewriteRule ^api/(.\*)$ php/api.php?path=/api/$1 [L,QSA]
+
+# Handle static files (allow them to be served directly)
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule . - [L]
+
+# Optional: Redirect root to your main HTML file
+
+# RewriteRule ^$ index.html [L]

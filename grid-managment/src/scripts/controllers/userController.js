@@ -20,7 +20,7 @@ export async function viewUserData(userName) {
   }
 
   const encodedUsername = encodeURIComponent(userName);
-  const url = `http://localhost:3000/api/users/${encodedUsername}/sessions`;
+  const url = `/api/users/${encodedUsername}/sessions`;
   console.log(`Sending request to: ${url}`);
 
   try {

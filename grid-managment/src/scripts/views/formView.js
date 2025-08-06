@@ -43,7 +43,7 @@ async function loadUsers() {
       return;
     }
 
-    const response = await fetch("http://localhost:3000/api/users");
+    const response = await fetch("/api/users");
 
     if (!response.ok) {
       throw new Error(`Failed to fetch users: ${response.status}`);
@@ -175,7 +175,7 @@ function handleUserSelection(event) {
 // Auto-populate grid box name based on selected user
 async function autoPopulateGridBoxName(userName) {
   try {
-    const response = await fetch("http://localhost:3000/api/users");
+    const response = await fetch("/api/users");
     if (!response.ok) {
       throw new Error("Failed to fetch user data");
     }
@@ -278,9 +278,7 @@ async function loadGridTypes() {
       return;
     }
 
-    const response = await fetch(
-      "http://localhost:3000/api/grid-types/summary"
-    );
+    const response = await fetch("/api/grid-types/summary");
     if (!response.ok) {
       throw new Error("Failed to fetch grid types");
     }
@@ -422,9 +420,7 @@ function autoPopulateGlowDischargeSettings(gridType) {
 async function loadGridBatches(gridTypeName) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/grid-types/batches/${encodeURIComponent(
-        gridTypeName
-      )}`
+      `/api/grid-types/batches/${encodeURIComponent(gridTypeName)}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch grid batches");

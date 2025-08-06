@@ -120,9 +120,7 @@ async function handleGridFormSubmit(event) {
   };
 
   try {
-    const url = isEditMode
-      ? `http://localhost:3000/api/grid-types/${editId}`
-      : "http://localhost:3000/api/grid-types";
+    const url = isEditMode ? `/api/grid-types/${editId}` : "/api/grid-types";
 
     const method = isEditMode ? "PUT" : "POST";
 
@@ -353,9 +351,7 @@ function generateGridTypeName(
 // Load and display grid summary table
 async function loadGridSummary() {
   try {
-    const response = await fetch(
-      "http://localhost:3000/api/grid-types/summary"
-    );
+    const response = await fetch("/api/grid-types/summary");
     if (!response.ok) {
       throw new Error("Failed to fetch grid summary");
     }
@@ -458,9 +454,7 @@ async function loadGridTypeBatches(gridTypeName, container) {
   try {
     container.innerHTML = "Fetching batch data...";
     const response = await fetch(
-      `http://localhost:3000/api/grid-types/batches/${encodeURIComponent(
-        gridTypeName
-      )}`
+      `/api/grid-types/batches/${encodeURIComponent(gridTypeName)}`
     );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -568,7 +562,7 @@ function displayGridTypeBatches(batches, container) {
 async function editGridType(gridTypeId) {
   try {
     // Get current grid type data
-    const response = await fetch(`http://localhost:3000/api/grid-types`);
+    const response = await fetch(`/api/grid-types`);
     if (!response.ok) {
       throw new Error("Failed to fetch grid types");
     }
@@ -659,15 +653,12 @@ async function markGridTypeEmpty(gridTypeId) {
   }
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/grid-types/${gridTypeId}/mark-empty`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/grid-types/${gridTypeId}/mark-empty`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -693,15 +684,12 @@ async function deleteGridType(gridTypeId) {
   }
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/grid-types/${gridTypeId}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/grid-types/${gridTypeId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -727,15 +715,12 @@ async function markGridTypeInUse(gridTypeId) {
   }
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/grid-types/${gridTypeId}/mark-in-use`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/grid-types/${gridTypeId}/mark-in-use`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();

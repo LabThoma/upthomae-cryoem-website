@@ -69,9 +69,7 @@ export async function fetchUserGridData(username) {
     console.log("Fetching data for user:", username);
 
     // Use the detailed user sessions endpoint with the username
-    const response = await fetch(
-      `http://localhost:3000/api/users/${username}/sessions`
-    );
+    const response = await fetch(`/api/users/${username}/sessions`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.status}`);
@@ -115,9 +113,7 @@ export async function fetchUserGridData(username) {
 export async function fetchGridData() {
   try {
     // Use the "all" special case for your user sessions endpoint
-    const response = await fetch(
-      "http://localhost:3000/api/users/all/sessions"
-    );
+    const response = await fetch("/api/users/all/sessions");
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.status}`);
@@ -139,7 +135,7 @@ export async function fetchGridData() {
 export async function fetchUsersData() {
   try {
     // Use the new dedicated users endpoint
-    const response = await fetch("http://localhost:3000/api/users");
+    const response = await fetch("/api/users");
 
     if (!response.ok) {
       throw new Error(`Failed to fetch users data: ${response.status}`);
@@ -609,15 +605,12 @@ function setupTrashEventListeners() {
 
 async function trashGrid(prepId, sessionId, slot) {
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/grid-preparations/${prepId}/trash`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/grid-preparations/${prepId}/trash`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to trash grid: ${response.status}`);
@@ -636,15 +629,12 @@ async function trashGrid(prepId, sessionId, slot) {
 
 async function untrashGrid(prepId, sessionId, slot) {
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/grid-preparations/${prepId}/untrash`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/grid-preparations/${prepId}/untrash`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to restore grid: ${response.status}`);
@@ -663,15 +653,12 @@ async function untrashGrid(prepId, sessionId, slot) {
 
 async function trashWholeGridBox(sessionId) {
   try {
-    const response = await fetch(
-      `http://localhost:3000/api/sessions/${sessionId}/trash-all-grids`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/sessions/${sessionId}/trash-all-grids`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to trash grid box: ${response.status}`);

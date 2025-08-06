@@ -98,7 +98,7 @@ export async function saveUpdate(event) {
 
     // First check if a session with this grid box name already exists for this user
     const checkResponse = await fetch(
-      `http://localhost:3000/api/sessions/check?user_name=${encodeURIComponent(
+      `/api/sessions/check?user_name=${encodeURIComponent(
         sessionData.user_name
       )}&grid_box_name=${encodeURIComponent(sessionData.grid_box_name)}`
     );
@@ -114,16 +114,13 @@ export async function saveUpdate(event) {
     if (existingSession) {
       // Update existing session
       console.log("Updating existing session:", existingSession.session_id);
-      response = await fetch(
-        `http://localhost:3000/api/sessions/${existingSession.session_id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      response = await fetch(`/api/sessions/${existingSession.session_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
       result = await response.json();
       if (!response.ok) {
         throw new Error(
@@ -135,7 +132,7 @@ export async function saveUpdate(event) {
     } else {
       // Create new session
       console.log("Creating new session");
-      response = await fetch("http://localhost:3000/api/sessions", {
+      response = await fetch("/api/sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,7 +210,7 @@ function getRowValue(row, selector) {
 
 export async function fetchGridData() {
   try {
-    const response = await fetch("http://localhost:3000/api/sessions");
+    const response = await fetch("/api/sessions");
     if (!response.ok) throw new Error("Failed to fetch grid data");
 
     const sessions = await response.json();
@@ -239,7 +236,7 @@ export async function nextBox(event) {
     }
 
     // Fetch user data to get next box name
-    const response = await fetch("http://localhost:3000/api/users");
+    const response = await fetch("/api/users");
     if (!response.ok) {
       throw new Error("Failed to fetch user data");
     }

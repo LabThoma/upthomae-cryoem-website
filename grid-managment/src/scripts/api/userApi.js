@@ -1,7 +1,7 @@
 // This file contains functions for interacting with user-related API endpoints.
 // It exports functions like fetchUserData and updateUserData.
 
-const API_BASE_URL = "http://localhost:3000/api/users";
+const API_BASE_URL = "/api/users";
 
 export async function fetchUserData(userName) {
   try {
