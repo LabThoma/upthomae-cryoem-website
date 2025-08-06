@@ -14,9 +14,14 @@
         <label for="showTrashedGridBoxes">Show trashed grid boxes</label>
       </div>
     </div>
-    <button id="backToUsersButton" class="btn btn-secondary btn-small">
-      Back to Users
-    </button>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button id="refreshDatabaseButton" class="btn-icon" title="Refresh">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <button id="backToUsersButton" class="btn btn-secondary btn-small">
+        Back to Users
+      </button>
+    </div>
   </div>
   <div style="overflow-x: auto">
     <table class="grid-table" id="databaseTable">

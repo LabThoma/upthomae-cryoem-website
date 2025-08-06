@@ -42,6 +42,13 @@ function setupDatabaseEventListeners() {
     }
   });
 
+  // Refresh database button
+  document.addEventListener("click", function (event) {
+    if (event.target.closest("#refreshDatabaseButton")) {
+      refreshCurrentView();
+    }
+  });
+
   // Show trashed grid boxes checkbox
   document.addEventListener("change", function (event) {
     if (event.target.id === "showTrashedGridBoxes") {
