@@ -48,7 +48,7 @@ const VALIDATION_RULES = {
   },
   grid: {
     gridType: { required: true, maxLength: 255, label: "Grid Type" },
-    gridBatch: { maxLength: 100, label: "Grid Batch" },
+    gridBatch: { required: true, maxLength: 100, label: "Grid Batch" },
     glowCurrent: {
       type: "decimal",
       min: 0,
@@ -212,9 +212,12 @@ export function validateForm() {
   // Validate sample information
   const sampleFields = [
     { id: "sampleName", rules: VALIDATION_RULES.sample.sampleName },
-    { id: "sampleConcentration", rules: VALIDATION_RULES.sample.sampleConcentration },
+    {
+      id: "sampleConcentration",
+      rules: VALIDATION_RULES.sample.sampleConcentration,
+    },
     { id: "additives", rules: VALIDATION_RULES.sample.additives },
-    { id: "volume", rules: VALIDATION_RULES.sample.volume }
+    { id: "volume", rules: VALIDATION_RULES.sample.volume },
   ];
 
   sampleFields.forEach((field) => {
