@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Validation Test</title>
+    <style>
+        .error {
+            border: 2px solid red !important;
+            background-color: #fdf2f2 !important;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        .field-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Validation Test</h1>
+    
+    <div class="field-group">
+        <label for="volume">Volume [µl]</label>
+        <input type="text" id="volume" placeholder="Enter volume (e.g., 3.5)" />
+    </div>
+    
+    <div class="field-group">
+        <label for="sampleName">Sample Name</label>
+        <input type="text" id="sampleName" />
+    </div>
+    
+    <button id="testBtn">Test Validation</button>
+    <button id="fillTestData">Fill Test Data</button>
+    
+    <div style="margin-top: 20px;">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Try entering "tttt" in the volume field and click "Test Validation"</li>
+            <li>Try entering "999" in the volume field (should be over max of 99.99)</li>
+            <li>Try entering "3.555" (too many decimal places)</li>
+            <li>Leave sample name empty</li>
+        </ol>
+    </div>
+    
+    <script type="module">
+        // Inline validation rules for testing
+        const VALIDATION_RULES = {
+            sample: {
+                volume: { type: "decimal", min: 0, max: 99.99, precision: 2, label: "Default Volume (μL)" },
+                sampleName: { required: true, maxLength: 255, minLength: 1, label: "Sample Name" }
+            }
+        };
+
+        function validateField(value, rules) {
+            const errors = [];
+            
+            // Handle empty values
+            if (value === null || value === undefined || value === '') {
+                if (rules.required) {
+                    errors.push(`${rules.label} is required`);
+                }
+                return errors;
+            }
+            
+            // Type validation
+            switch (rules.type) {
+                case 'decimal':
+                    const floatValue = parseFloat(value);
+                    if (isNaN(floatValue)) {
+                        errors.push(`${rules.label} must be a valid number`);
+                        break;
+                    }
+                    if (rules.min !== undefined && floatValue < rules.min) {
+                        errors.push(`${rules.label} must be at least ${rules.min}`);
+                    }
+                    if (rules.max !== undefined && floatValue > rules.max) {
+                        errors.push(`${rules.label} must be no more than ${rules.max}`);
+                    }
+                    if (rules.precision) {
+                        const decimalPlaces = (floatValue.toString().split('.')[1] || '').length;
+                        if (decimalPlaces > rules.precision) {
+                            errors.push(`${rules.label} can have at most ${rules.precision} decimal places`);
+                        }
+                    }
+                    break;
+            }
+            
+            // String length validation
+            if (typeof value === 'string') {
+                if (rules.minLength && value.trim().length < rules.minLength) {
+                    errors.push(`${rules.label} must be at least ${rules.minLength} characters long`);
+                }
+                if (rules.maxLength && value.length > rules.maxLength) {
+                    errors.push(`${rules.label} must be no more than ${rules.maxLength} characters long`);
+                }
+            }
+            
+            return errors;
+        }
+
+        function validateFieldRealTime(fieldId, rules) {
+            const element = document.getElementById(fieldId);
+            if (!element) return;
+            
+            const errors = validateField(element.value, rules);
+            
+            // Remove existing error styling
+            element.classList.remove('error');
+            const existingError = element.parentNode.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add error styling and message if there are errors
+            if (errors.length > 0) {
+                element.classList.add('error');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = errors[0]; // Show first error
+                element.parentNode.appendChild(errorDiv);
+            }
+            
+            return errors.length === 0;
+        }
+
+        // Setup real-time validation
+        function setupValidation() {
+            Object.entries(VALIDATION_RULES.sample).forEach(([field, rules]) => {
+                const element = document.getElementById(field);
+                if (element) {
+                    element.addEventListener('blur', () => validateFieldRealTime(field, rules));
+                    element.addEventListener('input', () => {
+                        // Clear error on input to give immediate feedback
+                        setTimeout(() => validateFieldRealTime(field, rules), 300);
+                    });
+                }
+            });
+        }
+
+        // Test button
+        function testValidation() {
+            const errors = [];
+            
+            console.log('=== Validation Test Results ===');
+            
+            Object.entries(VALIDATION_RULES.sample).forEach(([field, rules]) => {
+                const element = document.getElementById(field);
+                if (element) {
+                    console.log(`Testing ${field}: "${element.value}"`);
+                    const fieldErrors = validateField(element.value, rules);
+                    if (fieldErrors.length > 0) {
+                        console.log(`  Errors: ${fieldErrors.join(', ')}`);
+                    } else {
+                        console.log(`  ✓ Valid`);
+                    }
+                    errors.push(...fieldErrors);
+                    validateFieldRealTime(field, rules);
+                }
+            });
+            
+            console.log(`Total errors: ${errors.length}`);
+            console.log('================================');
+            
+            if (errors.length > 0) {
+                alert(`Validation failed with ${errors.length} errors. Check console for details.`);
+            } else {
+                alert('All validation passed!');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupValidation();
+            document.getElementById('testBtn').addEventListener('click', testValidation);
+            document.getElementById('fillTestData').addEventListener('click', () => {
+                document.getElementById('volume').value = 'tttt';
+                document.getElementById('sampleName').value = '';
+            });
+            console.log('Validation test page initialized');
+        });
+    </script>
+</body>
+</html>

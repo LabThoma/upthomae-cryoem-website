@@ -3,3 +3,5 @@ config.php
 .env
 .DS_Store
 node_modules/
+tests_website/
+database_backups/
