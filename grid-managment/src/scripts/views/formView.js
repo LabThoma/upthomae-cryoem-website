@@ -160,6 +160,41 @@ function handleUserSelection(event) {
       // Reset to empty selection if cancelled or empty
       event.target.value = "";
     }
+  } else if (event.target.value && event.target.value !== "") {
+    // Auto-populate grid box name for existing users
+    autoPopulateGridBoxName(event.target.value);
+  } else {
+    // Clear grid box name if no user selected
+    const gridBoxNameElement = document.getElementById("gridBoxName");
+    if (gridBoxNameElement) {
+      gridBoxNameElement.value = "";
+    }
+  }
+}
+
+// Auto-populate grid box name based on selected user
+async function autoPopulateGridBoxName(userName) {
+  try {
+    const response = await fetch("http://localhost:3000/api/users");
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+
+    const users = await response.json();
+    const user = users.find((u) => u.username === userName);
+
+    if (user && user.nextBoxName) {
+      const gridBoxNameElement = document.getElementById("gridBoxName");
+      if (gridBoxNameElement) {
+        gridBoxNameElement.value = user.nextBoxName;
+        showAlert(`Grid box name set to: ${user.nextBoxName}`, "info");
+      }
+    } else {
+      console.warn(`No next box name found for user: ${userName}`);
+    }
+  } catch (error) {
+    console.error("Error auto-populating grid box name:", error);
+    showAlert("Could not auto-populate grid box name", "warning");
   }
 }
 
@@ -316,7 +351,71 @@ function handleGridTypeChange(selectElement) {
     customInput.required = false;
     customInput.value = "";
     loadGridBatches(selectElement.value);
+
+    // Auto-populate glow discharge settings based on grid type
+    autoPopulateGlowDischargeSettings(selectElement.value);
   }
+}
+
+// Auto-populate glow discharge settings based on grid type
+function autoPopulateGlowDischargeSettings(gridType) {
+  if (!gridType) return;
+
+  const glowDischargeCheckbox = document.getElementById("glowDischarge");
+  const glowCurrentInput = document.getElementById("glowCurrent");
+  const glowTimeInput = document.getElementById("glowTime");
+  const glowDischargeSettings = document.getElementById(
+    "glowDischargeSettings"
+  );
+
+  const gridTypeUpper = gridType.toUpperCase();
+
+  if (
+    gridTypeUpper.startsWith("QF") ||
+    gridTypeUpper.startsWith("QUANTIFOIL")
+  ) {
+    // Quantifoil grids: enable glow discharge, 15mA, 60s
+    if (glowDischargeCheckbox) {
+      glowDischargeCheckbox.checked = true;
+    }
+    if (glowCurrentInput) {
+      glowCurrentInput.value = "15";
+    }
+    if (glowTimeInput) {
+      glowTimeInput.value = "60";
+    }
+    // Show the glow discharge settings section
+    if (glowDischargeSettings) {
+      glowDischargeSettings.style.display = "grid";
+    }
+    showAlert(
+      "Glow discharge settings auto-populated for Quantifoil (15mA, 60s)",
+      "info"
+    );
+  } else if (
+    gridTypeUpper.startsWith("UF") ||
+    gridTypeUpper.startsWith("ULTRAFOIL")
+  ) {
+    // Ultrafoil grids: enable glow discharge, 15mA, 90s
+    if (glowDischargeCheckbox) {
+      glowDischargeCheckbox.checked = true;
+    }
+    if (glowCurrentInput) {
+      glowCurrentInput.value = "15";
+    }
+    if (glowTimeInput) {
+      glowTimeInput.value = "90";
+    }
+    // Show the glow discharge settings section
+    if (glowDischargeSettings) {
+      glowDischargeSettings.style.display = "grid";
+    }
+    showAlert(
+      "Glow discharge settings auto-populated for Ultrafoil (15mA, 90s)",
+      "info"
+    );
+  }
+  // For other grid types, don't change any settings (leave as user set them)
 }
 
 // Load grid batches for the selected grid type
