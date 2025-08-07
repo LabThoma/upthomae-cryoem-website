@@ -27,16 +27,20 @@ function validateSession($session) {
         $errors[] = 'Grid box name cannot exceed 100 characters';
     }
     
-    if (isset($session['loading_order']) && (!is_numeric($session['loading_order']) || $session['loading_order'] < 1)) {
-        $errors[] = 'Loading order must be a positive number';
+    if (!empty($session['loading_order'])) {
+        if (!is_numeric($session['loading_order']) || $session['loading_order'] < 1) {
+            $errors[] = 'Loading order must be a positive number';
+        }
     }
     
     if (!empty($session['puck_name']) && strlen($session['puck_name']) > 100) {
         $errors[] = 'Puck name cannot exceed 100 characters';
     }
     
-    if (isset($session['puck_position']) && (!is_numeric($session['puck_position']) || $session['puck_position'] < 1)) {
-        $errors[] = 'Puck position must be a positive number';
+    if (!empty($session['puck_position'])) {
+        if (!is_numeric($session['puck_position']) || $session['puck_position'] < 1) {
+            $errors[] = 'Puck position must be a positive number';
+        }
     }
     
     return $errors;
@@ -45,31 +49,31 @@ function validateSession($session) {
 function validateVitrobotSettings($settings) {
     $errors = [];
     
-    if (isset($settings['humidity_percent'])) {
+    if (!empty($settings['humidity_percent'])) {
         if (!is_numeric($settings['humidity_percent']) || $settings['humidity_percent'] < 0 || $settings['humidity_percent'] > 100) {
             $errors[] = 'Humidity must be a number between 0 and 100';
         }
     }
     
-    if (isset($settings['temperature_c'])) {
+    if (!empty($settings['temperature_c'])) {
         if (!is_numeric($settings['temperature_c']) || $settings['temperature_c'] < -50 || $settings['temperature_c'] > 50) {
             $errors[] = 'Temperature must be a number between -50 and 50°C';
         }
     }
     
-    if (isset($settings['blot_force'])) {
+    if (!empty($settings['blot_force'])) {
         if (!is_numeric($settings['blot_force']) || $settings['blot_force'] < 0 || $settings['blot_force'] > 20) {
             $errors[] = 'Blot force must be a number between 0 and 20';
         }
     }
     
-    if (isset($settings['blot_time_seconds'])) {
+    if (!empty($settings['blot_time_seconds'])) {
         if (!is_numeric($settings['blot_time_seconds']) || $settings['blot_time_seconds'] < 0 || $settings['blot_time_seconds'] > 30) {
             $errors[] = 'Blot time must be a number between 0 and 30 seconds';
         }
     }
     
-    if (isset($settings['wait_time_seconds'])) {
+    if (!empty($settings['wait_time_seconds'])) {
         if (!is_numeric($settings['wait_time_seconds']) || $settings['wait_time_seconds'] < 0 || $settings['wait_time_seconds'] > 30) {
             $errors[] = 'Wait time must be a number between 0 and 30 seconds';
         }
@@ -89,13 +93,13 @@ function validateGridInfo($gridInfo) {
         $errors[] = 'Grid batch cannot exceed 100 characters';
     }
     
-    if (isset($gridInfo['glow_discharge_current'])) {
+    if (!empty($gridInfo['glow_discharge_current'])) {
         if (!is_numeric($gridInfo['glow_discharge_current']) || $gridInfo['glow_discharge_current'] < 0 || $gridInfo['glow_discharge_current'] > 50) {
             $errors[] = 'Glow discharge current must be a number between 0 and 50 mA';
         }
     }
     
-    if (isset($gridInfo['glow_discharge_time'])) {
+    if (!empty($gridInfo['glow_discharge_time'])) {
         if (!is_numeric($gridInfo['glow_discharge_time']) || $gridInfo['glow_discharge_time'] < 0 || $gridInfo['glow_discharge_time'] > 300) {
             $errors[] = 'Glow discharge time must be a number between 0 and 300 seconds';
         }
@@ -121,7 +125,7 @@ function validateSample($sample) {
         $errors[] = 'Additives cannot exceed 500 characters';
     }
     
-    if (isset($sample['default_volume_ul'])) {
+    if (!empty($sample['default_volume_ul'])) {
         if (!is_numeric($sample['default_volume_ul']) || $sample['default_volume_ul'] <= 0 || $sample['default_volume_ul'] > 20) {
             $errors[] = 'Default volume must be a number between 0 and 20 μL';
         }
@@ -139,19 +143,19 @@ function validateGridPreparation($grid) {
         }
     }
     
-    if (isset($grid['volume_ul_override'])) {
+    if (!empty($grid['volume_ul_override'])) {
         if (!is_numeric($grid['volume_ul_override']) || $grid['volume_ul_override'] <= 0 || $grid['volume_ul_override'] > 20) {
             $errors[] = 'Volume override must be a number between 0 and 20 μL';
         }
     }
     
-    if (isset($grid['blot_time_override'])) {
+    if (!empty($grid['blot_time_override'])) {
         if (!is_numeric($grid['blot_time_override']) || $grid['blot_time_override'] < 0 || $grid['blot_time_override'] > 30) {
             $errors[] = 'Blot time override must be a number between 0 and 30 seconds';
         }
     }
     
-    if (isset($grid['blot_force_override'])) {
+    if (!empty($grid['blot_force_override'])) {
         if (!is_numeric($grid['blot_force_override']) || $grid['blot_force_override'] < 0 || $grid['blot_force_override'] > 20) {
             $errors[] = 'Blot force override must be a number between 0 and 20';
         }
@@ -205,13 +209,13 @@ function validateGridType($gridType) {
         $errors[] = 'Manufacturer cannot exceed 100 characters';
     }
     
-    if (isset($gridType['grids_per_box'])) {
+    if (!empty($gridType['grids_per_box'])) {
         if (!is_numeric($gridType['grids_per_box']) || $gridType['grids_per_box'] < 1 || $gridType['grids_per_box'] > 200) {
             $errors[] = 'Grids per box must be a number between 1 and 200';
         }
     }
     
-    if (isset($gridType['cost_per_grid'])) {
+    if (!empty($gridType['cost_per_grid'])) {
         if (!is_numeric($gridType['cost_per_grid']) || $gridType['cost_per_grid'] < 0) {
             $errors[] = 'Cost per grid must be a positive number';
         }
@@ -267,6 +271,34 @@ function validateCompleteSession($input) {
     }
     
     return $allErrors;
+}
+
+// Helper function to flatten nested validation errors into a single array of strings
+function flattenValidationErrors($errors, $prefix = '') {
+    $flattened = [];
+    
+    foreach ($errors as $key => $value) {
+        if (is_array($value)) {
+            if (is_numeric($key)) {
+                // For numeric keys (like grid indices), create a more readable prefix
+                $newPrefix = $prefix ? $prefix . "[item " . $key . "]" : "Item " . $key;
+            } else {
+                // For string keys, append to prefix
+                $newPrefix = $prefix ? $prefix . "." . $key : $key;
+            }
+            
+            $flattened = array_merge($flattened, flattenValidationErrors($value, $newPrefix));
+        } else {
+            // This is a string error message
+            if ($prefix) {
+                $flattened[] = $prefix . ": " . $value;
+            } else {
+                $flattened[] = $value;
+            }
+        }
+    }
+    
+    return $flattened;
 }
 
 ?>

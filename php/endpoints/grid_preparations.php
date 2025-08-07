@@ -25,7 +25,7 @@ function trashGridPreparation($db, $prepId) {
             [$prepId]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid preparation not found', 404);
         }
         
@@ -43,7 +43,7 @@ function untrashGridPreparation($db, $prepId) {
             [$prepId]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid preparation not found', 404);
         }
         

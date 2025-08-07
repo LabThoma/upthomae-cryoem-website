@@ -123,9 +123,20 @@ export async function saveUpdate(event) {
       });
       result = await response.json();
       if (!response.ok) {
-        throw new Error(
-          result.message || result.error || "Failed to update session data"
-        );
+        // Handle error response - ensure we get a string message
+        let errorMessage = "Failed to update session data";
+        if (result.message) {
+          errorMessage =
+            typeof result.message === "string"
+              ? result.message
+              : JSON.stringify(result.message);
+        } else if (result.error) {
+          errorMessage =
+            typeof result.error === "string"
+              ? result.error
+              : JSON.stringify(result.error);
+        }
+        throw new Error(errorMessage);
       }
       console.log("Session updated successfully:", result);
       alertSystem.showAlert("Grid box data updated successfully!", "success");
@@ -141,9 +152,20 @@ export async function saveUpdate(event) {
       });
       result = await response.json();
       if (!response.ok) {
-        throw new Error(
-          result.message || result.error || "Failed to save session data"
-        );
+        // Handle error response - ensure we get a string message
+        let errorMessage = "Failed to save session data";
+        if (result.message) {
+          errorMessage =
+            typeof result.message === "string"
+              ? result.message
+              : JSON.stringify(result.message);
+        } else if (result.error) {
+          errorMessage =
+            typeof result.error === "string"
+              ? result.error
+              : JSON.stringify(result.error);
+        }
+        throw new Error(errorMessage);
       }
       console.log("Session created successfully:", result);
       alertSystem.showAlert("New grid box created successfully!", "success");

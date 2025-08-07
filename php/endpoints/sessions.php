@@ -3,9 +3,6 @@ require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../validation.php');
 
 function handleSessions($method, $path, $db, $input) {
-    // Debug logging
-    error_log("handleSessions called - Method: $method, Path: $path");
-    
     switch ($method) {
         case 'GET':
             if ($path === '/api/sessions') {
@@ -21,12 +18,9 @@ function handleSessions($method, $path, $db, $input) {
             break;
             
         case 'POST':
-            error_log("POST case reached for sessions");
             if ($path === '/api/sessions') {
-                error_log("Calling createSession");
                 createSession($db, $input);
             } else {
-                error_log("POST path didn't match: $path");
                 sendError('Sessions endpoint not found', 404);
             }
             break;
@@ -172,13 +166,13 @@ function trashAllGridsInSession($db, $sessionId) {
             [$sessionId]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('No grid preparations found for this session or already trashed', 404);
         }
         
         sendResponse([
             'message' => 'All grids in grid box marked as trashed successfully',
-            'affectedRows' => $result['affectedRows']
+            'affectedRows' => $result['rowCount']
         ]);
     } catch (Exception $e) {
         error_log("Error marking all grids in session as trashed: " . $e->getMessage());
@@ -207,14 +201,13 @@ function getGridTypeByBatch($db, $batchNumber) {
 
 // I'll continue with createSession and updateSession in the next part due to their complexity
 function createSession($db, $input) {
-    // Debug logging
-    error_log("createSession called with input: " . json_encode($input));
-    
     // Validate input
     $validationErrors = validateCompleteSession($input);
     if (!empty($validationErrors)) {
-        error_log("Validation errors: " . json_encode($validationErrors));
-        sendError(['message' => 'Validation failed', 'errors' => $validationErrors], 400);
+        // Flatten nested validation errors into a single array of strings
+        $flattenedErrors = flattenValidationErrors($validationErrors);
+        $errorMessage = 'Validation failed: ' . implode(', ', $flattenedErrors);
+        sendError($errorMessage, 400);
     }
     
     // Validate required fields
@@ -241,33 +234,86 @@ function createSession($db, $input) {
             "INSERT INTO sessions (user_name, date, grid_box_name, loading_order, puck_name, puck_position) 
              VALUES (?, ?, ?, ?, ?, ?)",
             [
-                $session['user_name'],
-                $session['date'],
-                $session['grid_box_name'] ?? null,
-                $session['loading_order'] ?? null,
-                $session['puck_name'] ?? null,
-                $session['puck_position'] ?? null
+                emptyToNull($session['user_name']),
+                emptyToNull($session['date']),
+                emptyToNull($session['grid_box_name'] ?? null),
+                emptyToNull($session['loading_order'] ?? null),
+                emptyToNull($session['puck_name'] ?? null),
+                emptyToNull($session['puck_position'] ?? null)
             ]
         );
         
         $sessionId = $sessionResult['insertId'];
         
         // THEN insert grid info using the sessionId
+        $glowDischargeCurrent = $grid_info['glow_discharge_current'] ?? null;
+        $glowDischargeTime = $grid_info['glow_discharge_time'] ?? null;
+        
+        // Convert string numbers to proper types
+        if ($glowDischargeCurrent !== null && $glowDischargeCurrent !== '') {
+            $glowDischargeCurrent = floatval($glowDischargeCurrent);
+        } else {
+            $glowDischargeCurrent = null;
+        }
+        
+        if ($glowDischargeTime !== null && $glowDischargeTime !== '') {
+            $glowDischargeTime = intval($glowDischargeTime);
+        } else {
+            $glowDischargeTime = null;
+        }
+        
         $gridResult = $db->execute(
             "INSERT INTO grids (session_id, grid_type, grid_batch, glow_discharge_applied, 
               glow_discharge_current, glow_discharge_time)
              VALUES (?, ?, ?, ?, ?, ?)",
             [
                 $sessionId,
-                $grid_info['grid_type'] ?? null,
-                $grid_info['grid_batch'] ?? null,
+                emptyToNull($grid_info['grid_type'] ?? null),
+                emptyToNull($grid_info['grid_batch'] ?? null),
                 ($grid_info['glow_discharge_applied'] ?? false) ? 1 : 0,
-                $grid_info['glow_discharge_current'] ?? null,
-                $grid_info['glow_discharge_time'] ?? null
+                $glowDischargeCurrent,
+                $glowDischargeTime
             ]
         );
         
         $gridId = $gridResult['insertId'];
+        
+        // Convert numeric string values to proper types for vitrobot settings
+        $humidityPercent = $vitrobot_settings['humidity_percent'] ?? null;
+        $temperatureC = $vitrobot_settings['temperature_c'] ?? null;
+        $blotForce = $vitrobot_settings['blot_force'] ?? null;
+        $blotTimeSeconds = $vitrobot_settings['blot_time_seconds'] ?? null;
+        $waitTimeSeconds = $vitrobot_settings['wait_time_seconds'] ?? null;
+        
+        if ($humidityPercent !== null && $humidityPercent !== '') {
+            $humidityPercent = floatval($humidityPercent);
+        } else {
+            $humidityPercent = null;
+        }
+        
+        if ($temperatureC !== null && $temperatureC !== '') {
+            $temperatureC = floatval($temperatureC);
+        } else {
+            $temperatureC = null;
+        }
+        
+        if ($blotForce !== null && $blotForce !== '') {
+            $blotForce = floatval($blotForce);
+        } else {
+            $blotForce = null;
+        }
+        
+        if ($blotTimeSeconds !== null && $blotTimeSeconds !== '') {
+            $blotTimeSeconds = floatval($blotTimeSeconds);
+        } else {
+            $blotTimeSeconds = null;
+        }
+        
+        if ($waitTimeSeconds !== null && $waitTimeSeconds !== '') {
+            $waitTimeSeconds = floatval($waitTimeSeconds);
+        } else {
+            $waitTimeSeconds = null;
+        }
         
         // Insert vitrobot settings
         $db->execute(
@@ -275,11 +321,11 @@ function createSession($db, $input) {
              VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
                 $sessionId,
-                $vitrobot_settings['humidity_percent'] ?? null,
-                $vitrobot_settings['temperature_c'] ?? null,
-                $vitrobot_settings['blot_force'] ?? null,
-                $vitrobot_settings['blot_time_seconds'] ?? null,
-                $vitrobot_settings['wait_time_seconds'] ?? null,
+                $humidityPercent,
+                $temperatureC,
+                $blotForce,
+                $blotTimeSeconds,
+                $waitTimeSeconds,
                 ($vitrobot_settings['glow_discharge_applied'] ?? false) ? 1 : 0
             ]
         );
@@ -307,10 +353,10 @@ function createSession($db, $input) {
                         $sampleResult = $db->execute(
                             "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
                             [
-                                $grid['sample_name'],
-                                $grid['sample_concentration'] ?? null,
-                                $grid['additives'] ?? null,
-                                $grid['default_volume_ul'] ?? null
+                                emptyToNull($grid['sample_name']),
+                                emptyToNull($grid['sample_concentration'] ?? null),
+                                emptyToNull($grid['additives'] ?? null),
+                                emptyToNull($grid['default_volume_ul'] ?? null)
                             ]
                         );
                         $sampleId = $sampleResult['insertId'];
@@ -328,6 +374,36 @@ function createSession($db, $input) {
                 // Use manual override if provided, otherwise use auto-populated value
                 $finalGridTypeOverride = $grid['grid_type_override'] ?? $gridTypeOverride;
                 
+                // Convert numeric string values to proper types for grid preparations
+                $slotNumber = $grid['slot_number'] ?? null;
+                $volumeOverride = $grid['volume_ul_override'] ?? null;
+                $blotTimeOverride = $grid['blot_time_override'] ?? null;
+                $blotForceOverride = $grid['blot_force_override'] ?? null;
+                
+                if ($slotNumber !== null && $slotNumber !== '') {
+                    $slotNumber = intval($slotNumber);
+                } else {
+                    $slotNumber = null;
+                }
+                
+                if ($volumeOverride !== null && $volumeOverride !== '') {
+                    $volumeOverride = floatval($volumeOverride);
+                } else {
+                    $volumeOverride = null;
+                }
+                
+                if ($blotTimeOverride !== null && $blotTimeOverride !== '') {
+                    $blotTimeOverride = floatval($blotTimeOverride);
+                } else {
+                    $blotTimeOverride = null;
+                }
+                
+                if ($blotForceOverride !== null && $blotForceOverride !== '') {
+                    $blotForceOverride = floatval($blotForceOverride);
+                } else {
+                    $blotForceOverride = null;
+                }
+                
                 // Insert grid preparation
                 $db->execute(
                     "INSERT INTO grid_preparations (
@@ -338,16 +414,16 @@ function createSession($db, $input) {
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $sessionId,
-                        $grid['slot_number'] ?? null,
+                        $slotNumber,
                         $sampleId,
                         $gridId,
-                        $grid['volume_ul_override'] ?? null,
-                        $grid['blot_time_override'] ?? null,
-                        $grid['blot_force_override'] ?? null,
-                        $grid['grid_batch_override'] ?? null,
-                        $finalGridTypeOverride,
-                        $grid['comments'] ?? null,
-                        $grid['additives_override'] ?? null,
+                        $volumeOverride,
+                        $blotTimeOverride,
+                        $blotForceOverride,
+                        emptyToNull($grid['grid_batch_override'] ?? null),
+                        emptyToNull($finalGridTypeOverride),
+                        emptyToNull($grid['comments'] ?? null),
+                        emptyToNull($grid['additives_override'] ?? null),
                         $grid['include_in_session'] ? 1 : 0,
                         $grid['trashed'] ?? 0,
                         $grid['trashed_at'] ?? null
@@ -374,7 +450,10 @@ function updateSession($db, $sessionId, $input) {
     // Validate input if provided
     $validationErrors = validateCompleteSession($input);
     if (!empty($validationErrors)) {
-        sendError(['message' => 'Validation failed', 'errors' => $validationErrors], 400);
+        // Flatten nested validation errors into a single array of strings
+        $flattenedErrors = flattenValidationErrors($validationErrors);
+        $errorMessage = 'Validation failed: ' . implode(', ', $flattenedErrors);
+        sendError($errorMessage, 400);
     }
     
     $session = $input['session'] ?? null;
@@ -391,12 +470,12 @@ function updateSession($db, $sessionId, $input) {
                 "UPDATE sessions SET user_name = ?, date = ?, grid_box_name = ?, loading_order = ?, puck_name = ?, puck_position = ?, updated_at = CURRENT_TIMESTAMP
                  WHERE session_id = ?",
                 [
-                    $session['user_name'],
-                    $session['date'],
-                    $session['grid_box_name'] ?? null,
-                    $session['loading_order'] ?? null,
-                    $session['puck_name'] ?? null,
-                    $session['puck_position'] ?? null,
+                    emptyToNull($session['user_name']),
+                    emptyToNull($session['date']),
+                    emptyToNull($session['grid_box_name'] ?? null),
+                    emptyToNull($session['loading_order'] ?? null),
+                    emptyToNull($session['puck_name'] ?? null),
+                    emptyToNull($session['puck_position'] ?? null),
                     $sessionId
                 ]
             );
@@ -415,11 +494,11 @@ function updateSession($db, $sessionId, $input) {
                       updated_at = CURRENT_TIMESTAMP
                      WHERE session_id = ?",
                     [
-                        $grid_info['grid_type'] ?? null,
-                        $grid_info['grid_batch'] ?? null,
+                        emptyToNull($grid_info['grid_type'] ?? null),
+                        emptyToNull($grid_info['grid_batch'] ?? null),
                         ($grid_info['glow_discharge_applied'] ?? false) ? 1 : 0,
-                        $grid_info['glow_discharge_current'] ?? null,
-                        $grid_info['glow_discharge_time'] ?? null,
+                        emptyToNull($grid_info['glow_discharge_current'] ?? null),
+                        emptyToNull($grid_info['glow_discharge_time'] ?? null),
                         $sessionId
                     ]
                 );
@@ -432,11 +511,11 @@ function updateSession($db, $sessionId, $input) {
                   ) VALUES (?, ?, ?, ?, ?, ?)",
                     [
                         $sessionId,
-                        $grid_info['grid_type'] ?? null,
-                        $grid_info['grid_batch'] ?? null,
+                        emptyToNull($grid_info['grid_type'] ?? null),
+                        emptyToNull($grid_info['grid_batch'] ?? null),
                         ($grid_info['glow_discharge_applied'] ?? false) ? 1 : 0,
-                        $grid_info['glow_discharge_current'] ?? null,
-                        $grid_info['glow_discharge_time'] ?? null
+                        emptyToNull($grid_info['glow_discharge_current'] ?? null),
+                        emptyToNull($grid_info['glow_discharge_time'] ?? null)
                     ]
                 );
             }
@@ -448,11 +527,11 @@ function updateSession($db, $sessionId, $input) {
                 "UPDATE vitrobot_settings SET humidity_percent = ?, temperature_c = ?, blot_force = ?, blot_time_seconds = ?, wait_time_seconds = ?, glow_discharge_applied = ?, updated_at = CURRENT_TIMESTAMP
                  WHERE session_id = ?",
                 [
-                    $vitrobot_settings['humidity_percent'] ?? null,
-                    $vitrobot_settings['temperature_c'] ?? null,
-                    $vitrobot_settings['blot_force'] ?? null,
-                    $vitrobot_settings['blot_time_seconds'] ?? null,
-                    $vitrobot_settings['wait_time_seconds'] ?? null,
+                    emptyToNull($vitrobot_settings['humidity_percent'] ?? null),
+                    emptyToNull($vitrobot_settings['temperature_c'] ?? null),
+                    emptyToNull($vitrobot_settings['blot_force'] ?? null),
+                    emptyToNull($vitrobot_settings['blot_time_seconds'] ?? null),
+                    emptyToNull($vitrobot_settings['wait_time_seconds'] ?? null),
                     ($vitrobot_settings['glow_discharge_applied'] ?? false) ? 1 : 0,
                     $sessionId
                 ]
@@ -482,9 +561,9 @@ function updateSession($db, $sessionId, $input) {
                             $db->execute(
                                 "UPDATE samples SET sample_name = ?, sample_concentration = ?, additives = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
                                 [
-                                    $grid['sample_name'],
-                                    $grid['sample_concentration'] ?? null,
-                                    $grid['additives'] ?? null,
+                                    emptyToNull($grid['sample_name']),
+                                    emptyToNull($grid['sample_concentration'] ?? null),
+                                    emptyToNull($grid['additives'] ?? null),
                                     $sampleId
                                 ]
                             );
@@ -505,10 +584,10 @@ function updateSession($db, $sessionId, $input) {
                             $sampleResult = $db->execute(
                                 "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
                                 [
-                                    $grid['sample_name'],
-                                    $grid['sample_concentration'] ?? null,
-                                    $grid['additives'] ?? null,
-                                    $grid['default_volume_ul'] ?? null
+                                    emptyToNull($grid['sample_name']),
+                                    emptyToNull($grid['sample_concentration'] ?? null),
+                                    emptyToNull($grid['additives'] ?? null),
+                                    emptyToNull($grid['default_volume_ul'] ?? null)
                                 ]
                             );
                             $sampleId = $sampleResult['insertId'];
@@ -532,16 +611,16 @@ function updateSession($db, $sessionId, $input) {
                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         [
                             $sessionId,
-                            $grid['slot_number'] ?? null,
+                            emptyToNull($grid['slot_number'] ?? null),
                             $sampleId,
                             $gridId,
-                            $grid['volume_ul_override'] ?? null,
-                            $grid['blot_time_override'] ?? null,
-                            $grid['blot_force_override'] ?? null,
-                            $grid['grid_batch_override'] ?? null,
-                            $finalGridTypeOverride,
-                            $grid['comments'] ?? null,
-                            $grid['additives_override'] ?? null,
+                            emptyToNull($grid['volume_ul_override'] ?? null),
+                            emptyToNull($grid['blot_time_override'] ?? null),
+                            emptyToNull($grid['blot_force_override'] ?? null),
+                            emptyToNull($grid['grid_batch_override'] ?? null),
+                            emptyToNull($finalGridTypeOverride),
+                            emptyToNull($grid['comments'] ?? null),
+                            emptyToNull($grid['additives_override'] ?? null),
                             $grid['include_in_session'] ? 1 : 0,
                             $grid['trashed'] ?? 0,
                             $grid['trashed_at'] ?? null
