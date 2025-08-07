@@ -298,7 +298,7 @@ function updateGridType($db, $gridTypeId, $input) {
             ]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid type not found', 404);
         }
         
@@ -313,7 +313,7 @@ function deleteGridType($db, $gridTypeId) {
     try {
         $result = $db->execute("DELETE FROM grid_types WHERE grid_type_id = ?", [$gridTypeId]);
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid type not found', 404);
         }
         
@@ -331,7 +331,7 @@ function markGridTypeAsEmpty($db, $gridTypeId) {
             [$gridTypeId]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid type not found', 404);
         }
         
@@ -349,7 +349,7 @@ function markGridTypeAsInUse($db, $gridTypeId) {
             [$gridTypeId]
         );
         
-        if ($result['affectedRows'] === 0) {
+        if ($result['rowCount'] === 0) {
             sendError('Grid type not found', 404);
         }
         
