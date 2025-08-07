@@ -10,7 +10,7 @@ let currentGridData = null;
 let currentSlotNumber = null;
 
 export function showGridModal(sessionId, slotNumber) {
-  fetch(`http://localhost:3000/api/sessions/${sessionId}`)
+  fetch(`/api/sessions/${sessionId}`)
     .then((response) => {
       if (!response.ok) throw new Error(`Failed to fetch session ${sessionId}`);
       return response.json();
@@ -651,16 +651,13 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
   }
 
   // Send update request
-  const response = await fetch(
-    `http://localhost:3000/api/sessions/${sessionId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    }
-  );
+  const response = await fetch(`/api/sessions/${sessionId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updateData),
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to update session: ${response.status}`);
