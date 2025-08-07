@@ -4,7 +4,7 @@ RewriteEngine On
 
 # Handle API routes - now using the full API
 
-RewriteRule ^api/(.\*)$ php/api.php?path=/api/$1 [L,QSA]
+RewriteRule ^api/(.*)$ php/api.php?path=/api/$1 [L,QSA]
 
 # Handle static files (allow them to be served directly)
 

@@ -420,7 +420,7 @@ function autoPopulateGlowDischargeSettings(gridType) {
 async function loadGridBatches(gridTypeName) {
   try {
     const response = await fetch(
-      `/api/grid-types/batches/${encodeURIComponent(gridTypeName)}`
+      `/api/grid-types/batches?type=${encodeURIComponent(gridTypeName)}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch grid batches");

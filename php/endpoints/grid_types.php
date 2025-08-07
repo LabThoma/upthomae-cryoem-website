@@ -9,9 +9,34 @@ function handleGridTypes($method, $path, $db, $input) {
                 getGridTypes($db);
             } elseif ($path === '/api/grid-types/summary') {
                 getGridTypesSummary($db);
-            } elseif (preg_match('/^\/api\/grid-types\/batches\/(.+)$/', $path, $matches)) {
-                $gridTypeName = urldecode($matches[1]);
+            } elseif ($path === '/api/grid-types/batches') {
+                // Use query parameter instead of path parameter to avoid URL encoding issues
+                $gridTypeName = $_GET['type'] ?? null;
+                if (!$gridTypeName) {
+                    sendError('Grid type parameter is required', 400);
+                    return;
+                }
                 getGridTypeBatches($db, $gridTypeName);
+                getGridTypes($db);
+            } elseif ($path === '/api/grid-types/summary') {
+                getGridTypesSummary($db);
+            } elseif ($path === '/api/grid-types/batches') {
+                // Use query parameter instead of path parameter to avoid URL encoding issues
+                $gridTypeName = $_GET['type'] ?? null;
+                if (!$gridTypeName) {
+                    sendError('Grid type parameter is required', 400);
+                    return;
+                }
+                getGridTypeBatches($db, $gridTypeName);
+            } elseif ($path === '/api/grid-types/debug') {
+                // Temporary debug endpoint
+                sendResponse([
+                    'received_path' => $path,
+                    'path_length' => strlen($path),
+                    'path_bytes' => bin2hex($path),
+                    'get_params' => $_GET,
+                    'server_request_uri' => $_SERVER['REQUEST_URI'] ?? 'not set'
+                ]);
             } elseif (preg_match('/^\/api\/grid-types\/(\d+)\/details$/', $path, $matches)) {
                 $gridTypeId = (int)$matches[1];
                 getGridTypeDetails($db, $gridTypeId);
@@ -224,16 +249,16 @@ function createGridType($db, $input) {
                 extra_info, quantity
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
-                $input['grid_type_name'] ?? null,
-                $input['manufacturer'] ?? null,
-                $input['support'] ?? null,
-                $input['spacing'] ?? null,
-                $input['grid_material'] ?? null,
-                $input['grid_mesh'] ?? null,
-                $input['extra_layer'] ?? null,
-                $input['extra_layer_thickness'] ?? null,
-                $input['q_number'] ?? null,
-                $input['extra_info'] ?? null,
+                emptyToNull($input['grid_type_name'] ?? null),
+                emptyToNull($input['manufacturer'] ?? null),
+                emptyToNull($input['support'] ?? null),
+                emptyToNull($input['spacing'] ?? null),
+                emptyToNull($input['grid_material'] ?? null),
+                emptyToNull($input['grid_mesh'] ?? null),
+                emptyToNull($input['extra_layer'] ?? null),
+                emptyToNull($input['extra_layer_thickness'] ?? null),
+                emptyToNull($input['q_number'] ?? null),
+                emptyToNull($input['extra_info'] ?? null),
                 isset($input['quantity']) ? (int)$input['quantity'] : null
             ]
         );
@@ -258,16 +283,16 @@ function updateGridType($db, $gridTypeId, $input) {
                 quantity = ?, updated_at = NOW()
             WHERE grid_type_id = ?",
             [
-                $input['grid_type_name'] ?? null,
-                $input['manufacturer'] ?? null,
-                $input['support'] ?? null,
-                $input['spacing'] ?? null,
-                $input['grid_material'] ?? null,
-                $input['grid_mesh'] ?? null,
-                $input['extra_layer'] ?? null,
-                $input['extra_layer_thickness'] ?? null,
-                $input['q_number'] ?? null,
-                $input['extra_info'] ?? null,
+                emptyToNull($input['grid_type_name'] ?? null),
+                emptyToNull($input['manufacturer'] ?? null),
+                emptyToNull($input['support'] ?? null),
+                emptyToNull($input['spacing'] ?? null),
+                emptyToNull($input['grid_material'] ?? null),
+                emptyToNull($input['grid_mesh'] ?? null),
+                emptyToNull($input['extra_layer'] ?? null),
+                emptyToNull($input['extra_layer_thickness'] ?? null),
+                emptyToNull($input['q_number'] ?? null),
+                emptyToNull($input['extra_info'] ?? null),
                 isset($input['quantity']) ? (int)$input['quantity'] : null,
                 $gridTypeId
             ]

@@ -381,9 +381,7 @@ function displayGridSummary(summaryData) {
       <td>
         <span class="expandable-row-icon" data-grid-type-name="${encodeURIComponent(
           gridType.grid_type_name
-        )}" onclick="toggleGridType('${encodeURIComponent(
-      gridType.grid_type_name
-    )}')">▶</span>
+        )}">▶</span>
         ${gridType.grid_type_name || "Unnamed Grid Type"} (${
       gridType.batch_count
     } batch${gridType.batch_count !== 1 ? "es" : ""})
@@ -454,7 +452,7 @@ async function loadGridTypeBatches(gridTypeName, container) {
   try {
     container.innerHTML = "Fetching batch data...";
     const response = await fetch(
-      `/api/grid-types/batches/${encodeURIComponent(gridTypeName)}`
+      `/api/grid-types/batches?type=${encodeURIComponent(gridTypeName)}`
     );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
