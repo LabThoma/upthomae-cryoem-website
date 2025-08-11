@@ -182,6 +182,7 @@
       </div>
     </div>
 
+    
     <!-- Load main script as a module -->
     <script type="module" src="scripts/main.js"></script>
   </body>

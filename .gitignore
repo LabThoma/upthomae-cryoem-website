@@ -1,7 +1,22 @@
-config.php
-*.log
-.env
-.DS_Store
-node_modules/
+# Environment-specific configs (NEVER commit these)
+private/config.local.php
+private/config.production.php
+entra/.env
+
+# Development-only files
+router.php
+
+# Generated files
+vendor/
+logs/
+sessions/
+tmp/
+
+# Debug files  
+debug-*.php
+debug-*.html
+*-test.php
+*-test.html
+
 tests_website/
 database_backups/
