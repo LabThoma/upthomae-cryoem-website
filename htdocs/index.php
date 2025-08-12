@@ -49,6 +49,9 @@
               Clear Form
             </button>
           </div>
+
+          <!-- Bottom Alert Container for Input Form -->
+          <div id="alertContainerBottom"></div>
         </div>
 
         <!-- Database View -->
