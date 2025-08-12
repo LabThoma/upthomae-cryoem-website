@@ -38,8 +38,8 @@ function validateSession($session) {
     }
     
     if (!empty($session['puck_position'])) {
-        if (!is_numeric($session['puck_position']) || $session['puck_position'] < 1) {
-            $errors[] = 'Puck position must be a positive number';
+        if (!is_numeric($session['puck_position']) || $session['puck_position'] < 1 || $session['puck_position'] > 12) {
+            $errors[] = 'Puck position must be a number between 1 and 12';
         }
     }
     

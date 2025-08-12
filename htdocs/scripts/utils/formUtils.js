@@ -13,7 +13,13 @@ const VALIDATION_RULES = {
     gridBoxName: { required: false, maxLength: 255, label: "Grid Box Name" },
     loadingOrder: { required: false, maxLength: 255, label: "Loading Order" },
     puckName: { required: false, maxLength: 255, label: "Puck Name" },
-    puckPosition: { required: false, maxLength: 255, label: "Puck Position" },
+    puckPosition: {
+      required: false,
+      type: "integer",
+      min: 1,
+      max: 12,
+      label: "Puck Position",
+    },
   },
   vitrobot: {
     humidity: {

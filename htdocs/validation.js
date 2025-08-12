@@ -11,7 +11,7 @@ const VALIDATION_SCHEMAS = {
     grid_box_name: { type: "string", required: false, maxLength: 255 },
     loading_order: { type: "string", required: false, maxLength: 255 },
     puck_name: { type: "string", required: false, maxLength: 255 },
-    puck_position: { type: "string", required: false, maxLength: 255 },
+    puck_position: { type: "integer", required: false, min: 1, max: 12 },
   },
 
   vitrobot_settings: {
