@@ -226,6 +226,25 @@ function getRowValue(row, selector) {
   if (selector === ".grid-slot") {
     return row.getAttribute("data-slot") || "";
   }
+
+  // Special case for grid batch override dropdown
+  if (selector === ".grid-batch-override") {
+    const dropdown = row.querySelector(".grid-batch-override");
+    const customInput = row.querySelector(".grid-batch-override-custom");
+
+    if (dropdown && customInput) {
+      // If custom input is visible and has a value, use that
+      if (customInput.style.display !== "none" && customInput.value) {
+        return customInput.value;
+      }
+      // Otherwise use dropdown value (but not if it's the custom option)
+      if (dropdown.value && dropdown.value !== "__custom__") {
+        return dropdown.value;
+      }
+    }
+    return "";
+  }
+
   const element = row.querySelector(selector);
   return element ? element.value : "";
 }

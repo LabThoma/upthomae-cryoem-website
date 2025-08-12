@@ -330,6 +330,62 @@ h2 {
     text-align: center;
 }
 
+/* Placeholder text styling for grid table inputs */
+.grid-table input::placeholder {
+    color: #a1a1aa;
+    opacity: 1;
+}
+
+.grid-table input::-webkit-input-placeholder {
+    color: #a1a1aa;
+}
+
+.grid-table input::-moz-placeholder {
+    color: #a1a1aa;
+    opacity: 1;
+}
+
+.grid-table input:-ms-input-placeholder {
+    color: #a1a1aa;
+}
+
+/* Grid batch override dropdown styling */
+.grid-table .grid-batch-override {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    text-align: center;
+    background-color: white;
+    color: #a1a1aa; /* Match placeholder text color exactly */
+    font-size: 14px;
+    appearance: auto;
+}
+
+.grid-table .grid-batch-override:focus {
+    outline: none;
+    border-color: #609BBF;
+    color: #374151; /* Darker text when focused/selected */
+}
+
+/* Grid batch override when value is selected */
+.grid-table .grid-batch-override.selected-state {
+    color: #374151; /* Normal text color when value is selected */
+}
+
+.grid-table .grid-batch-override option:not(:first-child) {
+    color: #374151; /* Normal color for actual options */
+}
+
+/* Custom input styling for grid batch override */
+.grid-table .grid-batch-override-custom {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    text-align: center;
+}
+
 /* Trashed grid styling */
 .trashed-grid {
     background-color: rgba(255, 154, 158, 0.1) !important;
