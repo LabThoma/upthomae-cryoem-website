@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../include/config.php';
+require_once __DIR__ . '/../../include/config.php';
 require_once 'endpoints/samples.php';
 require_once 'endpoints/grid_types.php';
 require_once 'endpoints/sessions.php';

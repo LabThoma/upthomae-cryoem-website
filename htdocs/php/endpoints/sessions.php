@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../../include/config.php');
+require_once(__DIR__ . '/../../../include/config.php');
 require_once(__DIR__ . '/../validation.php');
 
 function handleSessions($method, $path, $db, $input) {
