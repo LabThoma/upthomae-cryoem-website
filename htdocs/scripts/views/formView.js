@@ -161,14 +161,21 @@ function handleUserSelection(event) {
       event.target.value = "";
     }
   } else if (event.target.value && event.target.value !== "") {
+    // Clear Vitrobot settings first to avoid old values
+    clearVitrobotSettings();
+
     // Auto-populate grid box name for existing users
     autoPopulateGridBoxName(event.target.value);
+    // Auto-populate Vitrobot settings for existing users
+    autoPopulateVitrobotSettings(event.target.value);
   } else {
     // Clear grid box name if no user selected
     const gridBoxNameElement = document.getElementById("gridBoxName");
     if (gridBoxNameElement) {
       gridBoxNameElement.value = "";
     }
+    // Clear Vitrobot settings if no user selected
+    clearVitrobotSettings();
   }
 }
 
@@ -196,6 +203,117 @@ async function autoPopulateGridBoxName(userName) {
     console.error("Error auto-populating grid box name:", error);
     showAlert("Could not auto-populate grid box name", "warning");
   }
+}
+
+// Auto-populate Vitrobot settings based on selected user's last session
+async function autoPopulateVitrobotSettings(userName) {
+  try {
+    const response = await fetch(
+      `/api/users/${encodeURIComponent(userName)}/latest-settings`
+    );
+    if (!response.ok) {
+      console.warn(
+        `Failed to fetch settings for ${userName}: ${response.status}`
+      );
+      return;
+    }
+
+    const settings = await response.json();
+    console.log("Received settings:", settings); // Debug log
+
+    // Handle case where settings is null (no settings found)
+    if (!settings) {
+      console.warn(`No Vitrobot settings found for user: ${userName}`);
+      return;
+    }
+
+    let populatedFields = [];
+
+    // Populate humidity
+    if (
+      settings.humidity_percent !== null &&
+      settings.humidity_percent !== undefined
+    ) {
+      const humidityElement = document.getElementById("humidity");
+      if (humidityElement) {
+        humidityElement.value = settings.humidity_percent;
+        populatedFields.push(`Humidity: ${settings.humidity_percent}%`);
+      }
+    }
+
+    // Populate temperature
+    if (
+      settings.temperature_c !== null &&
+      settings.temperature_c !== undefined
+    ) {
+      const temperatureElement = document.getElementById("temperature");
+      if (temperatureElement) {
+        temperatureElement.value = settings.temperature_c;
+        populatedFields.push(`Temperature: ${settings.temperature_c}°C`);
+      }
+    }
+
+    // Populate blot force
+    if (settings.blot_force !== null && settings.blot_force !== undefined) {
+      const blotForceElement = document.getElementById("blotForce");
+      if (blotForceElement) {
+        blotForceElement.value = settings.blot_force;
+        populatedFields.push(`Blot Force: ${settings.blot_force}`);
+      }
+    }
+
+    // Populate blot time
+    if (
+      settings.blot_time_seconds !== null &&
+      settings.blot_time_seconds !== undefined
+    ) {
+      const blotTimeElement = document.getElementById("blotTime");
+      if (blotTimeElement) {
+        blotTimeElement.value = settings.blot_time_seconds;
+        populatedFields.push(`Blot Time: ${settings.blot_time_seconds}s`);
+      }
+    }
+
+    // Populate wait time
+    if (
+      settings.wait_time_seconds !== null &&
+      settings.wait_time_seconds !== undefined
+    ) {
+      const waitTimeElement = document.getElementById("waitTime");
+      if (waitTimeElement) {
+        waitTimeElement.value = settings.wait_time_seconds;
+        populatedFields.push(`Wait Time: ${settings.wait_time_seconds}s`);
+      }
+    }
+
+    if (populatedFields.length > 0) {
+      showAlert(
+        `Vitrobot settings auto-populated: ${populatedFields.join(", ")}`,
+        "info"
+      );
+    }
+  } catch (error) {
+    console.error("Error auto-populating Vitrobot settings:", error);
+    showAlert("Could not auto-populate Vitrobot settings", "warning");
+  }
+}
+
+// Clear Vitrobot settings when no user is selected
+function clearVitrobotSettings() {
+  const vitrobotFields = [
+    "humidity",
+    "temperature",
+    "blotForce",
+    "blotTime",
+    "waitTime",
+  ];
+
+  vitrobotFields.forEach((fieldId) => {
+    const element = document.getElementById(fieldId);
+    if (element) {
+      element.value = "";
+    }
+  });
 }
 
 // Toggle visibility of glow discharge settings

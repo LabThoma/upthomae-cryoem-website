@@ -9,6 +9,9 @@ function handleUsers($method, $path, $db, $input) {
             } elseif (preg_match('/^\/api\/users\/([^\/]+)\/sessions$/', $path, $matches)) {
                 $username = urldecode($matches[1]);
                 getUserSessions($db, $username);
+            } elseif (preg_match('/^\/api\/users\/([^\/]+)\/latest-settings$/', $path, $matches)) {
+                $username = urldecode($matches[1]);
+                getUserLatestSettings($db, $username);
             } else {
                 sendError('Users endpoint not found', 404);
             }
@@ -144,6 +147,34 @@ function getUserSessions($db, $username) {
     } catch (Exception $e) {
         error_log("Error fetching user sessions: " . $e->getMessage());
         sendError("Error fetching sessions for user: $username");
+    }
+}
+
+function getUserLatestSettings($db, $username) {
+    try {
+        // Get the most recent vitrobot settings for this user
+        $settings = $db->query("
+            SELECT vs.* 
+            FROM vitrobot_settings vs
+            INNER JOIN sessions s ON vs.session_id = s.session_id
+            WHERE s.user_name = ? 
+                AND (vs.humidity_percent IS NOT NULL 
+                     OR vs.temperature_c IS NOT NULL 
+                     OR vs.blot_force IS NOT NULL 
+                     OR vs.blot_time_seconds IS NOT NULL 
+                     OR vs.wait_time_seconds IS NOT NULL)
+            ORDER BY s.date DESC, s.created_at DESC
+            LIMIT 1
+        ", [$username]);
+        
+        if (!empty($settings)) {
+            sendResponse($settings[0]);
+        } else {
+            sendResponse(null);
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching latest settings for user: " . $e->getMessage());
+        sendError("Error fetching latest settings for user: $username");
     }
 }
 
