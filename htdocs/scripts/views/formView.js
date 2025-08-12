@@ -535,7 +535,7 @@ function autoPopulateGlowDischargeSettings(gridType) {
 }
 
 // Load grid batches for the selected grid type
-async function loadGridBatches(gridTypeName) {
+export async function loadGridBatches(gridTypeName) {
   try {
     const response = await fetch(
       `/api/grid-types/batches?type=${encodeURIComponent(gridTypeName)}`

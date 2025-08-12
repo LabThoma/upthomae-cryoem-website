@@ -291,6 +291,31 @@ export async function nextBox(event) {
       setupGridTable();
     }
 
+    // Reload grid batch dropdown to update remaining grid counts
+    const gridTypeElement = document.getElementById("gridType");
+    const gridBatchElement = document.getElementById("gridBatch");
+
+    if (
+      gridTypeElement &&
+      gridTypeElement.value &&
+      gridTypeElement.value !== "__custom__"
+    ) {
+      try {
+        // Store the current grid batch selection before reloading
+        const currentGridBatch = gridBatchElement ? gridBatchElement.value : "";
+
+        const { loadGridBatches } = await import("../views/formView.js");
+        await loadGridBatches(gridTypeElement.value);
+
+        // Restore the grid batch selection after reloading
+        if (currentGridBatch && gridBatchElement) {
+          gridBatchElement.value = currentGridBatch;
+        }
+      } catch (error) {
+        console.error("Error reloading grid batches:", error);
+      }
+    }
+
     alertSystem.showAlert(
       `Next box "${user.nextBoxName}" prepared for ${userName}`,
       "success"
