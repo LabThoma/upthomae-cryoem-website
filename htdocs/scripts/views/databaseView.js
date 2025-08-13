@@ -8,6 +8,9 @@ import { formatDate } from "../utils/dateUtils.js";
 // Flag to prevent multiple initialization
 let isDatabaseViewInitialized = false;
 
+// Flag to prevent multiple event listener setup
+let areEventListenersSetup = false;
+
 // Cache for users data to avoid re-fetching when toggling filters
 let cachedUsersData = null;
 
@@ -18,7 +21,13 @@ export function setupDatabaseView() {
     return;
   }
 
-  setupDatabaseEventListeners();
+  // Only setup event listeners once
+  if (!areEventListenersSetup) {
+    setupDatabaseEventListeners();
+    setupTrashEventListeners(); // Move this here so it's only called once
+    areEventListenersSetup = true;
+  }
+
   // Load users table on initial setup
   fetchUsersData();
   isDatabaseViewInitialized = true;
@@ -448,7 +457,11 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
   const expandIcons = document.querySelectorAll(".expandable-row-icon");
   expandIcons.forEach((icon) => {
-    icon.addEventListener("click", function () {
+    // Remove any existing event listeners by cloning the element
+    const newIcon = icon.cloneNode(true);
+    icon.parentNode.replaceChild(newIcon, icon);
+
+    newIcon.addEventListener("click", function () {
       const sessionId = this.getAttribute("data-session-id");
       const content = document.getElementById(`details-${sessionId}`);
       const detailRow = this.closest("tr").nextElementSibling;
@@ -462,7 +475,6 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
   // Set up grid modal event listeners once after all rows are created
   setupGridModalEventListeners();
-  setupTrashEventListeners();
 }
 
 export function updateUsersTable(users, showInactiveUsers = false) {

@@ -3,7 +3,15 @@
 
 import { showAlert } from "../components/alertSystem.js";
 
+// Flag to prevent multiple initialization
+let isAdminViewInitialized = false;
+
 export function setupAdminView() {
+  // Prevent multiple initialization
+  if (isAdminViewInitialized) {
+    return;
+  }
+
   setupAdminButtons();
   setupGridModal();
   loadGridSummary();
@@ -11,6 +19,8 @@ export function setupAdminView() {
   window.handleSelectChange = handleSelectChange;
   // Make toggleGridType globally available for onclick handlers
   window.toggleGridType = toggleGridType;
+
+  isAdminViewInitialized = true;
 }
 
 function setupAdminButtons() {
@@ -417,7 +427,11 @@ function displayGridSummary(summaryData) {
   // Set up expand/collapse functionality using existing pattern
   const expandIcons = document.querySelectorAll(".expandable-row-icon");
   expandIcons.forEach((icon) => {
-    icon.addEventListener("click", function () {
+    // Remove any existing event listeners by cloning the element
+    const newIcon = icon.cloneNode(true);
+    icon.parentNode.replaceChild(newIcon, icon);
+
+    newIcon.addEventListener("click", function () {
       const gridTypeName = decodeURIComponent(
         this.getAttribute("data-grid-type-name")
       );
