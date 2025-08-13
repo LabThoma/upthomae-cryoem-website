@@ -129,7 +129,7 @@ function getSessionDetails($db, $sessionId) {
         // Get grid preparations with sample and grid type info
         $grids = $db->query("
             SELECT gp.*, 
-                   s.sample_name, s.sample_concentration, s.additives, s.default_volume_ul,
+                   s.sample_name, s.sample_concentration, s.buffer, s.additives, s.default_volume_ul,
                    g.grid_type, g.grid_batch
             FROM grid_preparations gp
             LEFT JOIN samples s ON gp.sample_id = s.sample_id
@@ -343,23 +343,22 @@ function createSession($db, $input) {
             }
         }
         
-        // Create the sample ONCE from the first grid that has sample data
-        // Since sample info is the same across all grids, we only need to create it once
+        // Create the sample ONCE from the sample data in the request
+        // Sample info is session-wide, not per-grid
         $sessionSampleId = null;
-        foreach ($slotData as $grid) {
-            if ($grid && !empty($grid['sample_name'])) {
-                $sampleResult = $db->execute(
-                    "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
-                    [
-                        emptyToNull($grid['sample_name']),
-                        emptyToNull($grid['sample_concentration'] ?? null),
-                        emptyToNull($grid['additives'] ?? null),
-                        emptyToNull($grid['default_volume_ul'] ?? null)
-                    ]
-                );
-                $sessionSampleId = $sampleResult['insertId'];
-                break; // Only create once
-            }
+        if (isset($input['sample']) && !empty($input['sample']['sample_name'])) {
+            $sample = $input['sample'];
+            $sampleResult = $db->execute(
+                "INSERT INTO samples (sample_name, sample_concentration, buffer, additives, default_volume_ul) VALUES (?, ?, ?, ?, ?)",
+                [
+                    emptyToNull($sample['sample_name']),
+                    emptyToNull($sample['sample_concentration'] ?? null),
+                    emptyToNull($sample['buffer'] ?? null),
+                    emptyToNull($sample['additives'] ?? null),
+                    emptyToNull($sample['default_volume_ul'] ?? null)
+                ]
+            );
+            $sessionSampleId = $sampleResult['insertId'];
         }
         
         // Now create grid preparations for all 4 slots (1-4)
@@ -557,50 +556,35 @@ function updateSession($db, $sessionId, $input) {
                 }
             }
             
-            // Handle sample creation/update ONCE at session level
+            // --- Refactored sample update logic (like vitrobot settings) ---
+            // Always update the session's sample record if sample data is provided
             $sessionSampleId = null;
-            $hasExistingSampleId = false;
-            
-            // Check if we have an existing sample_id from any grid
+            // Find the session's sample_id from any grid (all grids share the same sample_id)
             foreach ($slotData as $grid) {
                 if ($grid && !empty($grid['sample_id'])) {
                     $sessionSampleId = $grid['sample_id'];
-                    $hasExistingSampleId = true;
-                    
-                    // Update the existing sample with current data
-                    if (!empty($grid['sample_name'])) {
-                        $db->execute(
-                            "UPDATE samples SET sample_name = ?, sample_concentration = ?, additives = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
-                            [
-                                emptyToNull($grid['sample_name']),
-                                emptyToNull($grid['sample_concentration'] ?? null),
-                                emptyToNull($grid['additives'] ?? null),
-                                $sessionSampleId
-                            ]
-                        );
-                    }
-                    break; // Only update once
+                    break;
                 }
             }
-            
-            // If no existing sample_id, create a new sample from the first grid with sample data
-            if (!$hasExistingSampleId) {
-                foreach ($slotData as $grid) {
-                    if ($grid && !empty($grid['sample_name'])) {
-                        $sampleResult = $db->execute(
-                            "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
-                            [
-                                emptyToNull($grid['sample_name']),
-                                emptyToNull($grid['sample_concentration'] ?? null),
-                                emptyToNull($grid['additives'] ?? null),
-                                emptyToNull($grid['default_volume_ul'] ?? null)
-                            ]
-                        );
-                        $sessionSampleId = $sampleResult['insertId'];
-                        break; // Only create once
-                    }
-                }
+
+            // If sample data is provided, update the sample record
+            if (isset($input['sample']) && $sessionSampleId) {
+                $sample = $input['sample'];
+                $db->execute(
+                    "UPDATE samples SET sample_name = ?, sample_concentration = ?, buffer = ?, additives = ?, default_volume_ul = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
+                    [
+                        emptyToNull($sample['sample_name'] ?? null),
+                        emptyToNull($sample['sample_concentration'] ?? null),
+                        emptyToNull($sample['buffer'] ?? null),
+                        emptyToNull($sample['additives'] ?? null),
+                        emptyToNull($sample['default_volume_ul'] ?? null),
+                        $sessionSampleId
+                    ]
+                );
             }
+
+            // Never create a new sample when editing in gridModal; only update the existing sample if sample_id exists
+            // (If you ever need to create a new sample, do it only in createSession, not updateSession)
             
             // Create grid preparations for all 4 slots (1-4)
             for ($slotNumber = 1; $slotNumber <= 4; $slotNumber++) {

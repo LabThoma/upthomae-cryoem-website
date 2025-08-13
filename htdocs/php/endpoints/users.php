@@ -131,7 +131,7 @@ function getUserSessions($db, $username) {
             // Get grid preparations
             $gridPreps = $db->query(
                 "SELECT gp.*,
-                   s.sample_name, s.sample_concentration, s.additives, s.default_volume_ul,
+                   s.sample_name, s.sample_concentration, s.buffer, s.additives, s.default_volume_ul,
                    g.grid_type, g.grid_batch  
                  FROM grid_preparations gp
                  LEFT JOIN samples s ON gp.sample_id = s.sample_id

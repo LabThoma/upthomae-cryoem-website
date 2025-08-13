@@ -90,13 +90,6 @@ export function showGridModal(sessionId, slotNumber) {
               "grid"
             )}
             ${createEditableField(
-              "Sample Additives",
-              "additives",
-              gridData.additives_override || gridData.additives,
-              "grid",
-              "additives"
-            )}
-            ${createEditableField(
               "Volume (μL)",
               "volume_ul",
               gridData.volume_ul_override || gridData.default_volume_ul,
@@ -104,6 +97,15 @@ export function showGridModal(sessionId, slotNumber) {
               "volume",
               "number"
             )}
+            ${createEditableField(
+              "Sample Additives",
+              "additives",
+              gridData.additives_override || gridData.additives,
+              "grid",
+              "additives"
+            )}
+            ${createEditableField("Buffer", "buffer", gridData.buffer, "grid")}
+
           </div>
           
           <div class="grid-detail-section">
@@ -447,6 +449,23 @@ async function saveInlineEdit(fieldName) {
     // Use the existing save logic but for single field
     await saveFieldUpdate(fieldName, newValue, dataType, overrideField);
 
+    // Update the local data to reflect the change
+    if (
+      dataType === "grid" &&
+      ["sample_name", "sample_concentration", "buffer", "additives"].includes(
+        fieldName
+      )
+    ) {
+      // Update sample fields in currentGridData
+      currentGridData[fieldName] = newValue;
+    } else if (dataType === "grid") {
+      // Update other grid fields
+      currentGridData[fieldName] = newValue;
+    } else if (dataType === "session") {
+      // Update session fields
+      currentSessionData.session[fieldName] = newValue;
+    }
+
     // Update the display
     const displayElement = document.getElementById(`display_${fieldName}`);
     if (displayElement) {
@@ -538,10 +557,9 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         const originalGridInfo = currentSessionData.grid_info || {};
 
         if (overrideField === "additives") {
+          const defaultAdditives = currentGridData.additives;
           updatedGrid.additives_override =
-            newValue && newValue !== currentGridData.additives
-              ? newValue
-              : null;
+            newValue && newValue !== defaultAdditives ? newValue : null;
         } else if (overrideField === "volume") {
           const defaultVolume =
             currentGridData.default_volume_ul || originalSettings.volume_ul;
@@ -578,8 +596,9 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         sample_id: updatedGrid.sample_id,
         sample_name: updatedGrid.sample_name,
         sample_concentration: updatedGrid.sample_concentration,
-        additives: updatedGrid.additives,
         volume_ul_override: updatedGrid.volume_ul_override,
+        additives: updatedGrid.additives,
+        buffer: updatedGrid.buffer,
         blot_force_override: updatedGrid.blot_force_override,
         blot_time_override: updatedGrid.blot_time_override,
         grid_batch_override: updatedGrid.grid_batch_override,
@@ -595,8 +614,9 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         sample_id: existingGrid.sample_id,
         sample_name: existingGrid.sample_name,
         sample_concentration: existingGrid.sample_concentration,
-        additives: existingGrid.additives,
         volume_ul_override: existingGrid.volume_ul_override,
+        additives: existingGrid.additives,
+        buffer: existingGrid.buffer,
         blot_force_override: existingGrid.blot_force_override,
         blot_time_override: existingGrid.blot_time_override,
         grid_batch_override: existingGrid.grid_batch_override,
@@ -618,6 +638,44 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
     updateData.session = {
       ...currentSessionData.session,
       [fieldName]: newValue,
+    };
+  }
+
+  // Always send the full sample object for sample field edits, to avoid null sample_name and prevent new sample creation
+  if (
+    dataType === "grid" &&
+    ["sample_name", "sample_concentration", "buffer", "additives"].includes(
+      fieldName
+    )
+  ) {
+    const currentGrid =
+      currentSessionData.grids?.find(
+        (g) => parseInt(g.slot_number) === currentSlotNumber
+      ) || {};
+    // Always use the existing sample_id and all sample fields, fallback to currentGridData if missing
+    updateData.sample = {
+      sample_name:
+        fieldName === "sample_name"
+          ? newValue
+          : currentGrid.sample_name || currentGridData.sample_name || "",
+      sample_concentration:
+        fieldName === "sample_concentration"
+          ? newValue
+          : currentGrid.sample_concentration ||
+            currentGridData.sample_concentration ||
+            null,
+      buffer:
+        fieldName === "buffer"
+          ? newValue
+          : currentGrid.buffer || currentGridData.buffer || null,
+      additives:
+        fieldName === "additives"
+          ? newValue
+          : currentGrid.additives || currentGridData.additives || null,
+      default_volume_ul:
+        currentGrid.default_volume_ul ||
+        currentGridData.default_volume_ul ||
+        null,
     };
   }
 

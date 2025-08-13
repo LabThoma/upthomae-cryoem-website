@@ -103,6 +103,7 @@ const VALIDATION_RULES = {
     },
     sampleConcentration: { maxLength: 100, label: "Sample Concentration" },
     additives: { maxLength: 1000, label: "Additives" },
+    buffer: { maxLength: 500, label: "Buffer" },
     volume: {
       type: "decimal",
       min: 0,
@@ -223,6 +224,7 @@ export function validateForm() {
       rules: VALIDATION_RULES.sample.sampleConcentration,
     },
     { id: "additives", rules: VALIDATION_RULES.sample.additives },
+    { id: "buffer", rules: VALIDATION_RULES.sample.buffer },
     { id: "volume", rules: VALIDATION_RULES.sample.volume },
   ];
 

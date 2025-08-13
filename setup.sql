@@ -47,6 +47,7 @@ CREATE TABLE `samples` (
   `sample_id` int(11) NOT NULL AUTO_INCREMENT,
   `sample_name` varchar(255) NOT NULL COMMENT 'Required, 1-255 characters',
   `sample_concentration` varchar(100) DEFAULT NULL COMMENT 'Optional, max 100 characters',
+  `buffer` varchar(500) DEFAULT NULL COMMENT 'Optional, max 500 characters',
   `additives` text DEFAULT NULL COMMENT 'Optional, max 1000 characters',
   `default_volume_ul` decimal(5, 2) DEFAULT NULL COMMENT 'Range: 0-99.99 μL',
   `created_at` timestamp NULL DEFAULT current_timestamp(),

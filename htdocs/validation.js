@@ -111,6 +111,7 @@ const VALIDATION_SCHEMAS = {
     },
     sample_concentration: { type: "string", required: false, maxLength: 100 },
     additives: { type: "text", required: false, maxLength: 1000 },
+    buffer: { type: "string", required: false, maxLength: 500 },
     default_volume_ul: {
       type: "decimal",
       required: false,

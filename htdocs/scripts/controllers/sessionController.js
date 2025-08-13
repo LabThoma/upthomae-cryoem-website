@@ -35,6 +35,7 @@ export async function saveUpdate(event) {
       sample_name: getElementValue("sampleName"),
       sample_concentration: getElementValue("sampleConcentration"),
       additives: getElementValue("additives"),
+      buffer: getElementValue("buffer"),
       default_volume_ul: getElementValue("volume"),
     };
 
@@ -73,6 +74,7 @@ export async function saveUpdate(event) {
         sample_name: sampleData.sample_name,
         sample_concentration: sampleData.sample_concentration,
         additives: sampleData.additives,
+        buffer: sampleData.buffer,
         comments: getRowValue(row, ".grid-comments"),
         volume_ul_override: getRowValue(row, ".grid-volume"),
         blot_time_override: getRowValue(row, ".grid-blot-time"),

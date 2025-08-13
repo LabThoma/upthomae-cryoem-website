@@ -113,21 +113,25 @@ function validateSample($sample) {
     
     if (empty($sample['sample_name'])) {
         $errors[] = 'Sample name is required';
-    } elseif (strlen($sample['sample_name']) > 200) {
-        $errors[] = 'Sample name cannot exceed 200 characters';
+    } elseif (strlen($sample['sample_name']) > 255) {
+        $errors[] = 'Sample name cannot exceed 255 characters';
     }
     
     if (!empty($sample['sample_concentration']) && strlen($sample['sample_concentration']) > 100) {
         $errors[] = 'Sample concentration cannot exceed 100 characters';
     }
     
-    if (!empty($sample['additives']) && strlen($sample['additives']) > 500) {
-        $errors[] = 'Additives cannot exceed 500 characters';
+    if (!empty($sample['additives']) && strlen($sample['additives']) > 1000) {
+        $errors[] = 'Additives cannot exceed 1000 characters';
+    }
+
+    if (!empty($sample['buffer']) && strlen($sample['buffer']) > 500) {
+        $errors[] = 'Buffer cannot exceed 500 characters';
     }
     
     if (!empty($sample['default_volume_ul'])) {
-        if (!is_numeric($sample['default_volume_ul']) || $sample['default_volume_ul'] <= 0 || $sample['default_volume_ul'] > 20) {
-            $errors[] = 'Default volume must be a number between 0 and 20 μL';
+        if (!is_numeric($sample['default_volume_ul']) || $sample['default_volume_ul'] < 0 || $sample['default_volume_ul'] > 99.99) {
+            $errors[] = 'Default volume must be a number between 0 and 99.99 μL';
         }
     }
     

@@ -48,7 +48,12 @@ function createSample($db, $input) {
     if ($sample_concentration && strlen($sample_concentration) > 100) {
         sendError('sample_concentration must be 100 characters or less', 400);
     }
-    
+
+    $buffer = isset($input['buffer']) ? $input['buffer'] : null;
+    if ($buffer && strlen($buffer) > 500) {
+        sendError('buffer must be 500 characters or less', 400);
+    }
+
     $additives = isset($input['additives']) ? $input['additives'] : null;
     if ($additives && strlen($additives) > 1000) {
         sendError('additives must be 1000 characters or less', 400);
@@ -63,10 +68,11 @@ function createSample($db, $input) {
     
     try {
         $result = $db->execute(
-            "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
+            "INSERT INTO samples (sample_name, sample_concentration, buffer, additives, default_volume_ul) VALUES (?, ?, ?, ?, ?)",
             [
                 trim($input['sample_name']),
                 $sample_concentration,
+                $buffer,
                 $additives,
                 $default_volume_ul
             ]
