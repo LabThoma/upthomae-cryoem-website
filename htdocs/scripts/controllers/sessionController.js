@@ -114,6 +114,14 @@ export async function saveUpdate(event) {
     let response, result;
 
     if (existingSession) {
+      // Show confirmation popup before overwriting
+      const gridBoxName = existingSession.grid_box_name || "this grid box";
+      const gridBoxDate = existingSession.date || "unknown date";
+      const confirmMsg = `Do you really want to overwrite '${gridBoxName}' from '${gridBoxDate}'?`;
+      if (!window.confirm(confirmMsg)) {
+        alertSystem.showAlert("Update cancelled.", "info");
+        return;
+      }
       // Update existing session
       console.log("Updating existing session:", existingSession.session_id);
       response = await fetch(`/api/sessions/${existingSession.session_id}`, {
