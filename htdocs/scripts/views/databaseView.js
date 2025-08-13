@@ -362,7 +362,11 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
           <tr class="unused-slot">
             <td>${i}</td>
             <td colspan="6" style="text-align: center; font-style: italic; color: #666;">Slot not used</td>
-            <td></td>
+            <td>
+              <button class="btn-icon btn-success add-grid-btn" data-session-id="${session.session_id}" data-slot="${i}" title="Add Grid to Slot">
+                <i class="fas fa-plus"></i>
+              </button>
+            </td>
           </tr>
         `;
       } else {
@@ -601,6 +605,20 @@ function setupTrashEventListeners() {
       }
     }
   });
+
+  // Event listeners for add grid buttons
+  document.addEventListener("click", async function (event) {
+    // Handle clicks on the button or its icon
+    const button = event.target.closest(".add-grid-btn");
+    if (button) {
+      const sessionId = button.getAttribute("data-session-id");
+      const slot = button.getAttribute("data-slot");
+
+      if (confirm(`Are you sure you want to add a new grid to slot ${slot}?`)) {
+        await addNewGrid(sessionId, slot);
+      }
+    }
+  });
 }
 
 async function trashGrid(prepId, sessionId, slot) {
@@ -675,6 +693,37 @@ async function trashWholeGridBox(sessionId) {
   } catch (error) {
     console.error("Error trashing grid box:", error);
     showAlert(`Error trashing grid box: ${error.message}`, "error");
+  }
+}
+
+async function addNewGrid(sessionId, slot) {
+  try {
+    const response = await fetch(
+      `/api/sessions/${sessionId}/grid-preparations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slot_number: slot,
+          include_in_session: true,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to add grid: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(`New grid added to slot ${slot}`, "success");
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error adding grid:", error);
+    showAlert(`Error adding grid: ${error.message}`, "error");
   }
 }
 

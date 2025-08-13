@@ -20,6 +20,9 @@ function handleSessions($method, $path, $db, $input) {
         case 'POST':
             if ($path === '/api/sessions') {
                 createSession($db, $input);
+            } elseif (preg_match('/^\/api\/sessions\/(\d+)\/grid-preparations$/', $path, $matches)) {
+                $sessionId = (int)$matches[1];
+                addGridPreparation($db, $sessionId, $input);
             } else {
                 sendError('Sessions endpoint not found', 404);
             }
@@ -330,106 +333,104 @@ function createSession($db, $input) {
             ]
         );
         
-        // Insert grid preparations
+        // Insert grid preparations for all 4 slots
+        // First, create a map of slot data from the input grids
+        $slotData = [];
         foreach ($grids as $grid) {
-            if ($grid['include_in_session']) {
-                // Handle sample creation/lookup based on sample_name
-                $sampleId = null;
-                
-                if (!empty($grid['sample_name'])) {
-                    // Check if this sample already exists FOR THIS SESSION/GRID BOX
-                    $existingSamples = $db->query(
-                        "SELECT s.sample_id FROM samples s 
-                         JOIN grid_preparations gp ON s.sample_id = gp.sample_id 
-                         WHERE gp.session_id = ? AND s.sample_name = ?",
-                        [$sessionId, $grid['sample_name']]
-                    );
-                    
-                    if (!empty($existingSamples)) {
-                        // Use existing sample from this session
-                        $sampleId = $existingSamples[0]['sample_id'];
-                    } else {
-                        // Create a new sample for this grid box/session
-                        $sampleResult = $db->execute(
-                            "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
-                            [
-                                emptyToNull($grid['sample_name']),
-                                emptyToNull($grid['sample_concentration'] ?? null),
-                                emptyToNull($grid['additives'] ?? null),
-                                emptyToNull($grid['default_volume_ul'] ?? null)
-                            ]
-                        );
-                        $sampleId = $sampleResult['insertId'];
-                    }
-                } elseif (!empty($grid['sample_id'])) {
-                    $sampleId = $grid['sample_id'];
-                }
-                
-                // Look up grid type if grid_batch_override is provided
-                $gridTypeOverride = null;
-                if (!empty($grid['grid_batch_override'])) {
-                    $gridTypeOverride = getGridTypeByBatch($db, $grid['grid_batch_override']);
-                }
-                
-                // Use manual override if provided, otherwise use auto-populated value
-                $finalGridTypeOverride = $grid['grid_type_override'] ?? $gridTypeOverride;
-                
-                // Convert numeric string values to proper types for grid preparations
-                $slotNumber = $grid['slot_number'] ?? null;
-                $volumeOverride = $grid['volume_ul_override'] ?? null;
-                $blotTimeOverride = $grid['blot_time_override'] ?? null;
-                $blotForceOverride = $grid['blot_force_override'] ?? null;
-                
-                if ($slotNumber !== null && $slotNumber !== '') {
-                    $slotNumber = intval($slotNumber);
-                } else {
-                    $slotNumber = null;
-                }
-                
-                if ($volumeOverride !== null && $volumeOverride !== '') {
-                    $volumeOverride = floatval($volumeOverride);
-                } else {
-                    $volumeOverride = null;
-                }
-                
-                if ($blotTimeOverride !== null && $blotTimeOverride !== '') {
-                    $blotTimeOverride = floatval($blotTimeOverride);
-                } else {
-                    $blotTimeOverride = null;
-                }
-                
-                if ($blotForceOverride !== null && $blotForceOverride !== '') {
-                    $blotForceOverride = floatval($blotForceOverride);
-                } else {
-                    $blotForceOverride = null;
-                }
-                
-                // Insert grid preparation
-                $db->execute(
-                    "INSERT INTO grid_preparations (
-                      session_id, slot_number, sample_id, grid_id, volume_ul_override, 
-                      blot_time_override, blot_force_override, grid_batch_override, 
-                      grid_type_override, comments, additives_override, include_in_session,
-                      trashed, trashed_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            $slotNumber = $grid['slot_number'] ?? null;
+            if ($slotNumber >= 1 && $slotNumber <= 4) {
+                $slotData[$slotNumber] = $grid;
+            }
+        }
+        
+        // Create the sample ONCE from the first grid that has sample data
+        // Since sample info is the same across all grids, we only need to create it once
+        $sessionSampleId = null;
+        foreach ($slotData as $grid) {
+            if ($grid && !empty($grid['sample_name'])) {
+                $sampleResult = $db->execute(
+                    "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
                     [
-                        $sessionId,
-                        $slotNumber,
-                        $sampleId,
-                        $gridId,
-                        $volumeOverride,
-                        $blotTimeOverride,
-                        $blotForceOverride,
-                        emptyToNull($grid['grid_batch_override'] ?? null),
-                        emptyToNull($finalGridTypeOverride),
-                        emptyToNull($grid['comments'] ?? null),
-                        emptyToNull($grid['additives_override'] ?? null),
-                        $grid['include_in_session'] ? 1 : 0,
-                        $grid['trashed'] ?? 0,
-                        $grid['trashed_at'] ?? null
+                        emptyToNull($grid['sample_name']),
+                        emptyToNull($grid['sample_concentration'] ?? null),
+                        emptyToNull($grid['additives'] ?? null),
+                        emptyToNull($grid['default_volume_ul'] ?? null)
                     ]
                 );
+                $sessionSampleId = $sampleResult['insertId'];
+                break; // Only create once
             }
+        }
+        
+        // Now create grid preparations for all 4 slots (1-4)
+        for ($slotNumber = 1; $slotNumber <= 4; $slotNumber++) {
+            $grid = $slotData[$slotNumber] ?? null;
+            $includeInSession = $grid && ($grid['include_in_session'] ?? false);
+            
+            // Use the session-level sample_id for all slots (or specific sample_id if provided)
+            $sampleId = null;
+            if ($grid && !empty($grid['sample_id'])) {
+                // Use existing sample_id if provided
+                $sampleId = $grid['sample_id'];
+            } elseif ($sessionSampleId) {
+                // Use the session-level sample we just created
+                $sampleId = $sessionSampleId;
+            }
+            
+            // Look up grid type if grid_batch_override is provided (regardless of inclusion status)
+            $gridTypeOverride = null;
+            $finalGridTypeOverride = null;
+            if ($grid && !empty($grid['grid_batch_override'])) {
+                $gridTypeOverride = getGridTypeByBatch($db, $grid['grid_batch_override']);
+                $finalGridTypeOverride = $grid['grid_type_override'] ?? $gridTypeOverride;
+            } elseif ($grid) {
+                $finalGridTypeOverride = $grid['grid_type_override'] ?? null;
+            }
+            
+            // Convert numeric string values to proper types for grid preparations
+            $volumeOverride = null;
+            $blotTimeOverride = null;
+            $blotForceOverride = null;
+            
+            if ($grid) {
+                if (isset($grid['volume_ul_override']) && $grid['volume_ul_override'] !== '') {
+                    $volumeOverride = floatval($grid['volume_ul_override']);
+                }
+                
+                if (isset($grid['blot_time_override']) && $grid['blot_time_override'] !== '') {
+                    $blotTimeOverride = floatval($grid['blot_time_override']);
+                }
+                
+                if (isset($grid['blot_force_override']) && $grid['blot_force_override'] !== '') {
+                    $blotForceOverride = floatval($grid['blot_force_override']);
+                }
+            }
+            
+            // Insert grid preparation for this slot (always create, but include_in_session may be 0)
+            $db->execute(
+                "INSERT INTO grid_preparations (
+                  session_id, slot_number, sample_id, grid_id, volume_ul_override, 
+                  blot_time_override, blot_force_override, grid_batch_override, 
+                  grid_type_override, comments, additives_override, include_in_session,
+                  trashed, trashed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    $sessionId,
+                    $slotNumber,
+                    $sampleId,
+                    $gridId,
+                    $volumeOverride,
+                    $blotTimeOverride,
+                    $blotForceOverride,
+                    $grid ? emptyToNull($grid['grid_batch_override'] ?? null) : null,
+                    emptyToNull($finalGridTypeOverride),
+                    $grid ? emptyToNull($grid['comments'] ?? null) : null,
+                    $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
+                    $includeInSession ? 1 : 0,
+                    ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
+                    ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null
+                ]
+            );
         }
         
         $db->commit();
@@ -547,86 +548,122 @@ function updateSession($db, $sessionId, $input) {
             $gridQuery = $db->query("SELECT grid_id FROM grids WHERE session_id = ?", [$sessionId]);
             $gridId = !empty($gridQuery) ? $gridQuery[0]['grid_id'] : null;
             
-            // Insert updated grid preparations
+            // Create a map of slot data from the input grids
+            $slotData = [];
             foreach ($grids as $grid) {
-                if ($grid['include_in_session']) {
-                    // Handle sample creation/lookup (same logic as create)
-                    $sampleId = null;
-                    
-                    if (!empty($grid['sample_id'])) {
-                        // If we have an existing sample_id, use it and update the sample details
-                        $sampleId = $grid['sample_id'];
-                        
-                        if (!empty($grid['sample_name'])) {
-                            $db->execute(
-                                "UPDATE samples SET sample_name = ?, sample_concentration = ?, additives = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
-                                [
-                                    emptyToNull($grid['sample_name']),
-                                    emptyToNull($grid['sample_concentration'] ?? null),
-                                    emptyToNull($grid['additives'] ?? null),
-                                    $sampleId
-                                ]
-                            );
-                        }
-                    } elseif (!empty($grid['sample_name'])) {
-                        // Check if this sample already exists FOR THIS SESSION/GRID BOX
-                        $existingSamples = $db->query(
-                            "SELECT s.sample_id FROM samples s 
-                             JOIN grid_preparations gp ON s.sample_id = gp.sample_id 
-                             WHERE gp.session_id = ? AND s.sample_name = ?",
-                            [$sessionId, $grid['sample_name']]
-                        );
-                        
-                        if (!empty($existingSamples)) {
-                            $sampleId = $existingSamples[0]['sample_id'];
-                        } else {
-                            // Create a new sample
-                            $sampleResult = $db->execute(
-                                "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
-                                [
-                                    emptyToNull($grid['sample_name']),
-                                    emptyToNull($grid['sample_concentration'] ?? null),
-                                    emptyToNull($grid['additives'] ?? null),
-                                    emptyToNull($grid['default_volume_ul'] ?? null)
-                                ]
-                            );
-                            $sampleId = $sampleResult['insertId'];
-                        }
-                    }
-                    
-                    // Look up grid type if grid_batch_override is provided
-                    $gridTypeOverride = null;
-                    if (!empty($grid['grid_batch_override'])) {
-                        $gridTypeOverride = getGridTypeByBatch($db, $grid['grid_batch_override']);
-                    }
-                    
-                    $finalGridTypeOverride = $grid['grid_type_override'] ?? $gridTypeOverride;
-                    
-                    $db->execute(
-                        "INSERT INTO grid_preparations (
-                        session_id, slot_number, sample_id, grid_id, volume_ul_override, 
-                        blot_time_override, blot_force_override, grid_batch_override, 
-                        grid_type_override, comments, additives_override, include_in_session,
-                        trashed, trashed_at
-                      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [
-                            $sessionId,
-                            emptyToNull($grid['slot_number'] ?? null),
-                            $sampleId,
-                            $gridId,
-                            emptyToNull($grid['volume_ul_override'] ?? null),
-                            emptyToNull($grid['blot_time_override'] ?? null),
-                            emptyToNull($grid['blot_force_override'] ?? null),
-                            emptyToNull($grid['grid_batch_override'] ?? null),
-                            emptyToNull($finalGridTypeOverride),
-                            emptyToNull($grid['comments'] ?? null),
-                            emptyToNull($grid['additives_override'] ?? null),
-                            $grid['include_in_session'] ? 1 : 0,
-                            $grid['trashed'] ?? 0,
-                            $grid['trashed_at'] ?? null
-                        ]
-                    );
+                $slotNumber = $grid['slot_number'] ?? null;
+                if ($slotNumber >= 1 && $slotNumber <= 4) {
+                    $slotData[$slotNumber] = $grid;
                 }
+            }
+            
+            // Handle sample creation/update ONCE at session level
+            $sessionSampleId = null;
+            $hasExistingSampleId = false;
+            
+            // Check if we have an existing sample_id from any grid
+            foreach ($slotData as $grid) {
+                if ($grid && !empty($grid['sample_id'])) {
+                    $sessionSampleId = $grid['sample_id'];
+                    $hasExistingSampleId = true;
+                    
+                    // Update the existing sample with current data
+                    if (!empty($grid['sample_name'])) {
+                        $db->execute(
+                            "UPDATE samples SET sample_name = ?, sample_concentration = ?, additives = ?, updated_at = CURRENT_TIMESTAMP WHERE sample_id = ?",
+                            [
+                                emptyToNull($grid['sample_name']),
+                                emptyToNull($grid['sample_concentration'] ?? null),
+                                emptyToNull($grid['additives'] ?? null),
+                                $sessionSampleId
+                            ]
+                        );
+                    }
+                    break; // Only update once
+                }
+            }
+            
+            // If no existing sample_id, create a new sample from the first grid with sample data
+            if (!$hasExistingSampleId) {
+                foreach ($slotData as $grid) {
+                    if ($grid && !empty($grid['sample_name'])) {
+                        $sampleResult = $db->execute(
+                            "INSERT INTO samples (sample_name, sample_concentration, additives, default_volume_ul) VALUES (?, ?, ?, ?)",
+                            [
+                                emptyToNull($grid['sample_name']),
+                                emptyToNull($grid['sample_concentration'] ?? null),
+                                emptyToNull($grid['additives'] ?? null),
+                                emptyToNull($grid['default_volume_ul'] ?? null)
+                            ]
+                        );
+                        $sessionSampleId = $sampleResult['insertId'];
+                        break; // Only create once
+                    }
+                }
+            }
+            
+            // Create grid preparations for all 4 slots (1-4)
+            for ($slotNumber = 1; $slotNumber <= 4; $slotNumber++) {
+                $grid = $slotData[$slotNumber] ?? null;
+                $includeInSession = $grid && ($grid['include_in_session'] ?? false);
+                
+                // Use the session-level sample_id for all slots
+                $sampleId = $sessionSampleId;
+                
+                // Look up grid type if grid_batch_override is provided (regardless of inclusion status)
+                $gridTypeOverride = null;
+                $finalGridTypeOverride = null;
+                if ($grid && !empty($grid['grid_batch_override'])) {
+                    $gridTypeOverride = getGridTypeByBatch($db, $grid['grid_batch_override']);
+                    $finalGridTypeOverride = $grid['grid_type_override'] ?? $gridTypeOverride;
+                } elseif ($grid) {
+                    $finalGridTypeOverride = $grid['grid_type_override'] ?? null;
+                }
+                
+                // Convert numeric string values to proper types for grid preparations
+                $volumeOverride = null;
+                $blotTimeOverride = null;
+                $blotForceOverride = null;
+                
+                if ($grid) {
+                    if (isset($grid['volume_ul_override']) && $grid['volume_ul_override'] !== '') {
+                        $volumeOverride = floatval($grid['volume_ul_override']);
+                    }
+                    
+                    if (isset($grid['blot_time_override']) && $grid['blot_time_override'] !== '') {
+                        $blotTimeOverride = floatval($grid['blot_time_override']);
+                    }
+                    
+                    if (isset($grid['blot_force_override']) && $grid['blot_force_override'] !== '') {
+                        $blotForceOverride = floatval($grid['blot_force_override']);
+                    }
+                }
+                
+                // Insert grid preparation for this slot (always create, but include_in_session may be 0)
+                $db->execute(
+                    "INSERT INTO grid_preparations (
+                    session_id, slot_number, sample_id, grid_id, volume_ul_override, 
+                    blot_time_override, blot_force_override, grid_batch_override, 
+                    grid_type_override, comments, additives_override, include_in_session,
+                    trashed, trashed_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $sessionId,
+                        $slotNumber,
+                        $sampleId,
+                        $gridId,
+                        $volumeOverride,
+                        $blotTimeOverride,
+                        $blotForceOverride,
+                        $grid ? emptyToNull($grid['grid_batch_override'] ?? null) : null,
+                        emptyToNull($finalGridTypeOverride),
+                        $grid ? emptyToNull($grid['comments'] ?? null) : null,
+                        $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
+                        $includeInSession ? 1 : 0,
+                        ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
+                        ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null
+                    ]
+                );
             }
         }
         
@@ -637,6 +674,64 @@ function updateSession($db, $sessionId, $input) {
         $db->rollback();
         error_log("Error updating session: " . $e->getMessage());
         sendError('Error updating session: ' . $e->getMessage());
+    }
+}
+
+function addGridPreparation($db, $sessionId, $input) {
+    try {
+        // Validate required fields
+        if (!isset($input['slot_number'])) {
+            sendError('slot_number is required', 400);
+        }
+        
+        $slotNumber = (int)$input['slot_number'];
+        
+        // Validate slot number range
+        if ($slotNumber < 1 || $slotNumber > 4) {
+            sendError('slot_number must be between 1 and 4', 400);
+        }
+        
+        // Check if session exists and get the grid_id for this session
+        $sessionData = $db->query(
+            "SELECT s.session_id, g.grid_id FROM sessions s 
+             LEFT JOIN grids g ON s.session_id = g.session_id 
+             WHERE s.session_id = ?",
+            [$sessionId]
+        );
+        
+        if (empty($sessionData)) {
+            sendError('Session not found', 404);
+        }
+        
+        $gridId = $sessionData[0]['grid_id'];
+        
+        // Check if grid preparation exists for this slot (it should always exist now)
+        $existingGrid = $db->query(
+            "SELECT prep_id, include_in_session FROM grid_preparations WHERE session_id = ? AND slot_number = ?",
+            [$sessionId, $slotNumber]
+        );
+        
+        if (!empty($existingGrid)) {
+            // Update existing grid preparation to include it in session and link to grid_id
+            $result = $db->execute(
+                "UPDATE grid_preparations SET include_in_session = 1, grid_id = ?, trashed = FALSE, trashed_at = NULL, updated_at = NOW() WHERE session_id = ? AND slot_number = ?",
+                [$gridId, $sessionId, $slotNumber]
+            );
+            
+            sendResponse(['message' => 'Grid preparation updated successfully', 'prep_id' => $existingGrid[0]['prep_id']]);
+        } else {
+            // This shouldn't happen with the new approach, but handle it just in case
+            // Create new grid preparation
+            $result = $db->execute(
+                "INSERT INTO grid_preparations (session_id, slot_number, grid_id, include_in_session, created_at, updated_at) VALUES (?, ?, ?, 1, NOW(), NOW())",
+                [$sessionId, $slotNumber, $gridId]
+            );
+            
+            sendResponse(['message' => 'Grid preparation added successfully', 'prep_id' => $result['insertId']]);
+        }
+    } catch (Exception $e) {
+        error_log("Error adding grid preparation: " . $e->getMessage());
+        sendError('Error adding grid preparation');
     }
 }
 ?>
