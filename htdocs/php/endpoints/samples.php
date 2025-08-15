@@ -60,10 +60,8 @@ function createSample($db, $input) {
     }
     
     $default_volume_ul = isset($input['default_volume_ul']) ? $input['default_volume_ul'] : null;
-    if ($default_volume_ul !== null) {
-        if (!is_numeric($default_volume_ul) || $default_volume_ul < 0 || $default_volume_ul > 99.99) {
-            sendError('default_volume_ul must be between 0 and 99.99', 400);
-        }
+    if ($default_volume_ul !== null && strlen($default_volume_ul) > 200) {
+        sendError('default_volume_ul must be 200 characters or less', 400);
     }
     
     try {

@@ -72,10 +72,8 @@ const VALIDATION_RULES = {
   gridPrep: {
     slotNumber: { type: "integer", min: 1, max: 48, label: "Slot Number" },
     volumeOverride: {
-      type: "decimal",
-      min: 0,
-      max: 99.99,
-      precision: 2,
+      type: "string",
+      maxLength: 200,
       label: "Volume Override (μL)",
     },
     blotTimeOverride: {
@@ -105,10 +103,8 @@ const VALIDATION_RULES = {
     additives: { maxLength: 1000, label: "Additives" },
     buffer: { maxLength: 500, label: "Buffer" },
     volume: {
-      type: "decimal",
-      min: 0,
-      max: 99.99,
-      precision: 2,
+      type: "string",
+      maxLength: 200,
       label: "Default Volume (μL)",
     },
   },

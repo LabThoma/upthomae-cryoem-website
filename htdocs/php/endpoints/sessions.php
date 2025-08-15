@@ -383,7 +383,7 @@ function createSession($db, $input) {
             $blotForceOverride = null;
             if ($grid) {
                 if (isset($grid['volume_ul_override']) && $grid['volume_ul_override'] !== '') {
-                    $volumeOverride = floatval($grid['volume_ul_override']);
+                    $volumeOverride = $grid['volume_ul_override'];
                 }
                 if (isset($grid['blot_time_override']) && $grid['blot_time_override'] !== '') {
                     $blotTimeOverride = floatval($grid['blot_time_override']);
@@ -578,7 +578,7 @@ function updateSession($db, $sessionId, $input) {
                 $blotForceOverride = null;
                 if ($grid) {
                     if (isset($grid['volume_ul_override']) && $grid['volume_ul_override'] !== '') {
-                        $volumeOverride = floatval($grid['volume_ul_override']);
+                        $volumeOverride = $grid['volume_ul_override'];
                     }
                     if (isset($grid['blot_time_override']) && $grid['blot_time_override'] !== '') {
                         $blotTimeOverride = floatval($grid['blot_time_override']);

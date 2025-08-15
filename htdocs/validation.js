@@ -69,11 +69,9 @@ const VALIDATION_SCHEMAS = {
   grid_preparations: {
     slot_number: { type: "integer", required: false, min: 1, max: 48 },
     volume_ul_override: {
-      type: "decimal",
+      type: "string",
       required: false,
-      min: 0,
-      max: 99.99,
-      precision: 2,
+      maxLength: 200,
     },
     incubation_time_seconds: {
       type: "decimal",
@@ -113,11 +111,9 @@ const VALIDATION_SCHEMAS = {
     additives: { type: "text", required: false, maxLength: 1000 },
     buffer: { type: "string", required: false, maxLength: 500 },
     default_volume_ul: {
-      type: "decimal",
+      type: "string",
       required: false,
-      min: 0,
-      max: 99.99,
-      precision: 2,
+      maxLength: 200,
     },
   },
 

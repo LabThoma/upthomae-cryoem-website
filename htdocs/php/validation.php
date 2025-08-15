@@ -134,10 +134,8 @@ function validateSample($sample) {
         $errors[] = 'Buffer cannot exceed 500 characters';
     }
 
-    if (!empty($sample['default_volume_ul'])) {
-        if (!is_numeric($sample['default_volume_ul']) || $sample['default_volume_ul'] < 0 || $sample['default_volume_ul'] > 99.99) {
-            $errors[] = 'Default volume must be a number between 0 and 99.99 μL';
-        }
+    if (!empty($sample['default_volume_ul']) && strlen($sample['default_volume_ul']) > 200) {
+        $errors[] = 'Default volume must be no more than 200 characters.';
     }
     
     return $errors;
@@ -152,10 +150,8 @@ function validateGridPreparation($grid) {
         }
     }
     
-    if (!empty($grid['volume_ul_override'])) {
-        if (!is_numeric($grid['volume_ul_override']) || $grid['volume_ul_override'] <= 0 || $grid['volume_ul_override'] > 20) {
-            $errors[] = 'Volume override must be a number between 0 and 20 μL';
-        }
+    if (!empty($grid['volume_ul_override']) && strlen($grid['volume_ul_override']) > 200) {
+        $errors[] = 'Volume override must be no more than 200 characters.';
     }
     
     if (!empty($grid['blot_time_override'])) {
