@@ -231,19 +231,10 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
     let dateDisplay = formatDate(session.date);
 
+    // Use session-level sample name only
     let sampleName = "N/A";
-    if (session.sample_names) {
-      sampleName = session.sample_names;
-    } else if (
-      session.grid_preparations &&
-      session.grid_preparations.length > 0
-    ) {
-      const gridWithSample = session.grid_preparations.find(
-        (grid) => grid.sample_name
-      );
-      if (gridWithSample) {
-        sampleName = gridWithSample.sample_name;
-      }
+    if (session.sample && session.sample.sample_name) {
+      sampleName = session.sample.sample_name;
     }
 
     // Check if any grids in this session are in use and not already trashed
@@ -382,36 +373,52 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
         // Use session values as fallbacks if grid-specific values are missing
         // Use explicit null/undefined checks so zero values are displayed
         const blotTime =
-          gridData.blot_time_override !== undefined && gridData.blot_time_override !== null
+          gridData.blot_time_override !== undefined &&
+          gridData.blot_time_override !== null
             ? gridData.blot_time_override
             : gridData.blot_time !== undefined && gridData.blot_time !== null
-              ? gridData.blot_time
-              : gridData.blot_time_seconds !== undefined && gridData.blot_time_seconds !== null
-                ? gridData.blot_time_seconds
-                : sessionBlotTime !== undefined && sessionBlotTime !== null
-                  ? sessionBlotTime
-                  : "N/A";
+            ? gridData.blot_time
+            : gridData.blot_time_seconds !== undefined &&
+              gridData.blot_time_seconds !== null
+            ? gridData.blot_time_seconds
+            : sessionBlotTime !== undefined && sessionBlotTime !== null
+            ? sessionBlotTime
+            : "N/A";
 
         const blotForce =
-          gridData.blot_force_override !== undefined && gridData.blot_force_override !== null
+          gridData.blot_force_override !== undefined &&
+          gridData.blot_force_override !== null
             ? gridData.blot_force_override
             : gridData.blot_force !== undefined && gridData.blot_force !== null
-              ? gridData.blot_force
-              : sessionBlotForce !== undefined && sessionBlotForce !== null
-                ? sessionBlotForce
-                : "N/A";
+            ? gridData.blot_force
+            : sessionBlotForce !== undefined && sessionBlotForce !== null
+            ? sessionBlotForce
+            : "N/A";
 
         const volume =
-          gridData.volume_ul_override !== undefined && gridData.volume_ul_override !== null
+          gridData.volume_ul_override !== undefined &&
+          gridData.volume_ul_override !== null
             ? gridData.volume_ul_override
-            : gridData.default_volume_ul !== undefined && gridData.default_volume_ul !== null
-              ? gridData.default_volume_ul
-              : sessionDefaultVolume !== undefined && sessionDefaultVolume !== null
-                ? sessionDefaultVolume
-                : "N/A";
+            : gridData.default_volume_ul !== undefined &&
+              gridData.default_volume_ul !== null
+            ? gridData.default_volume_ul
+            : sessionDefaultVolume !== undefined &&
+              sessionDefaultVolume !== null
+            ? sessionDefaultVolume
+            : "N/A";
 
         const additives =
-          gridData.additives_override || gridData.additives || "N/A";
+          gridData.additives_override !== undefined &&
+          gridData.additives_override !== null &&
+          gridData.additives_override !== ""
+            ? gridData.additives_override
+            : gridData.additives !== undefined &&
+              gridData.additives !== null &&
+              gridData.additives !== ""
+            ? gridData.additives
+            : session.sample && session.sample.additives
+            ? session.sample.additives
+            : "N/A";
 
         const gridType =
           gridData.grid_type_override ||
