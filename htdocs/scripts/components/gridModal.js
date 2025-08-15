@@ -93,7 +93,10 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Volume (μL)",
               "volume_ul",
-              gridData.volume_ul_override || sample.default_volume_ul,
+              gridData.volume_ul_override !== undefined &&
+                gridData.volume_ul_override !== null
+                ? gridData.volume_ul_override
+                : sample.default_volume_ul,
               "grid",
               "volume",
               "number"
@@ -101,7 +104,10 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Sample Additives",
               "additives",
-              gridData.additives_override || sample.additives,
+              gridData.additives_override !== undefined &&
+                gridData.additives_override !== null
+                ? gridData.additives_override
+                : sample.additives,
               "grid",
               "additives"
             )}
@@ -114,14 +120,20 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Grid Type",
               "grid_type",
-              gridData.grid_type_override || grid_info.grid_type,
+              gridData.grid_type_override !== undefined &&
+                gridData.grid_type_override !== null
+                ? gridData.grid_type_override
+                : grid_info.grid_type,
               "grid",
               "grid_type"
             )}
             ${createEditableField(
               "Grid Batch",
               "grid_batch",
-              gridData.grid_batch_override || grid_info.grid_batch,
+              gridData.grid_batch_override !== undefined &&
+                gridData.grid_batch_override !== null
+                ? gridData.grid_batch_override
+                : grid_info.grid_batch,
               "grid",
               "grid_batch"
             )}
@@ -166,7 +178,10 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Blot Force",
               "blot_force",
-              gridData.blot_force_override || settings.blot_force,
+              gridData.blot_force_override !== undefined &&
+                gridData.blot_force_override !== null
+                ? gridData.blot_force_override
+                : settings.blot_force,
               "grid",
               "blot_force",
               "number"
@@ -174,7 +189,10 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Blot Time (s)",
               "blot_time_seconds",
-              gridData.blot_time_override || settings.blot_time_seconds,
+              gridData.blot_time_override !== undefined &&
+                gridData.blot_time_override !== null
+                ? gridData.blot_time_override
+                : settings.blot_time_seconds,
               "grid",
               "blot_time",
               "number"
@@ -182,7 +200,9 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Wait Time (s)",
               "wait_time_seconds",
-              settings.wait_time_seconds,
+              settings.wait_time_seconds === 0 || settings.wait_time_seconds === "0"
+                ? 0
+                : settings.wait_time_seconds,
               "settings",
               null,
               "number"
@@ -220,7 +240,12 @@ function createEditableField(
   overrideField = null,
   inputType = "text"
 ) {
-  const displayValue = value || "N/A";
+  const displayValue =
+    value === 0 || value === "0"
+      ? "0"
+      : value !== undefined && value !== null && value !== ""
+      ? value
+      : "N/A";
   const editIcon = "✏️";
 
   return `
@@ -468,7 +493,13 @@ async function saveInlineEdit(fieldName) {
       if (input.type === "checkbox") {
         displayElement.textContent = newValue ? "Yes" : "No";
       } else {
-        displayElement.textContent = newValue || "N/A";
+        // Use same logic as createEditableField for zero values
+        displayElement.textContent =
+          newValue === 0 || newValue === "0"
+            ? "0"
+            : newValue !== undefined && newValue !== null && newValue !== ""
+            ? newValue
+            : "N/A";
       }
     }
 

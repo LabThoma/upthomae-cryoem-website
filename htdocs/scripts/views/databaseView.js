@@ -380,24 +380,35 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
         `;
       } else {
         // Use session values as fallbacks if grid-specific values are missing
+        // Use explicit null/undefined checks so zero values are displayed
         const blotTime =
-          gridData.blot_time_override ||
-          gridData.blot_time ||
-          gridData.blot_time_seconds ||
-          sessionBlotTime ||
-          "N/A";
+          gridData.blot_time_override !== undefined && gridData.blot_time_override !== null
+            ? gridData.blot_time_override
+            : gridData.blot_time !== undefined && gridData.blot_time !== null
+              ? gridData.blot_time
+              : gridData.blot_time_seconds !== undefined && gridData.blot_time_seconds !== null
+                ? gridData.blot_time_seconds
+                : sessionBlotTime !== undefined && sessionBlotTime !== null
+                  ? sessionBlotTime
+                  : "N/A";
 
         const blotForce =
-          gridData.blot_force_override ||
-          gridData.blot_force ||
-          sessionBlotForce ||
-          "N/A";
+          gridData.blot_force_override !== undefined && gridData.blot_force_override !== null
+            ? gridData.blot_force_override
+            : gridData.blot_force !== undefined && gridData.blot_force !== null
+              ? gridData.blot_force
+              : sessionBlotForce !== undefined && sessionBlotForce !== null
+                ? sessionBlotForce
+                : "N/A";
 
         const volume =
-          gridData.volume_ul_override ||
-          gridData.default_volume_ul ||
-          sessionDefaultVolume ||
-          "N/A";
+          gridData.volume_ul_override !== undefined && gridData.volume_ul_override !== null
+            ? gridData.volume_ul_override
+            : gridData.default_volume_ul !== undefined && gridData.default_volume_ul !== null
+              ? gridData.default_volume_ul
+              : sessionDefaultVolume !== undefined && sessionDefaultVolume !== null
+                ? sessionDefaultVolume
+                : "N/A";
 
         const additives =
           gridData.additives_override || gridData.additives || "N/A";

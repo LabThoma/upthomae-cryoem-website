@@ -111,9 +111,9 @@ export async function setupGridTable() {
       <td>${i}</td>
       <td><input type="checkbox" class="grid-checkbox" /></td>
       <td><input type="text" class="grid-comments" placeholder="Notes" /></td>
-         <td><input type="text" class="grid-volume" maxlength="200" placeholder="Override" /></td>
-      <td><input type="number" class="grid-blot-time" placeholder="Override" /></td>
-      <td><input type="number" class="grid-blot-force" placeholder="Override" /></td>
+      <td><input type="text" class="grid-volume" maxlength="200" placeholder="Override" /></td>
+      <td><input type="number" class="grid-blot-time" min="0" max="100" step="0.01" placeholder="Override" /></td>
+      <td><input type="number" class="grid-blot-force" min="-50" max="50" step="0.01" placeholder="Override" /></td>
       <td class="grid-batch-cell"></td>
       <td><input type="text" class="grid-additives" step="0.1" placeholder="Override" /></td>
     `;

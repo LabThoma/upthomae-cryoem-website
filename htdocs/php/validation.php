@@ -48,32 +48,32 @@ function validateVitrobotSettings($settings) {
     $errors = [];
     
     if (!empty($settings['humidity_percent'])) {
-        if (!is_numeric($settings['humidity_percent']) || $settings['humidity_percent'] < 0 || $settings['humidity_percent'] > 100) {
-            $errors[] = 'Humidity must be a number between 0 and 100';
+        if (!is_string($settings['humidity_percent']) || strlen($settings['humidity_percent']) > 200) {
+            $errors[] = 'Humidity must be text up to 200 characters';
         }
     }
     
     if (!empty($settings['temperature_c'])) {
-        if (!is_numeric($settings['temperature_c']) || $settings['temperature_c'] < -50 || $settings['temperature_c'] > 50) {
-            $errors[] = 'Temperature must be a number between -50 and 50°C';
+        if (!is_numeric($settings['temperature_c']) || $settings['temperature_c'] < 0 || $settings['temperature_c'] > 50) {
+            $errors[] = 'Temperature must be a number between 0 and 50°C';
         }
     }
     
-    if (!empty($settings['blot_force'])) {
-        if (!is_numeric($settings['blot_force']) || $settings['blot_force'] < 0 || $settings['blot_force'] > 20) {
-            $errors[] = 'Blot force must be a number between 0 and 20';
+    if (!empty($settings['blot_force']) || $settings['blot_force'] === 0) {
+        if (!is_numeric($settings['blot_force']) || $settings['blot_force'] < -50 || $settings['blot_force'] > 50) {
+            $errors[] = 'Blot force must be a number between -50 and 50';
         }
     }
     
     if (!empty($settings['blot_time_seconds'])) {
-        if (!is_numeric($settings['blot_time_seconds']) || $settings['blot_time_seconds'] < 0 || $settings['blot_time_seconds'] > 30) {
-            $errors[] = 'Blot time must be a number between 0 and 30 seconds';
+        if (!is_numeric($settings['blot_time_seconds']) || $settings['blot_time_seconds'] < 0 || $settings['blot_time_seconds'] > 100) {
+            $errors[] = 'Blot time must be a number between 0 and 100 seconds';
         }
     }
     
     if (!empty($settings['wait_time_seconds'])) {
-        if (!is_numeric($settings['wait_time_seconds']) || $settings['wait_time_seconds'] < 0 || $settings['wait_time_seconds'] > 30) {
-            $errors[] = 'Wait time must be a number between 0 and 30 seconds';
+        if (!is_string($settings['wait_time_seconds']) || strlen($settings['wait_time_seconds']) > 200) {
+            $errors[] = 'Wait time must be text up to 200 characters';
         }
     }
     
@@ -153,14 +153,14 @@ function validateGridPreparation($grid) {
     }
     
     if (!empty($grid['blot_time_override'])) {
-        if (!is_numeric($grid['blot_time_override']) || $grid['blot_time_override'] < 0 || $grid['blot_time_override'] > 30) {
-            $errors[] = 'Blot time override must be a number between 0 and 30 seconds';
+        if (!is_numeric($grid['blot_time_override']) || $grid['blot_time_override'] < 0 || $grid['blot_time_override'] > 100) {
+            $errors[] = 'Blot time override must be a number between 0 and 100 seconds';
         }
     }
     
-    if (!empty($grid['blot_force_override'])) {
-        if (!is_numeric($grid['blot_force_override']) || $grid['blot_force_override'] < 0 || $grid['blot_force_override'] > 20) {
-            $errors[] = 'Blot force override must be a number between 0 and 20';
+    if (!empty($grid['blot_force_override']) || $grid['blot_force_override'] === 0) {
+        if (!is_numeric($grid['blot_force_override']) || $grid['blot_force_override'] < -50 || $grid['blot_force_override'] > 50) {
+            $errors[] = 'Blot force override must be a number between -50 and 50';
         }
     }
     

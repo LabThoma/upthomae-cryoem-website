@@ -291,7 +291,7 @@ function createSession($db, $input) {
         $waitTimeSeconds = $vitrobot_settings['wait_time_seconds'] ?? null;
         
         if ($humidityPercent !== null && $humidityPercent !== '') {
-            $humidityPercent = floatval($humidityPercent);
+            $humidityPercent = trim($humidityPercent);
         } else {
             $humidityPercent = null;
         }
@@ -315,7 +315,7 @@ function createSession($db, $input) {
         }
         
         if ($waitTimeSeconds !== null && $waitTimeSeconds !== '') {
-            $waitTimeSeconds = floatval($waitTimeSeconds);
+            $waitTimeSeconds = trim($waitTimeSeconds);
         } else {
             $waitTimeSeconds = null;
         }
