@@ -99,7 +99,7 @@ export function showGridModal(sessionId, slotNumber) {
                 : sample.default_volume_ul,
               "grid",
               "volume",
-              "number"
+              "text"
             )}
             ${createEditableField(
               "Sample Additives",
@@ -165,7 +165,7 @@ export function showGridModal(sessionId, slotNumber) {
               settings.humidity_percent,
               "settings",
               null,
-              "number"
+              "text"
             )}
             ${createEditableField(
               "Temperature (°C)",
@@ -200,12 +200,10 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Wait Time (s)",
               "wait_time_seconds",
-              settings.wait_time_seconds === 0 || settings.wait_time_seconds === "0"
-                ? 0
-                : settings.wait_time_seconds,
+              settings.wait_time_seconds,
               "settings",
               null,
-              "number"
+              "text"
             )}
           </div>
           
