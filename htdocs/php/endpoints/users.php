@@ -128,19 +128,23 @@ function getUserSessions($db, $username) {
             );
             $row['settings'] = $settings[0] ?? [];
             
-            // Get grid preparations
+            // Get grid preparations (no sample fields)
             $gridPreps = $db->query(
-                "SELECT gp.*,
-                   s.sample_name, s.sample_concentration, s.buffer, s.additives, s.default_volume_ul,
-                   g.grid_type, g.grid_batch  
+                "SELECT gp.*, g.grid_type, g.grid_batch  
                  FROM grid_preparations gp
-                 LEFT JOIN samples s ON gp.sample_id = s.sample_id
                  LEFT JOIN grids g ON gp.grid_id = g.grid_id
                  WHERE gp.session_id = ?
                  ORDER BY gp.slot_number",
                 [$sessionId]
             );
             $row['grid_preparations'] = $gridPreps;
+
+            // Get session-level sample
+            $sample = $db->query(
+                "SELECT * FROM samples WHERE session_id = ? LIMIT 1",
+                [$sessionId]
+            );
+            $row['sample'] = $sample[0] ?? null;
         }
         
         sendResponse($rows);

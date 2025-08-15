@@ -110,17 +110,22 @@ function validateGridInfo($gridInfo) {
 
 function validateSample($sample) {
     $errors = [];
-    
+
+    // Only require session_id if present (for updates)
+    if (array_key_exists('session_id', $sample) && empty($sample['session_id'])) {
+        $errors[] = 'Session ID is required for sample';
+    }
+
     if (empty($sample['sample_name'])) {
         $errors[] = 'Sample name is required';
     } elseif (strlen($sample['sample_name']) > 255) {
         $errors[] = 'Sample name cannot exceed 255 characters';
     }
-    
+
     if (!empty($sample['sample_concentration']) && strlen($sample['sample_concentration']) > 100) {
         $errors[] = 'Sample concentration cannot exceed 100 characters';
     }
-    
+
     if (!empty($sample['additives']) && strlen($sample['additives']) > 1000) {
         $errors[] = 'Additives cannot exceed 1000 characters';
     }
@@ -128,7 +133,7 @@ function validateSample($sample) {
     if (!empty($sample['buffer']) && strlen($sample['buffer']) > 500) {
         $errors[] = 'Buffer cannot exceed 500 characters';
     }
-    
+
     if (!empty($sample['default_volume_ul'])) {
         if (!is_numeric($sample['default_volume_ul']) || $sample['default_volume_ul'] < 0 || $sample['default_volume_ul'] > 99.99) {
             $errors[] = 'Default volume must be a number between 0 and 99.99 μL';
@@ -258,19 +263,18 @@ function validateCompleteSession($input) {
     // Validate grids (grid preparations)
     if (isset($input['grids']) && is_array($input['grids'])) {
         foreach ($input['grids'] as $index => $grid) {
-            // If this grid includes a sample, validate the sample data
-            if (!empty($grid['sample_name'])) {
-                $sampleErrors = validateSample($grid);
-                if (!empty($sampleErrors)) {
-                    $allErrors["grids"][$index]['sample'] = $sampleErrors;
-                }
-            }
-            
-            // Validate grid preparation data
             $gridErrors = validateGridPreparation($grid);
             if (!empty($gridErrors)) {
                 $allErrors["grids"][$index]['grid'] = $gridErrors;
             }
+        }
+    }
+
+    // Validate session-level sample 
+    if (isset($input['sample'])) {
+        $sampleErrors = validateSample($input['sample']);
+        if (!empty($sampleErrors)) {
+            $allErrors['sample'] = $sampleErrors;
         }
     }
     

@@ -45,6 +45,7 @@ CREATE TABLE `sessions` (
 -- 2. Create samples table (independent)
 CREATE TABLE `samples` (
   `sample_id` int(11) NOT NULL AUTO_INCREMENT,
+  `session_id` int(11) NOT NULL,
   `sample_name` varchar(255) NOT NULL COMMENT 'Required, 1-255 characters',
   `sample_concentration` varchar(100) DEFAULT NULL COMMENT 'Optional, max 100 characters',
   `buffer` varchar(500) DEFAULT NULL COMMENT 'Optional, max 500 characters',
@@ -52,7 +53,9 @@ CREATE TABLE `samples` (
   `default_volume_ul` decimal(5, 2) DEFAULT NULL COMMENT 'Range: 0-99.99 μL',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`sample_id`)
+  PRIMARY KEY (`sample_id`),
+  KEY `session_id` (`session_id`),
+  CONSTRAINT `samples_ibfk_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 26 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- 3. Create grid_types table (independent)
 CREATE TABLE `grid_types` (

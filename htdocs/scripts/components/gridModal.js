@@ -24,6 +24,7 @@ export function showGridModal(sessionId, slotNumber) {
       const session = sessionData.session || {};
       const settings = sessionData.settings || {};
       const grid_info = sessionData.grid_info || {};
+      const sample = sessionData.sample || {};
 
       // Store data for inline editing
       currentSessionData = sessionData;
@@ -80,19 +81,19 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Sample Name",
               "sample_name",
-              gridData.sample_name,
-              "grid"
+              sample.sample_name,
+              "sample"
             )}
             ${createEditableField(
               "Sample Concentration",
               "sample_concentration",
-              gridData.sample_concentration,
-              "grid"
+              sample.sample_concentration,
+              "sample"
             )}
             ${createEditableField(
               "Volume (μL)",
               "volume_ul",
-              gridData.volume_ul_override || gridData.default_volume_ul,
+              gridData.volume_ul_override || sample.default_volume_ul,
               "grid",
               "volume",
               "number"
@@ -100,12 +101,11 @@ export function showGridModal(sessionId, slotNumber) {
             ${createEditableField(
               "Sample Additives",
               "additives",
-              gridData.additives_override || gridData.additives,
+              gridData.additives_override || sample.additives,
               "grid",
               "additives"
             )}
-            ${createEditableField("Buffer", "buffer", gridData.buffer, "grid")}
-
+            ${createEditableField("Buffer", "buffer", sample.buffer, "sample")}
           </div>
           
           <div class="grid-detail-section">
@@ -450,16 +450,12 @@ async function saveInlineEdit(fieldName) {
     await saveFieldUpdate(fieldName, newValue, dataType, overrideField);
 
     // Update the local data to reflect the change
-    if (
-      dataType === "grid" &&
-      ["sample_name", "sample_concentration", "buffer", "additives"].includes(
-        fieldName
-      )
-    ) {
-      // Update sample fields in currentGridData
-      currentGridData[fieldName] = newValue;
+    if (dataType === "sample") {
+      // Update session-level sample fields
+      if (!currentSessionData.sample) currentSessionData.sample = {};
+      currentSessionData.sample[fieldName] = newValue;
     } else if (dataType === "grid") {
-      // Update other grid fields
+      // Update grid-specific fields (overrides)
       currentGridData[fieldName] = newValue;
     } else if (dataType === "session") {
       // Update session fields
@@ -641,42 +637,21 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
     };
   }
 
-  // Always send the full sample object for sample field edits, to avoid null sample_name and prevent new sample creation
-  if (
-    dataType === "grid" &&
-    ["sample_name", "sample_concentration", "buffer", "additives"].includes(
-      fieldName
-    )
-  ) {
-    const currentGrid =
-      currentSessionData.grids?.find(
-        (g) => parseInt(g.slot_number) === currentSlotNumber
-      ) || {};
-    // Always use the existing sample_id and all sample fields, fallback to currentGridData if missing
-    updateData.sample = {
-      sample_name:
-        fieldName === "sample_name"
-          ? newValue
-          : currentGrid.sample_name || currentGridData.sample_name || "",
-      sample_concentration:
-        fieldName === "sample_concentration"
-          ? newValue
-          : currentGrid.sample_concentration ||
-            currentGridData.sample_concentration ||
-            null,
-      buffer:
-        fieldName === "buffer"
-          ? newValue
-          : currentGrid.buffer || currentGridData.buffer || null,
-      additives:
-        fieldName === "additives"
-          ? newValue
-          : currentGrid.additives || currentGridData.additives || null,
-      default_volume_ul:
-        currentGrid.default_volume_ul ||
-        currentGridData.default_volume_ul ||
-        null,
-    };
+  // Always send the full sample object for sample field edits
+  if (dataType === "sample") {
+    // For volume_ul and additives, use grid overrides instead of sample
+    if (fieldName === "volume_ul") {
+      // Set override in the grid object
+      updatedGrid.volume_ul_override = newValue;
+    } else if (fieldName === "additives") {
+      updatedGrid.additives_override = newValue;
+    } else {
+      // For all other sample fields, update the sample object
+      updateData.sample = {
+        ...currentSessionData.sample,
+        [fieldName]: newValue,
+      };
+    }
   }
 
   // Add vitrobot settings updates (preserve existing, only update system-wide fields)

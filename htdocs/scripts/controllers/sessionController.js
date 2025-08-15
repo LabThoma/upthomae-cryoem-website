@@ -71,10 +71,6 @@ export async function saveUpdate(event) {
         slot_number: row.getAttribute("data-slot"),
         grid_id: null, // We'll resolve this on the server
         sample_id: null, // We'll resolve this on the server
-        sample_name: sampleData.sample_name,
-        sample_concentration: sampleData.sample_concentration,
-        additives: sampleData.additives,
-        buffer: sampleData.buffer,
         comments: getRowValue(row, ".grid-comments"),
         volume_ul_override: getRowValue(row, ".grid-volume"),
         blot_time_override: getRowValue(row, ".grid-blot-time"),
