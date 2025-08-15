@@ -11,7 +11,12 @@ const VALIDATION_RULES = {
     },
     sessionDate: { required: true, type: "date", label: "Session Date" },
     gridBoxName: { required: false, maxLength: 255, label: "Grid Box Name" },
-    loadingOrder: { required: false, maxLength: 255, label: "Loading Order" },
+    loadingOrder: {
+      required: false,
+      type: "string",
+      maxLength: 255,
+      label: "Loading Order",
+    },
     puckName: { required: false, maxLength: 255, label: "Puck Name" },
     puckPosition: {
       required: false,

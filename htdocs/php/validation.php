@@ -27,10 +27,8 @@ function validateSession($session) {
         $errors[] = 'Grid box name cannot exceed 100 characters';
     }
     
-    if (!empty($session['loading_order'])) {
-        if (!is_numeric($session['loading_order']) || $session['loading_order'] < 1) {
-            $errors[] = 'Loading order must be a positive number';
-        }
+    if (!empty($session['loading_order']) && strlen($session['loading_order']) > 255) {
+        $errors[] = 'Loading order cannot exceed 255 characters';
     }
     
     if (!empty($session['puck_name']) && strlen($session['puck_name']) > 100) {
