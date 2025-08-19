@@ -24,7 +24,8 @@ export function setupDatabaseView() {
   // Only setup event listeners once
   if (!areEventListenersSetup) {
     setupDatabaseEventListeners();
-    setupTrashEventListeners(); // Move this here so it's only called once
+    setupTrashEventListeners();
+    setupShipEventListeners();
     areEventListenersSetup = true;
   }
 
@@ -431,8 +432,12 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
         const isTrashed = gridData.trashed === true || gridData.trashed === 1;
         const trashedClass = isTrashed ? ' class="trashed-grid"' : "";
 
+        // Check if grid is shipped
+        const isShipped = gridData.shipped === true || gridData.shipped === 1;
+        const shippedClass = isShipped ? " shipped-grid" : "";
+
         gridTableHTML += `
-          <tr${trashedClass}>
+          <tr${trashedClass}${shippedClass}>
             <td>${i}</td>
             <td>${gridType}</td>
             <td>${blotTime}</td>
@@ -446,6 +451,15 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
               }" data-slot="${i}" title="View & Edit">
                 <i class="fas fa-book-open"></i>
               </button>
+              ${
+                isShipped
+                  ? `<button class="btn-icon btn-warning unship-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Unship Grid">
+                        <i class="fas fa-truck-arrow-right fa-flip-horizontal"></i>
+                    </button>`
+                  : `<button class="btn-icon btn-info ship-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Ship Grid">
+                        <i class="fas fa-truck-arrow-right"></i>
+                    </button>`
+              }
               ${
                 isTrashed
                   ? `<button class="btn-icon btn-success untrash-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Restore Grid">
@@ -649,6 +663,89 @@ function setupTrashEventListeners() {
       }
     }
   });
+}
+
+function setupShipEventListeners() {
+  // Event listeners for ship buttons
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".ship-grid-btn");
+    if (button) {
+      const prepId = button.getAttribute("data-prep-id");
+      const sessionId = button.getAttribute("data-session-id");
+      const slot = button.getAttribute("data-slot");
+      if (
+        confirm(
+          `Are you sure you want to mark the grid in slot ${slot} as shipped?`
+        )
+      ) {
+        await shipGrid(prepId, sessionId, slot);
+      }
+    }
+  });
+
+  // Event listeners for unship buttons
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".unship-grid-btn");
+    if (button) {
+      const prepId = button.getAttribute("data-prep-id");
+      const sessionId = button.getAttribute("data-session-id");
+      const slot = button.getAttribute("data-slot");
+      if (
+        confirm(
+          `Are you sure you want to mark the grid in slot ${slot} as unshipped?`
+        )
+      ) {
+        await unshipGrid(prepId, sessionId, slot);
+      }
+    }
+  });
+}
+async function shipGrid(prepId, sessionId, slot) {
+  try {
+    const response = await fetch(`/api/grid-preparations/${prepId}/ship`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to ship grid: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(`Grid in slot ${slot} has been marked as shipped`, "success");
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error shipping grid:", error);
+    showAlert(`Error shipping grid: ${error.message}`, "error");
+  }
+}
+
+async function unshipGrid(prepId, sessionId, slot) {
+  try {
+    const response = await fetch(`/api/grid-preparations/${prepId}/unship`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to unship grid: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(`Grid in slot ${slot} has been marked as unshipped`, "success");
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error unshipping grid:", error);
+    showAlert(`Error unshipping grid: ${error.message}`, "error");
+  }
 }
 
 async function trashGrid(prepId, sessionId, slot) {

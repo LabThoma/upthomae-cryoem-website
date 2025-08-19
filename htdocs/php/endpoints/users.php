@@ -45,7 +45,9 @@ function getUsers($db) {
                 s.user_name,
                 s.grid_box_name,
                 COUNT(CASE 
-                    WHEN gp.include_in_session = 1 AND (gp.trashed = 0 OR gp.trashed IS NULL)
+                    WHEN gp.include_in_session = 1 
+                         AND (gp.trashed = 0 OR gp.trashed IS NULL)
+                         AND (gp.shipped = 0 OR gp.shipped IS NULL)
                     THEN 1 
                     ELSE NULL 
                 END) as active_grids

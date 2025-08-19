@@ -393,6 +393,26 @@ h2 {
     text-decoration: line-through;
 }
 
+
+/* Shipped grid styling: only apply if not trashed, scoped to grid-detail-table for specificity */
+.grid-detail-table tr.shipped-grid:not(.trashed-grid) {
+    background-color: rgba(217, 152, 74, 0.12) !important; /* light orange, matches accent color */
+    opacity: 0.7;
+
+}
+
+.grid-detail-table tr.shipped-grid:not(.trashed-grid) td {
+    color: var(--accent-orange);
+}
+
+/* Shipped grid box styling */
+.shipped-gridbox {
+    background-color: var(--primary);
+    opacity: 0.8;
+}
+.shipped-gridbox td {
+    color: #555;
+}
 .trashed-grid td {
     color: #721c24;
     border-bottom: 1px solid rgba(255, 154, 158, 0.3);
@@ -561,6 +581,19 @@ h2 {
 
 .btn-icon i {
     font-size: 14px;
+}
+
+/* Ship/unship grid button background (orange accent) */
+.btn-icon.btn-info,
+.btn-icon.btn-warning {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #F4B366 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(217, 152, 74, 0.3);
+}
+
+.btn-icon.btn-info:hover,
+.btn-icon.btn-warning:hover {
+    box-shadow: 0 4px 12px rgba(217, 152, 74, 0.4);
 }
 
 /* Default icon button styling (for view button) */

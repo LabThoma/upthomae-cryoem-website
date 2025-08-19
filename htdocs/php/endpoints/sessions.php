@@ -50,6 +50,9 @@ function handleSessions($method, $path, $db, $input) {
             if (preg_match('/^\/api\/sessions\/(\d+)\/trash-all-grids$/', $path, $matches)) {
                 $sessionId = (int)$matches[1];
                 trashAllGridsInSession($db, $sessionId);
+            } elseif (preg_match('/^\/api\/sessions\/(\d+)\/ship-all-grids$/', $path, $matches)) {
+                $sessionId = (int)$matches[1];
+                shipAllGridsInSession($db, $sessionId);
             } else {
                 sendError('Sessions endpoint not found', 404);
             }
@@ -182,6 +185,25 @@ function trashAllGridsInSession($db, $sessionId) {
     } catch (Exception $e) {
         error_log("Error marking all grids in session as trashed: " . $e->getMessage());
         sendError('Error marking all grids in session as trashed');
+    }
+}
+
+function shipAllGridsInSession($db, $sessionId) {
+    try {
+        $result = $db->execute(
+            "UPDATE grid_preparations SET shipped = TRUE, shipped_at = NOW(), updated_at = NOW() WHERE session_id = ? AND include_in_session = TRUE",
+            [$sessionId]
+        );
+        if ($result['rowCount'] === 0) {
+            sendError('No grid preparations found for this session or already shipped', 404);
+        }
+        sendResponse([
+            'message' => 'All grids in grid box marked as shipped successfully',
+            'affectedRows' => $result['rowCount']
+        ]);
+    } catch (Exception $e) {
+        error_log("Error marking all grids in session as shipped: " . $e->getMessage());
+        sendError('Error marking all grids in session as shipped');
     }
 }
 
@@ -397,8 +419,9 @@ function createSession($db, $input) {
                   session_id, slot_number, sample_id, grid_id, volume_ul_override, 
                   blot_time_override, blot_force_override, grid_batch_override, 
                   grid_type_override, comments, additives_override, include_in_session,
-                  trashed, trashed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  trashed, trashed_at,
+                  shipped, shipped_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $sessionId,
                     $slotNumber,
@@ -413,7 +436,9 @@ function createSession($db, $input) {
                     $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
                     $includeInSession ? 1 : 0,
                     ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
-                    ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null
+                    ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null,
+                    ($grid && ($grid['shipped'] ?? false)) ? 1 : 0,
+                    ($grid && isset($grid['shipped_at'])) ? $grid['shipped_at'] : null
                 ]
             );
         }
@@ -592,8 +617,9 @@ function updateSession($db, $sessionId, $input) {
                     session_id, slot_number, sample_id, grid_id, volume_ul_override, 
                     blot_time_override, blot_force_override, grid_batch_override, 
                     grid_type_override, comments, additives_override, include_in_session,
-                    trashed, trashed_at
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    trashed, trashed_at, 
+                    shipped, shipped_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $sessionId,
                         $slotNumber,
@@ -608,7 +634,9 @@ function updateSession($db, $sessionId, $input) {
                         $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
                         $includeInSession ? 1 : 0,
                         ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
-                        ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null
+                        ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null,
+                        ($grid && ($grid['shipped'] ?? false)) ? 1 : 0,
+                        ($grid && isset($grid['shipped_at'])) ? $grid['shipped_at'] : null
                     ]
                 );
             }
@@ -661,7 +689,7 @@ function addGridPreparation($db, $sessionId, $input) {
         if (!empty($existingGrid)) {
             // Update existing grid preparation to include it in session and link to grid_id
             $result = $db->execute(
-                "UPDATE grid_preparations SET include_in_session = 1, grid_id = ?, trashed = FALSE, trashed_at = NULL, updated_at = NOW() WHERE session_id = ? AND slot_number = ?",
+                "UPDATE grid_preparations SET include_in_session = 1, grid_id = ?, trashed = FALSE, trashed_at = NULL, shipped = FALSE, shipped_at = NULL, updated_at = NOW() WHERE session_id = ? AND slot_number = ?",
                 [$gridId, $sessionId, $slotNumber]
             );
             
