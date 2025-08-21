@@ -20,3 +20,4 @@ debug-*.html
 
 tests_website/
 database_backups/
+.vscode/
