@@ -463,7 +463,8 @@ async function saveInlineEdit(fieldName) {
   if (input.type === "checkbox") {
     newValue = input.checked;
   } else if (input.type === "number") {
-    newValue = parseFloat(input.value) || null;
+    // Only set null if input is empty, otherwise parse the number (including 0)
+    newValue = input.value === "" ? null : parseFloat(input.value);
   } else {
     newValue = input.value.trim() || null;
   }
@@ -602,12 +603,16 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
               : null;
         } else if (overrideField === "blot_force") {
           updatedGrid.blot_force_override =
-            newValue && newValue !== originalSettings.blot_force
+            newValue !== null &&
+            newValue !== undefined &&
+            newValue !== originalSettings.blot_force
               ? newValue
               : null;
         } else if (overrideField === "blot_time") {
           updatedGrid.blot_time_override =
-            newValue && newValue !== originalSettings.blot_time_seconds
+            newValue !== null &&
+            newValue !== undefined &&
+            newValue !== originalSettings.blot_time_seconds
               ? newValue
               : null;
         }
@@ -685,19 +690,32 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
 
   // Add vitrobot settings updates (preserve existing, only update system-wide fields)
   if (dataType === "settings") {
+    // Always send humidity_percent and wait_time_seconds as strings
+    const humidity =
+      fieldName === "humidity_percent"
+        ? newValue !== null && newValue !== undefined
+          ? String(newValue)
+          : null
+        : currentSessionData.settings?.humidity_percent !== null &&
+          currentSessionData.settings?.humidity_percent !== undefined
+        ? String(currentSessionData.settings?.humidity_percent)
+        : null;
+    const waitTime =
+      fieldName === "wait_time_seconds"
+        ? newValue !== null && newValue !== undefined
+          ? String(newValue)
+          : null
+        : currentSessionData.settings?.wait_time_seconds !== null &&
+          currentSessionData.settings?.wait_time_seconds !== undefined
+        ? String(currentSessionData.settings?.wait_time_seconds)
+        : null;
     updateData.vitrobot_settings = {
-      humidity_percent:
-        dataType === "settings" && fieldName === "humidity_percent"
-          ? newValue
-          : currentSessionData.settings?.humidity_percent,
+      humidity_percent: humidity,
       temperature_c:
-        dataType === "settings" && fieldName === "temperature_c"
+        fieldName === "temperature_c"
           ? newValue
           : currentSessionData.settings?.temperature_c,
-      wait_time_seconds:
-        dataType === "settings" && fieldName === "wait_time_seconds"
-          ? newValue
-          : currentSessionData.settings?.wait_time_seconds,
+      wait_time_seconds: waitTime,
       // Preserve existing blot settings
       blot_force: currentSessionData.settings?.blot_force,
       blot_time_seconds: currentSessionData.settings?.blot_time_seconds,
