@@ -1409,3 +1409,19 @@ h2 {
     border-radius: 4px;
     font-size: 14px;
 }
+
+/* Overview table shipped grid box styling */
+.grid-table tr.shipped-gridbox {
+    background-color: rgba(217, 152, 74, 0.18) !important; /* slightly deeper orange for overview */
+    opacity: 0.8;
+}
+.grid-table tr.shipped-gridbox td {
+    color: var(--accent-orange) !important;
+    font-weight: normal;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(217, 152, 74, 0.2);
+}
+
+.grid-table tr.shipped-gridbox:hover {
+    background-color: rgba(217, 152, 74, 0.25) !important;
+}

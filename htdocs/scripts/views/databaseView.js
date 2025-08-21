@@ -262,6 +262,22 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
       row.classList.add("trashed-gridbox");
     }
 
+    // Check if all used grids are shipped (and not trashed)
+    const usedGrids = session.grid_preparations
+      ? session.grid_preparations.filter(
+          (grid) =>
+            (grid.include_in_session === true ||
+              grid.include_in_session === 1) &&
+            !(grid.trashed === true || grid.trashed === 1)
+        )
+      : [];
+    const allUsedGridsShipped =
+      usedGrids.length > 0 &&
+      usedGrids.every((grid) => grid.shipped === true || grid.shipped === 1);
+    if (allUsedGridsShipped) {
+      row.classList.add("shipped-gridbox");
+    }
+
     row.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-id="${
@@ -275,7 +291,16 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
         ${
           hasUsedGrids && !isCompletelyTrashed
             ? `
-          <button class="btn-icon btn-danger trash-gridbox-btn" 
+            ${
+              !allUsedGridsShipped
+                ? `<button class="btn-icon btn-info ship-gridbox-btn" 
+                  data-session-id="${session.session_id}" 
+                  title="Ship all grids in grid box">
+            <i class="fas fa-truck-arrow-right"></i>
+            </button>`
+                : ""
+            }
+            <button class="btn-icon btn-danger trash-gridbox-btn" 
                   data-session-id="${session.session_id}" 
                   title="Trash whole grid box">
             <i class="fas fa-trash-alt"></i>
@@ -434,7 +459,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
         // Check if grid is shipped
         const isShipped = gridData.shipped === true || gridData.shipped === 1;
-        const shippedClass = isShipped ? " shipped-grid" : "";
+        const shippedClass = isShipped ? ' class="shipped-grid"' : "";
 
         gridTableHTML += `
           <tr${trashedClass}${shippedClass}>
@@ -619,16 +644,28 @@ function setupTrashEventListeners() {
   // Event listeners for trash whole gridbox buttons
   document.addEventListener("click", async function (event) {
     // Handle clicks on the button or its icon
-    const button = event.target.closest(".trash-gridbox-btn");
-    if (button) {
-      const sessionId = button.getAttribute("data-session-id");
-
+    const trashButton = event.target.closest(".trash-gridbox-btn");
+    if (trashButton) {
+      const sessionId = trashButton.getAttribute("data-session-id");
       if (
         confirm(
           `Are you sure you want to trash ALL grids in this grid box? This will mark all used slots as trashed.`
         )
       ) {
         await trashWholeGridBox(sessionId);
+      }
+    }
+
+    // Handle clicks on the ship all grids button
+    const shipButton = event.target.closest(".ship-gridbox-btn");
+    if (shipButton) {
+      const sessionId = shipButton.getAttribute("data-session-id");
+      if (
+        confirm(
+          `Are you sure you want to mark ALL grids in this grid box as shipped? This will mark all used slots as shipped.`
+        )
+      ) {
+        await shipWholeGridBox(sessionId);
       }
     }
   });
@@ -820,6 +857,34 @@ async function trashWholeGridBox(sessionId) {
   } catch (error) {
     console.error("Error trashing grid box:", error);
     showAlert(`Error trashing grid box: ${error.message}`, "error");
+  }
+}
+
+// Ship all grids in a session
+async function shipWholeGridBox(sessionId) {
+  try {
+    const response = await fetch(`/api/sessions/${sessionId}/ship-all-grids`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to ship all grids: ${response.status}`);
+    }
+
+    const result = await response.json();
+    showAlert(
+      `All grids in grid box have been marked as shipped (${result.affectedRows} grids affected)`,
+      "success"
+    );
+
+    // Refresh the view to show updated status
+    refreshCurrentView();
+  } catch (error) {
+    console.error("Error shipping all grids:", error);
+    showAlert(`Error shipping all grids: ${error.message}`, "error");
   }
 }
 
