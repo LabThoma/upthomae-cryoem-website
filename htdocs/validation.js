@@ -69,13 +69,6 @@ const VALIDATION_SCHEMAS = {
       required: false,
       maxLength: 200,
     },
-    incubation_time_seconds: {
-      type: "decimal",
-      required: false,
-      min: 0,
-      max: 9999.99,
-      precision: 2,
-    },
     blot_time_override: {
       type: "decimal",
       required: false,

@@ -117,7 +117,6 @@ CREATE TABLE `grid_preparations` (
   `slot_number` int(11) DEFAULT NULL COMMENT 'Range: 1-48',
   `sample_id` int(11) DEFAULT NULL,
   `volume_ul_override` varchar(200) DEFAULT NULL COMMENT 'Up to 200 characters, free text',
-  `incubation_time_seconds` decimal(7, 2) DEFAULT NULL COMMENT 'Range: 0-9999.99 seconds',
   `comments` text DEFAULT NULL COMMENT 'Max 1000 characters',
   `include_in_session` tinyint(1) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
