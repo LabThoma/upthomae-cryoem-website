@@ -1,0 +1,39 @@
+<div class="form-section">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    "
+  >
+    <div>
+      <h2 class="section-title">Grid Database</h2>
+      <div class="checkbox-group" style="margin-top: 10px">
+        <input type="checkbox" id="showTrashedGridBoxes" />
+        <label for="showTrashedGridBoxes">Show trashed grid boxes</label>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button id="refreshDatabaseButton" class="btn-icon" title="Refresh">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <button id="backToUsersButton" class="btn btn-secondary btn-small">
+        Back to Users
+      </button>
+    </div>
+  </div>
+  <div style="overflow-x: auto">
+    <table class="grid-table" id="databaseTable">
+      <thead>
+        <tr>
+          <th>Box Name</th>
+          <th>Date</th>
+          <th>Sample</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="databaseTableBody"></tbody>
+    </table>
+  </div>
+</div>

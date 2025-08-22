@@ -1,0 +1,42 @@
+<div class="form-section">
+  <h2 class="section-title">Session Information</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="userName">User Name</label>
+      <select id="userName">
+        <option value="">Select User</option>
+        <!-- Users will be populated dynamically from the API -->
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="sessionDate">Date</label>
+      <input type="date" id="sessionDate" />
+    </div>
+    <div class="form-group">
+      <label for="gridBoxName">Grid Box Name</label>
+      <input type="text" id="gridBoxName" />
+    </div>
+    <div class="form-group">
+      <label for="loadingOrder">Loading Order</label>
+      <select id="loadingOrder">
+        <option value="">Loading Order of grids in gridbox</option>
+        <option value="top-to-bottom">top-to-bottom</option>
+        <option value="counter-clockwise">counter-clockwise</option>
+        <option value="clockwise">clockwise</option>
+        <option value="numbering-on-box">numbering on gridbox</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="puckName">Puck Name</label>
+      <input type="text" id="puckName" placeholder="e.g. SV035" />
+    </div>
+    <div class="form-group">
+      <label for="puckPosition">Puck Position</label>
+      <input
+        type="text"
+        id="puckPosition"
+        placeholder="Enter position of gridbox in your puck"
+      />
+    </div>
+  </div>
+</div>

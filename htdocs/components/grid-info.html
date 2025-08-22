@@ -1,0 +1,54 @@
+<div class="form-section">
+  <h2 class="section-title">Grid Details & Glow Discharge</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="gridType">Grid Type</label>
+      <select id="gridType" onchange="handleGridTypeChange(this)">
+        <option value="">Select Grid Type</option>
+        <!-- Options will be populated dynamically -->
+        <option value="__custom__">+ Enter Custom</option>
+      </select>
+      <input
+        type="text"
+        id="gridTypeCustom"
+        placeholder="Enter custom grid type"
+        style="display: none; margin-top: 5px"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="gridBatch">Grid Batch (Q Number)</label>
+      <select id="gridBatch" onchange="handleGridBatchChange(this)">
+        <option value="">Select Q Number</option>
+        <!-- Options will be populated based on selected grid type -->
+        <option value="__custom__">+ Enter Custom</option>
+      </select>
+      <input
+        type="text"
+        id="gridBatchCustom"
+        placeholder="Enter custom Q number"
+        style="display: none; margin-top: 5px"
+      />
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="glowDischarge" />
+      <label for="glowDischarge">Glow Discharge Applied</label>
+    </div>
+
+    <div
+      class="glow-discharge"
+      id="glowDischargeSettings"
+      style="display: none"
+    >
+      <div class="form-group">
+        <label for="glowCurrent">Current [mA]</label>
+        <input type="text" id="glowCurrent" placeholder="e.g. 15.0" />
+      </div>
+      <div class="form-group">
+        <label for="glowTime">Time [s]</label>
+        <input type="text" id="glowTime" placeholder="e.g. 60" />
+      </div>
+    </div>
+  </div>
+</div>

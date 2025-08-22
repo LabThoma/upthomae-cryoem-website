@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -4 170 179">
+  <style>
+    .microscope-line {
+      fill: none;
+      stroke: #D9984A;
+      stroke-miterlimit: 10;
+      stroke-width: 8px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+  <!-- Extended connection line from the left -->
+  <line class="microscope-line" x1="0" y1="168" x2="40" y2="168"/>
+  
+  <!-- EXACT microscope coordinates, shifted to start near y=0 -->
+  <!-- Original was y=20-188, now shifted to y=0-168 (moved up 20 units) -->
+  
+  <!-- Main column -->
+  <path class="microscope-line" d="M103,0v168"/>
+  
+  <!-- Left arm -->
+  <polyline class="microscope-line" points="103,0 40,29 40,169"/>
+  
+  <!-- Right arm -->
+  <path class="microscope-line" d="M137,168V29"/>
+  
+  <!-- Top connection -->
+  <path class="microscope-line" d="M103,0l34,29"/>
+  
+  <!-- Horizontal connectors -->
+  <line class="microscope-line" x1="103" y1="57" x2="137" y2="74"/>
+  <line class="microscope-line" x1="103" y1="116" x2="137" y2="118"/>
+  <line class="microscope-line" x1="40" y1="118" x2="103" y2="116"/>
+  <line class="microscope-line" x1="40" y1="72" x2="103" y2="57"/>
+</svg>
