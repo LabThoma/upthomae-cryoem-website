@@ -141,6 +141,65 @@ CREATE TABLE `grid_preparations` (
     CONSTRAINT `fk_grid_preparations_grid_id` FOREIGN KEY (`grid_id`) REFERENCES `grids` (`grid_id`) ON DELETE
   SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 84 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+-- 7. Create microscope_sessions table
+CREATE TABLE `microscope_sessions` (
+  `session_id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `microscope` varchar(255) NOT NULL,
+  `overnight` tinyint(1) DEFAULT 0,
+  `clipped_at_microscope` tinyint(1) DEFAULT 0,
+  `issues` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`session_id`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+-- 8. Create microscope_details table
+CREATE TABLE `microscope_details` (
+  `detail_id` int(11) NOT NULL AUTO_INCREMENT,
+  `session_id` int(11) NOT NULL,
+  `microscope_slot` int(2) NOT NULL CHECK (
+    `microscope_slot` BETWEEN 1 AND 12
+  ),
+  `grid_identifier` varchar(255) NOT NULL,
+  `prep_id` int(11) DEFAULT NULL,
+  `atlas` tinyint(1) DEFAULT 0,
+  `screened` varchar(255) DEFAULT NULL,
+  `collected` tinyint(1) DEFAULT 0,
+  `multigrid` tinyint(1) DEFAULT 0,
+  `px_size` decimal(8, 4) DEFAULT NULL,
+  `magnification` int(6) DEFAULT NULL CHECK (
+    `magnification` BETWEEN 0 AND 500000
+  ),
+  `exposure_e` int(11) DEFAULT NULL,
+  `exposure_time` int(11) DEFAULT NULL,
+  `spot_size` int(11) DEFAULT NULL,
+  `illumination_area` decimal(10, 4) DEFAULT NULL,
+  `exp_per_hole` int(11) DEFAULT NULL,
+  `images` int(11) DEFAULT NULL,
+  `comments` text DEFAULT NULL,
+  `nominal_defocus` varchar(255) DEFAULT NULL,
+  `objective` int(11) DEFAULT NULL,
+  `slit_width` int(11) DEFAULT NULL,
+  `rescued` tinyint(1) DEFAULT 0,
+  `particle_number` tinyint(1) DEFAULT NULL CHECK (
+    `particle_number` BETWEEN 0 AND 5
+  ),
+  `ice_quality` tinyint(1) DEFAULT NULL CHECK (
+    `ice_quality` BETWEEN 0 AND 5
+  ),
+  `grid_quality` tinyint(1) DEFAULT NULL CHECK (
+    `grid_quality` BETWEEN 0 AND 5
+  ),
+  `last_updated` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`detail_id`),
+  KEY `session_id` (`session_id`),
+  KEY `prep_id` (`prep_id`),
+  CONSTRAINT `microscope_details_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `microscope_sessions` (`session_id`) ON DELETE CASCADE,
+  CONSTRAINT `microscope_details_ibfk_2` FOREIGN KEY (`prep_id`) REFERENCES `grid_preparations` (`prep_id`) ON DELETE
+  SET NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */
