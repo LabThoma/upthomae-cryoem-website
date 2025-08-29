@@ -70,6 +70,18 @@ function getUsers($db) {
         // Process the results to add computed fields
         $processedUsers = [];
         foreach ($users as $user) {
+            $microscopeSessions = getMicroscopeSessionsForUser($db, $user['user_name']);
+            // Find latest microscope session date
+            $latestMicroscopeDate = null;
+            if (!empty($microscopeSessions)) {
+                foreach ($microscopeSessions as $ms) {
+                    if (!empty($ms['microscope_session_date'])) {
+                        if ($latestMicroscopeDate === null || $ms['microscope_session_date'] > $latestMicroscopeDate) {
+                            $latestMicroscopeDate = $ms['microscope_session_date'];
+                        }
+                    }
+                }
+            }
             $processedUsers[] = [
                 'username' => $user['user_name'],
                 'totalSessions' => (int)($user['total_sessions'] ?? 0),
@@ -78,7 +90,10 @@ function getUsers($db) {
                 'lastSessionDate' => $user['last_session_date'],
                 'firstSessionDate' => $user['first_session_date'],
                 'activeGridBoxes' => $activeBoxesMap[$user['user_name']] ?? 0,
-                'nextBoxName' => generateNextBoxName($user['user_name'], $db)
+                'nextBoxName' => generateNextBoxName($user['user_name'], $db),
+                'microscopeSessions' => $microscopeSessions,
+                'lastMicroscopeSessionDate' => $latestMicroscopeDate,
+                'hasMicroscopeSession' => !empty($latestMicroscopeDate)
             ];
         }
         
@@ -86,6 +101,26 @@ function getUsers($db) {
     } catch (Exception $e) {
         error_log("Error fetching users: " . $e->getMessage());
         sendError('Error fetching users');
+    }
+}
+
+// Helper: Get microscope sessions for a user
+function getMicroscopeSessionsForUser($db, $username) {
+    try {
+        // Join microscope_details -> grid_preparations -> sessions to get user_name
+        $rows = $db->query("
+            SELECT md.*, ms.date AS microscope_session_date, gp.prep_id, s.user_name
+            FROM microscope_details md
+            LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            LEFT JOIN sessions s ON gp.session_id = s.session_id
+            LEFT JOIN microscope_sessions ms ON md.session_id = ms.session_id
+            WHERE s.user_name = ?
+            ORDER BY ms.date DESC, md.last_updated DESC
+        ", [$username]);
+        return $rows;
+    } catch (Exception $e) {
+        error_log("Error fetching microscope sessions for user $username: " . $e->getMessage());
+        return [];
     }
 }
 

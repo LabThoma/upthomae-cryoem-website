@@ -114,8 +114,19 @@ $pageTitle = "THOMAE cryoEM";
         <!-- Microscope View -->
         <div id="microscopeView" class="content-view">
           <div class="form-section">
-            <h2 class="section-title">Microscope</h2>
-            <p>Content coming soon...</p>
+            <h2 class="section-title">Users</h2>
+            <div style="overflow-x: auto">
+              <table class="grid-table" id="microscopeUsersTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Last Session</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="microscopeUsersTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 

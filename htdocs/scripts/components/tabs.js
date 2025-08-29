@@ -2,6 +2,7 @@
 
 import { setupDatabaseView } from "../views/databaseView.js";
 import { setupAdminView } from "../views/adminView.js";
+import { setupMicroscopeTab } from "../views/microscopeView.js";
 
 const ADMIN_PASSWORD = "NoGlycerol!";
 let isAdminAuthenticated = false;
@@ -40,6 +41,8 @@ export function setupTabs() {
       // Initialize views when they become active
       if (targetView === "databaseView") {
         setupDatabaseView();
+      } else if (targetView === "microscopeView") {
+        setupMicroscopeTab();
       } else if (targetView === "adminView" && isAdminAuthenticated) {
         setupAdminView();
       }
