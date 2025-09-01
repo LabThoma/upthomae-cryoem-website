@@ -12,6 +12,9 @@ function handleUsers($method, $path, $db, $input) {
             } elseif (preg_match('/^\/api\/users\/([^\/]+)\/latest-settings$/', $path, $matches)) {
                 $username = urldecode($matches[1]);
                 getUserLatestSettings($db, $username);
+            } elseif (preg_match('/^\/api\/users\/([^\/]+)\/microscope-sessions$/', $path, $matches)) {
+                $username = urldecode($matches[1]);
+                getUserMicroscopeSessions($db, $username);
             } else {
                 sendError('Users endpoint not found', 404);
             }
@@ -19,6 +22,81 @@ function handleUsers($method, $path, $db, $input) {
             
         default:
             sendError('Method not allowed', 405);
+    }
+}
+
+// Return all microscope sessions for a user
+function getUserMicroscopeSessions($db, $username) {
+    try {
+        // Get all microscope sessions for the user, grouped by session
+        $rows = $db->query("
+            SELECT 
+                ms.session_id,
+                ms.date AS microscope_session_date,
+                ms.microscope AS microscope_name,
+                COUNT(md.prep_id) AS grid_count
+            FROM microscope_sessions ms
+            LEFT JOIN microscope_details md ON ms.session_id = md.session_id
+            LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            LEFT JOIN sessions s ON gp.session_id = s.session_id
+            WHERE s.user_name = ?
+            GROUP BY ms.session_id, ms.date, ms.microscope
+            ORDER BY ms.date DESC
+        ", [$username]);
+        $result = [];
+        foreach ($rows as $row) {
+            // For each microscope session, get all microscope_details
+            $details = $db->query(
+                "SELECT md.*, gp.sample_id, s.sample_name
+                 FROM microscope_details md
+                 LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+                 LEFT JOIN samples s ON gp.sample_id = s.sample_id
+                 WHERE md.session_id = ?",
+                [$row['session_id']]
+            );
+            $grids = [];
+            foreach ($details as $d) {
+                $grids[] = [
+                    'grid_identifier' => $d['grid_identifier'],
+                    'microscope_slot' => $d['microscope_slot'],
+                    'sample' => $d['sample_name'] ?? '',
+                    'ice_quality' => $d['ice_quality'],
+                    'particle_concentration' => $d['particle_number'],
+                    'grid_quality' => $d['grid_quality'],
+                    'number_of_images' => $d['images'],
+                    'rescued' => $d['rescued'],
+                    'comments' => $d['comments']
+                ];
+            }
+            // For each microscope session, find all grid_preparations linked via microscope_details
+            $prepRows = $db->query(
+                "SELECT DISTINCT md.prep_id FROM microscope_details md WHERE md.session_id = ? AND md.prep_id IS NOT NULL",
+                [$row['session_id']]
+            );
+            $prepIds = array_column($prepRows, 'prep_id');
+            $boxNames = [];
+            if (!empty($prepIds)) {
+                // For each prep_id, get its session_id and then the box name
+                $inClause = implode(',', array_fill(0, count($prepIds), '?'));
+                $params = $prepIds;
+                $boxRows = $db->query(
+                    "SELECT DISTINCT s.grid_box_name FROM grid_preparations gp JOIN sessions s ON gp.session_id = s.session_id WHERE gp.prep_id IN ($inClause) AND s.grid_box_name IS NOT NULL AND s.grid_box_name != '' ORDER BY s.grid_box_name",
+                    $params
+                );
+                $boxNames = array_column($boxRows, 'grid_box_name');
+            }
+            $result[] = [
+                'date' => $row['microscope_session_date'],
+                'microscope' => $row['microscope_name'],
+                'numberOfGrids' => (int)($row['grid_count'] ?? 0),
+                'gridBoxes' => implode(', ', $boxNames),
+                'grids' => $grids
+            ];
+        }
+        sendResponse($result);
+    } catch (Exception $e) {
+        error_log("Error fetching microscope sessions for user $username: " . $e->getMessage());
+        sendError("Error fetching microscope sessions for user: $username");
     }
 }
 
