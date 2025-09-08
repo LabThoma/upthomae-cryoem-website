@@ -1,9 +1,28 @@
+<?php
+// Load Composer autoloader and authentication
+require_once('vendor/autoload.php');
+require_once('entra/auth_check.php');
+
+// Require authentication for this page
+requireAuth();
+
+// Get user information
+$userInfo = getUserInfo();
+$userName = getUserName();
+$userEmail = getUserEmail();
+$userSciper = getUserSciper();
+$userGroups = getUserGroups();
+
+// Page variables
+$pageTitle = "THOMAE cryoEM";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THOMAE cryoEM</title>
+    <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="stylesheet" href="styles/main.css" />
     <link
       rel="stylesheet"
