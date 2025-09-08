@@ -4,7 +4,6 @@
 // Import necessary functions
 import { setDefaultDate } from "../views/formView.js";
 import { setupGridTable } from "./gridTable.js";
-import { setupTabs } from "./tabs.js";
 
 export function loadComponents(callback) {
   const components = [
@@ -42,11 +41,6 @@ export function loadComponents(callback) {
         // Call setDefaultDate after session-info is loaded
         if (id === "session-info") {
           setDefaultDate();
-        }
-
-        // Setup tabs after header is loaded
-        if (id === "header") {
-          setupTabs();
         }
 
         // Call setupGridTable after grid-details is loaded

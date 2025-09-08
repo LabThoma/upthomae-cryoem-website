@@ -49,6 +49,9 @@ export function setupTabs() {
   // Set up admin authentication
   setupAdminAuthentication();
 
+  // Set up Entra logout
+  setupEntraLogout();
+
   // Set the default active tab (Input Form)
   const defaultTab = document.querySelector(
     '.nav-tab[data-target="inputFormView"]'
@@ -182,5 +185,16 @@ function clearPasswordError() {
   const errorDiv = document.getElementById("adminLoginError");
   if (errorDiv) {
     errorDiv.style.display = "none";
+  }
+}
+
+function setupEntraLogout() {
+  const entraLogoutButton = document.getElementById("entraLogoutButton");
+
+  if (entraLogoutButton) {
+    entraLogoutButton.addEventListener("click", () => {
+      // Redirect to Entra logout endpoint
+      window.location.href = "/entra/logout.php";
+    });
   }
 }
