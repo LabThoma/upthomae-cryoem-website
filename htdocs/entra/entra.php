@@ -3,8 +3,20 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 use Jumbojett\OpenIDConnectClient;
 
 // Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+try {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__, ['.env.local', '.env.production', '.env']);
+    $dotenv->safeLoad();
+} catch (Exception $e) {
+    die("Environment configuration error: " . $e->getMessage());
+}
+
+// Validate required environment variables
+$required_vars = ['AUTH_URL', 'CLIENT_ID', 'CLIENT_SECRET', 'OIDC_REDIRECT_URI'];
+foreach ($required_vars as $var) {
+    if (empty($_ENV[$var])) {
+        die("Missing required environment variable: " . $var);
+    }
+}
 
 // Start session safely
 if (session_status() === PHP_SESSION_NONE) {
@@ -31,8 +43,7 @@ try {
     exit;
     
 } catch (Exception $e) {
-    error_log("Authentication error: " . $e->getMessage());
-    header("Location: ../index.php?error=auth_failed");
+    echo "Authentication failed: " . $e->getMessage();
     exit;
 }
 ?>
