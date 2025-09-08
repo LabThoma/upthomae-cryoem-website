@@ -1460,3 +1460,74 @@ h2 {
 .grid-table tr.shipped-gridbox:hover {
     background-color: rgba(217, 152, 74, 0.25) !important;
 }
+
+/* Wide modal for microscope sessions - extends existing modal system */
+.modal-content.wide {
+  width: 95vw;
+  max-width: none;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.microscope-table-container {
+  overflow-x: auto;
+  margin: 16px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.microscope-table-container table {
+  min-width: 1200px;
+  width: 100%;
+}
+
+.session-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin: 0;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Star Rating System */
+.star-rating {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
+}
+
+.star-rating .star {
+  font-size: 18px;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+.star-rating .star:hover {
+  color: #609BBF;
+}
+
+.star-rating .star.active {
+  color: #609BBF;
+}
+
+.star-rating .star.inactive {
+  color: #ddd;
+}

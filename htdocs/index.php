@@ -177,6 +177,9 @@ $pageTitle = "THOMAE cryoEM";
                   <button id="addNewGridsButton" class="btn btn-primary">
                     Add New Grids
                   </button>
+                  <button id="openMicroscopeSessionBtn" class="btn btn-primary">
+                    New Microscope Session
+                  </button>
                 </div>
                 <div class="grid-summary-container">
                   <table class="grid-table" id="gridSummaryTable">
@@ -212,6 +215,14 @@ $pageTitle = "THOMAE cryoEM";
       <div class="modal-content">
         <span class="close-modal">&times;</span>
         <div id="gridModalContent"></div>
+      </div>
+    </div>
+
+    <!-- Modal for Microscope Sessions -->
+    <div id="microscopeSessionModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="microscopeSessionModalContent"></div>
       </div>
     </div>
 
