@@ -22,7 +22,9 @@ This document provides specific information for EPFL users on how to request and
 ## EntraID setup
 
 - Your website must be password protected and only accessible to your team, in accordance with EPFL guidelines.
-- More details will follow.
+- For EntraID to work, you need to register your website via https://app-portal.epfl.ch/ (may only work in a private window) and specify which groups should have access
+- Generate the `vendor` folder via `composer install` or generate it locally`composer require jumbojett/openid-connect-php vlucas/phpdotenv` and upload the folder via Cyberduck
+- Create `entra/.env` with your credentials per these guides: https://github.com/epfl-si/entra-id-auth-examples/blob/main/oidc/PHP/Jumbojett-OIDC/php-oidc-jumbojett-simple/TEQUILA_MIGRATION_EXAMPLE.md & https://github.com/epfl-si/entra-id-auth-examples/tree/main/oidc/PHP/Jumbojett-OIDC
 
 ## Guidelines
 
