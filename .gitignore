@@ -1,7 +1,10 @@
 # Environment-specific configs (NEVER commit these)
 private/config.local.php
 private/config.production.php
-entra/.env
+htdocs/entra/.env*
+*.env*
+
+!htdocs/entra/.env.example
 
 # Development-only files
 router.php
@@ -11,6 +14,7 @@ vendor/
 logs/
 sessions/
 tmp/
+*.DS_Store
 
 # Debug files  
 debug-*.php
