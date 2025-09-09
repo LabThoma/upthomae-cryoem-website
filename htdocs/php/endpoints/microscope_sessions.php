@@ -5,7 +5,15 @@ function handleMicroscopeSessions($method, $path, $db, $input) {
     switch ($method) {
         case 'POST':
             if ($path === '/api/microscope-sessions') {
-                createMicroscopeSession($db, $input);
+                saveMicroscopeSession($db, $input);
+            } else {
+                sendError('Microscope sessions endpoint not found', 404);
+            }
+            break;
+        case 'PUT':
+            if (preg_match('/^\/api\/microscope-sessions\/(\d+)$/', $path, $matches)) {
+                $sessionId = (int)$matches[1];
+                saveMicroscopeSession($db, $input, $sessionId);
             } else {
                 sendError('Microscope sessions endpoint not found', 404);
             }
@@ -15,7 +23,7 @@ function handleMicroscopeSessions($method, $path, $db, $input) {
     }
 }
 
-function createMicroscopeSession($db, $input) {
+function saveMicroscopeSession($db, $input, $sessionId = null) {
     // Validate required fields
     $required = ['date', 'microscope'];
     foreach ($required as $field) {
@@ -29,19 +37,41 @@ function createMicroscopeSession($db, $input) {
     $clipped_at_microscope = isset($input['clipped_at_microscope']) ? (int)$input['clipped_at_microscope'] : 0;
     $issues = isset($input['issues']) ? $input['issues'] : null;
 
+    $isUpdate = ($sessionId !== null);
+
     try {
         $db->beginTransaction();
-        $result = $db->execute(
-            'INSERT INTO microscope_sessions (date, microscope, overnight, clipped_at_microscope, issues) VALUES (?, ?, ?, ?, ?)',
-            [
-                $input['date'],
-                $input['microscope'],
-                $overnight,
-                $clipped_at_microscope,
-                $issues
-            ]
-        );
-        $sessionId = $result['insertId'];
+
+        if ($isUpdate) {
+            // Update existing session
+            $db->execute(
+                'UPDATE microscope_sessions SET date = ?, microscope = ?, overnight = ?, clipped_at_microscope = ?, issues = ?, updated_at = NOW() WHERE session_id = ?',
+                [
+                    $input['date'],
+                    $input['microscope'],
+                    $overnight,
+                    $clipped_at_microscope,
+                    $issues,
+                    $sessionId
+                ]
+            );
+
+            // Delete existing microscope_details for this session
+            $db->execute('DELETE FROM microscope_details WHERE session_id = ?', [$sessionId]);
+        } else {
+            // Create new session
+            $result = $db->execute(
+                'INSERT INTO microscope_sessions (date, microscope, overnight, clipped_at_microscope, issues) VALUES (?, ?, ?, ?, ?)',
+                [
+                    $input['date'],
+                    $input['microscope'],
+                    $overnight,
+                    $clipped_at_microscope,
+                    $issues
+                ]
+            );
+            $sessionId = $result['insertId'];
+        }
 
         $insertedSlots = [];
         // Insert up to 12 microscope_details if provided
@@ -120,10 +150,22 @@ function createMicroscopeSession($db, $input) {
         }
 
         $db->commit();
-        sendResponse(['success' => true, 'id' => $sessionId, 'inserted_slots' => $insertedSlots], 201);
+        
+        $message = $isUpdate ? 'Microscope session updated successfully' : 'Microscope session saved successfully';
+        $statusCode = $isUpdate ? 200 : 201;
+        $responseKey = $isUpdate ? 'slots_updated' : 'inserted_slots';
+        
+        sendResponse([
+            'success' => true, 
+            'message' => $message,
+            'id' => $sessionId, 
+            $responseKey => $insertedSlots
+        ], $statusCode);
+        
     } catch (Exception $e) {
         $db->rollback();
-        sendError('Failed to create microscope session: ' . $e->getMessage());
+        $action = $isUpdate ? 'update' : 'create';
+        sendError("Failed to {$action} microscope session: " . $e->getMessage(), 500);
     }
 }
 

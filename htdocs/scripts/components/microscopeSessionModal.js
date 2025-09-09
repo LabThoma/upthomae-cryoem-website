@@ -4,6 +4,9 @@
 import { showAlert } from "./alertSystem.js";
 import { getCurrentDateForInput } from "../utils/dateUtils.js";
 
+// Global variable to track current session ID for updates
+let currentSessionId = null;
+
 // Microscope Session Modal Functions
 export function setupMicroscopeSessionModal() {
   const modal = document.getElementById("microscopeSessionModal");
@@ -25,6 +28,9 @@ export function openMicroscopeSessionModal() {
   const content = document.getElementById("microscopeSessionModalContent");
 
   if (modal && content) {
+    // Reset session tracking for new modal
+    currentSessionId = null;
+
     // Add wide class for this modal
     modal.querySelector(".modal-content").classList.add("wide");
 
@@ -44,6 +50,8 @@ function closeMicroscopeSessionModal() {
     document.body.classList.remove("modal-open");
     // Remove wide class
     modal.querySelector(".modal-content").classList.remove("wide");
+    // Reset session tracking when closing
+    currentSessionId = null;
   }
 }
 
@@ -382,8 +390,15 @@ async function handleMicroscopeSessionSubmit(event) {
   };
 
   try {
-    const response = await fetch("/api/microscope-sessions", {
-      method: "POST",
+    // Determine if this is a new session or an update
+    const isUpdate = currentSessionId !== null;
+    const method = isUpdate ? "PUT" : "POST";
+    const url = isUpdate
+      ? `/api/microscope-sessions/${currentSessionId}`
+      : "/api/microscope-sessions";
+
+    const response = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -394,11 +409,28 @@ async function handleMicroscopeSessionSubmit(event) {
     }
 
     const result = await response.json();
-    showAlert(
-      `Microscope session saved successfully! Session ID: ${result.id}`,
-      "success"
-    );
-    closeMicroscopeSessionModal();
+
+    if (isUpdate) {
+      showAlert(
+        `Microscope session updated successfully! Session ID: ${currentSessionId}`,
+        "success"
+      );
+    } else {
+      // First save - store the session ID and change button text
+      currentSessionId = result.id;
+      const submitButton = document.querySelector(
+        '#microscopeSessionForm button[type="submit"]'
+      );
+      if (submitButton) {
+        submitButton.textContent = "Update Session";
+      }
+      showAlert(
+        `Microscope session saved successfully! Session ID: ${result.id}`,
+        "success"
+      );
+    }
+
+    // Don't close the modal - keep it open for further edits
   } catch (error) {
     console.error("Error saving microscope session:", error);
     showAlert(`Failed to save session: ${error.message}`, "error");
