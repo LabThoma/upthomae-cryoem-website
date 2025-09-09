@@ -124,6 +124,9 @@ function setupMicroscopeSessionForm() {
   // Setup star ratings after rows are generated
   setupStarRatings();
 
+  // Setup foldout functionality for collected checkboxes
+  setupCollectedFoldouts();
+
   // Handle form submission
   if (form) {
     form.addEventListener("submit", handleMicroscopeSessionSubmit);
@@ -182,6 +185,69 @@ function generateMicroscopeSlotRows() {
       <td><textarea name="comments[]" placeholder="Notes" style="width: 100%; height: 40px; resize: vertical; box-sizing: border-box;" rows="2"></textarea></td>
     `;
     tbody.appendChild(tr);
+
+    // Add the foldout row for additional microscope details
+    const foldoutRow = document.createElement("tr");
+    foldoutRow.className = "expandable-row microscope-foldout";
+    foldoutRow.dataset.slot = i;
+    foldoutRow.innerHTML = `
+      <td colspan="10">
+        <div class="expandable-content microscope-details" id="microscope-details-${i}">
+          <h4 class="detail-subtitle">Collection Details for Slot ${i}</h4>
+          <div class="microscope-details-grid">
+            <div class="form-group">
+              <label>Multigrid</label>
+              <input name="multigrid[]" type="checkbox" />
+            </div>
+            <div class="form-group">
+              <label>Px Size (Å)</label>
+              <input name="px_size[]" type="number" step="0.001" placeholder="e.g. 1.06" />
+            </div>
+            <div class="form-group">
+              <label>Magnification</label>
+              <input name="magnification[]" type="number" placeholder="e.g. 81000" />
+            </div>
+            <div class="form-group">
+              <label>Exposure (e/Å²)</label>
+              <input name="exposure_e[]" type="number" step="1" placeholder="e.g. 40" />
+            </div>
+            <div class="form-group">
+              <label>Exposure Time (s)</label>
+              <input name="exposure_time[]" type="number" step="0.1" placeholder="e.g. 2.5" />
+            </div>
+            <div class="form-group">
+              <label>Spot Size</label>
+              <input name="spot_size[]" type="number" placeholder="e.g. 4" />
+            </div>
+            <div class="form-group">
+              <label>Illumination Area</label>
+              <input name="illumination_area[]" type="number" step="0.01" placeholder="e.g. 3.5" />
+            </div>
+            <div class="form-group">
+              <label>Exp per Hole</label>
+              <input name="exp_per_hole[]" type="number" placeholder="e.g. 3" />
+            </div>
+            <div class="form-group">
+              <label>Images</label>
+              <input name="images[]" type="number" placeholder="e.g. 1500" />
+            </div>
+            <div class="form-group">
+              <label>Nominal Defocus</label>
+              <input name="nominal_defocus[]" type="text" placeholder="e.g. -1.5 to -2.5" />
+            </div>
+            <div class="form-group">
+              <label>Objective</label>
+              <input name="objective[]" type="number" placeholder="e.g. 100" />
+            </div>
+            <div class="form-group">
+              <label>Slit Width</label>
+              <input name="slit_width[]" type="number" placeholder="e.g. 20" />
+            </div>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(foldoutRow);
   }
 }
 
@@ -195,23 +261,114 @@ async function handleMicroscopeSessionSubmit(event) {
   const details = [];
   const tbody = document.getElementById("microscopeSlotsTableBody");
   tbody.querySelectorAll("tr").forEach((tr) => {
-    const grid_identifier = tr
-      .querySelector('[name="grid_identifier[]"]')
-      .value.trim();
+    // Skip foldout rows - only process main slot rows
+    if (tr.classList.contains("microscope-foldout")) {
+      return;
+    }
+
+    const gridIdentifierElement = tr.querySelector(
+      '[name="grid_identifier[]"]'
+    );
+    if (!gridIdentifierElement) {
+      return; // Skip if this isn't a main slot row
+    }
+
+    const grid_identifier = gridIdentifierElement.value.trim();
     if (grid_identifier) {
-      details.push({
+      const collectedElement = tr.querySelector('[name="collected[]"]');
+      const detail = {
         microscope_slot: parseInt(tr.dataset.slot),
         grid_identifier: grid_identifier,
         atlas: tr.querySelector('[name="atlas[]"]').checked ? 1 : 0,
         screened: tr.querySelector('[name="screened[]"]').value.trim() || null,
-        collected: tr.querySelector('[name="collected[]"]').checked ? 1 : 0,
+        collected: collectedElement ? (collectedElement.checked ? 1 : 0) : 0,
         grid_quality: tr.querySelector('[name="grid_quality[]"]').value || null,
         particle_number:
           tr.querySelector('[name="particle_number[]"]').value || null,
         ice_quality: tr.querySelector('[name="ice_quality[]"]').value || null,
         rescued: tr.querySelector('[name="rescued[]"]').checked ? 1 : 0,
         comments: tr.querySelector('[name="comments[]"]').value.trim() || null,
-      });
+      };
+
+      // Add additional microscope details if collected checkbox is checked
+      if (collectedElement && collectedElement.checked) {
+        const slot = tr.dataset.slot;
+        const foldoutRow = document.querySelector(
+          `.microscope-foldout[data-slot="${slot}"]`
+        );
+
+        if (foldoutRow) {
+          const multigridElement = foldoutRow.querySelector(
+            '[name="multigrid[]"]'
+          );
+          const pxSizeElement = foldoutRow.querySelector('[name="px_size[]"]');
+          const magnificationElement = foldoutRow.querySelector(
+            '[name="magnification[]"]'
+          );
+          const exposureEElement = foldoutRow.querySelector(
+            '[name="exposure_e[]"]'
+          );
+          const exposureTimeElement = foldoutRow.querySelector(
+            '[name="exposure_time[]"]'
+          );
+          const spotSizeElement = foldoutRow.querySelector(
+            '[name="spot_size[]"]'
+          );
+          const illuminationAreaElement = foldoutRow.querySelector(
+            '[name="illumination_area[]"]'
+          );
+          const expPerHoleElement = foldoutRow.querySelector(
+            '[name="exp_per_hole[]"]'
+          );
+          const imagesElement = foldoutRow.querySelector('[name="images[]"]');
+          const nominalDefocusElement = foldoutRow.querySelector(
+            '[name="nominal_defocus[]"]'
+          );
+          const objectiveElement = foldoutRow.querySelector(
+            '[name="objective[]"]'
+          );
+          const slitWidthElement = foldoutRow.querySelector(
+            '[name="slit_width[]"]'
+          );
+
+          detail.multigrid = multigridElement
+            ? multigridElement.checked
+              ? 1
+              : 0
+            : 0;
+          detail.px_size = pxSizeElement ? pxSizeElement.value || null : null;
+          detail.magnification = magnificationElement
+            ? magnificationElement.value || null
+            : null;
+          detail.exposure_e = exposureEElement
+            ? exposureEElement.value || null
+            : null;
+          detail.exposure_time = exposureTimeElement
+            ? exposureTimeElement.value || null
+            : null;
+          detail.spot_size = spotSizeElement
+            ? spotSizeElement.value || null
+            : null;
+          detail.illumination_area = illuminationAreaElement
+            ? illuminationAreaElement.value || null
+            : null;
+          detail.exp_per_hole = expPerHoleElement
+            ? expPerHoleElement.value || null
+            : null;
+          detail.images = imagesElement ? imagesElement.value || null : null;
+          detail.nominal_defocus = nominalDefocusElement
+            ? nominalDefocusElement.value.trim() || null
+            : null;
+          detail.objective = objectiveElement
+            ? objectiveElement.value || null
+            : null;
+          detail.slit_width = slitWidthElement
+            ? slitWidthElement.value || null
+            : null;
+        }
+      }
+
+      details.push(detail);
     }
   });
 
@@ -296,4 +453,49 @@ function setStarRating(ratingContainer, value) {
   const hiddenInput = ratingContainer.querySelector('input[type="hidden"]');
   hiddenInput.value = value;
   highlightStars(ratingContainer, value);
+}
+
+// Foldout Functions
+function setupCollectedFoldouts() {
+  const collectedCheckboxes = document.querySelectorAll(
+    'input[name="collected[]"]'
+  );
+
+  collectedCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", function () {
+      const row = this.closest("tr");
+      const slot = row.dataset.slot;
+      const foldoutRow = document.querySelector(
+        `.microscope-foldout[data-slot="${slot}"]`
+      );
+      const content = document.getElementById(`microscope-details-${slot}`);
+
+      if (this.checked) {
+        // Show foldout
+        foldoutRow.classList.add("visible");
+        content.classList.add("expanded");
+      } else {
+        // Hide foldout and clear values
+        foldoutRow.classList.remove("visible");
+        content.classList.remove("expanded");
+        clearFoldoutValues(slot);
+      }
+    });
+  });
+}
+
+function clearFoldoutValues(slot) {
+  const foldoutRow = document.querySelector(
+    `.microscope-foldout[data-slot="${slot}"]`
+  );
+  if (foldoutRow) {
+    const inputs = foldoutRow.querySelectorAll("input");
+    inputs.forEach((input) => {
+      if (input.type === "checkbox") {
+        input.checked = false;
+      } else {
+        input.value = "";
+      }
+    });
+  }
 }

@@ -1531,3 +1531,85 @@ body.modal-open {
 .star-rating .star.inactive {
   color: #ddd;
 }
+
+/* Textarea styling for comments in microscope table */
+.microscope-table-container textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px;
+  resize: vertical;
+  min-height: 40px;
+}
+
+/* Microscope Session Foldout Styling */
+.microscope-foldout {
+  background-color: #f9f9f9;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.microscope-foldout.show {
+  display: table-row;
+}
+
+.microscope-foldout.hide {
+  display: none;
+}
+
+.microscope-foldout td {
+  border-top: none;
+  padding: 15px;
+}
+
+.microscope-details-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.microscope-details-grid .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.microscope-details-grid .form-group label {
+  font-weight: 600;
+  margin-bottom: 3px;
+  color: #2c3e50;
+  font-size: 12px;
+}
+
+.microscope-details-grid .form-group input,
+.microscope-details-grid .form-group select {
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 13px;
+  height: 28px;
+  box-sizing: border-box;
+}
+
+.microscope-details-grid .form-group input:focus,
+.microscope-details-grid .form-group select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.microscope-details-grid .form-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  height: 16px;
+}
+
+.microscope-table-container textarea:focus {
+  outline: none;
+  border-color: #609BBF;
+  box-shadow: 0 0 0 2px rgba(96, 155, 191, 0.2);
+}
