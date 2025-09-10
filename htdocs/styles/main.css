@@ -742,7 +742,7 @@ h2 {
 }
 
 .expandable-content.expanded {
-  max-height: 500px;
+  max-height: 2000px;
   margin: 10px 0;
   padding: 15px;
   border-top: 1px solid #e2e8f0;
@@ -1346,6 +1346,7 @@ h2 {
     flex-direction: column;
     gap: 20px;
     margin: 20px 0;
+    padding-bottom: 40px; /* Ensure content isn't cut off at bottom */
 }
 
 .admin-section {
@@ -1377,6 +1378,17 @@ h2 {
 /* Grid Summary Table Styles - Reuse existing table styles */
 .grid-summary-container {
     margin-top: 20px;
+}
+
+/* Microscope Sessions Table Styles */
+.microscope-sessions-container {
+    margin-top: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+}
+
+.microscope-sessions-container table {
+    min-width: 800px; /* Ensures table doesn't get too cramped */
 }
 
 .action-buttons {
@@ -1530,6 +1542,34 @@ body.modal-open {
 
 .star-rating .star.inactive {
   color: #ddd;
+}
+
+/* Read-only Star Display System */
+.star-display {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
+}
+
+.star-display .star {
+  font-size: 16px;
+  user-select: none;
+}
+
+.star-display .star.filled {
+  color: #609BBF;
+}
+
+.star-display .star.empty {
+  color: #ddd;
+}
+
+.star-display.empty-rating {
+  color: #999;
+  font-style: italic;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Textarea styling for comments in microscope table */

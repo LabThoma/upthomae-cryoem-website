@@ -197,6 +197,37 @@ $pageTitle = "THOMAE cryoEM";
                 </div>
               </div>
 
+              <!-- Microscope Sessions Section -->
+              <div class="admin-section">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                  "
+                >
+                  <h3 style="margin: 0">Microscope Sessions</h3>
+                </div>
+                <div class="microscope-sessions-container">
+                  <table class="grid-table" id="microscopeSessionsTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Microscope</th>
+                        <th>Users</th>
+                        <th>Number of Grids</th>
+                        <th>Overnight</th>
+                        <th>Issues</th>
+                      </tr>
+                    </thead>
+                    <tbody id="microscopeSessionsTableBody">
+                      <!-- Session rows will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <div class="admin-section">
                 <h3>System Actions</h3>
                 <p>Administrative functions</p>

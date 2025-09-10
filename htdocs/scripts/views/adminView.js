@@ -6,6 +6,7 @@ import {
   setupMicroscopeSessionModal,
   openMicroscopeSessionModal,
 } from "../components/microscopeSessionModal.js";
+import { renderStarRating } from "../utils/starRating.js";
 
 // Flag to prevent multiple initialization
 let isAdminViewInitialized = false;
@@ -20,6 +21,7 @@ export function setupAdminView() {
   setupGridModal();
   setupMicroscopeSessionModal();
   loadGridSummary();
+  loadMicroscopeSessions();
   // Make handleSelectChange globally available
   window.handleSelectChange = handleSelectChange;
 
@@ -765,3 +767,135 @@ window.editGridType = editGridType;
 window.markGridTypeEmpty = markGridTypeEmpty;
 window.markGridTypeInUse = markGridTypeInUse;
 window.deleteGridType = deleteGridType;
+
+// Load and display microscope sessions table
+async function loadMicroscopeSessions() {
+  try {
+    const response = await fetch("/api/microscope-sessions");
+    if (!response.ok) {
+      throw new Error("Failed to fetch microscope sessions");
+    }
+
+    const sessionsData = await response.json();
+    displayMicroscopeSessions(sessionsData);
+  } catch (error) {
+    console.error("Error loading microscope sessions:", error);
+    showAlert(`Error loading microscope sessions: ${error.message}`, "error");
+  }
+}
+
+// Display microscope sessions table
+function displayMicroscopeSessions(sessionsData) {
+  const tableBody = document.getElementById("microscopeSessionsTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = "";
+
+  if (sessionsData.length === 0) {
+    tableBody.innerHTML =
+      "<tr><td colspan='6'>No microscope sessions found</td></tr>";
+    return;
+  }
+
+  sessionsData.forEach((session, idx) => {
+    // Main session row
+    const sessionRow = document.createElement("tr");
+    sessionRow.innerHTML = `
+      <td>
+        <span class="expandable-row-icon" data-session-idx="${idx}">▶</span>
+        ${session.date || ""}
+      </td>
+      <td>${session.microscope || ""}</td>
+      <td>${session.users || "N/A"}</td>
+      <td>${session.grid_count || 0}</td>
+      <td>${session.overnight ? "Yes" : "No"}</td>
+      <td>${session.issues || ""}</td>
+    `;
+
+    // Detail row (initially hidden)
+    const detailRow = document.createElement("tr");
+    detailRow.className = "expandable-row";
+    const detailCell = document.createElement("td");
+    detailCell.colSpan = 6;
+
+    // Create grid details table - always show slots 12 down to 1
+    let gridRows = "";
+    for (let slot = 12; slot >= 1; slot--) {
+      const gridDetail = session.details?.find(
+        (detail) => detail.microscope_slot === slot
+      );
+
+      if (gridDetail) {
+        // Slot has data
+        gridRows += `
+          <tr>
+            <td>${slot}</td>
+            <td>${gridDetail.grid_identifier || ""}</td>
+            <td>${gridDetail.sample_name || ""}</td>
+            <td>${gridDetail.atlas ? "Yes" : "No"}</td>
+            <td>${gridDetail.screened || ""}</td>
+            <td>${gridDetail.collected ? "Yes" : "No"}</td>
+            <td>${renderStarRating(gridDetail.ice_quality)}</td>
+            <td>${renderStarRating(gridDetail.particle_number)}</td>
+            <td>${renderStarRating(gridDetail.grid_quality)}</td>
+            <td>${gridDetail.rescued ? "Yes" : "No"}</td>
+            <td>${gridDetail.images || ""}</td>
+            <td>${gridDetail.comments || ""}</td>
+          </tr>
+        `;
+      } else {
+        // Empty slot
+        gridRows += `
+          <tr style="color: #888; font-style: italic;">
+            <td>${slot}</td>
+            <td colspan="11" style="text-align: center;">Empty slot</td>
+          </tr>
+        `;
+      }
+    }
+
+    detailCell.innerHTML = `
+      <div class="expandable-content" id="microscope-session-details-${idx}">
+        <h4 class="detail-subtitle">Grid Details for Session on ${session.date}</h4>
+        <div class="grid-detail-container">
+          <table class="grid-detail-table">
+            <thead>
+              <tr>
+                <th>Slot</th>
+                <th>Grid ID</th>
+                <th>Sample</th>
+                <th>Atlas</th>
+                <th>Screened</th>
+                <th>Collected</th>
+                <th>Ice Quality</th>
+                <th>Particle #</th>
+                <th>Grid Quality</th>
+                <th>Rescued</th>
+                <th>Images</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gridRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    detailRow.appendChild(detailCell);
+    tableBody.appendChild(sessionRow);
+    tableBody.appendChild(detailRow);
+
+    // Toggle logic for details row and content
+    sessionRow
+      .querySelector(".expandable-row-icon")
+      .addEventListener("click", function () {
+        detailRow.classList.toggle("visible");
+        const content = detailRow.querySelector(".expandable-content");
+        content.classList.toggle("expanded");
+        this.classList.toggle("expanded");
+        this.textContent = this.textContent === "▶" ? "▼" : "▶";
+      });
+  });
+}
