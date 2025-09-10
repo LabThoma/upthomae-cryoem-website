@@ -3,6 +3,16 @@ require_once(__DIR__ . '/../../../include/config.php');
 // require_once(__DIR__ . '/../validation.php');
 function handleMicroscopeSessions($method, $path, $db, $input) {
     switch ($method) {
+        case 'GET':
+            if ($path === '/api/microscope-sessions') {
+                getAllMicroscopeSessions($db);
+            } elseif (preg_match('/^\/api\/microscope-sessions\/(\d+)$/', $path, $matches)) {
+                $sessionId = (int)$matches[1];
+                getMicroscopeSessionDetails($db, $sessionId);
+            } else {
+                sendError('Microscope sessions endpoint not found', 404);
+            }
+            break;
         case 'POST':
             if ($path === '/api/microscope-sessions') {
                 saveMicroscopeSession($db, $input);
@@ -189,4 +199,85 @@ function findPrepIdByGridIdentifier($db, $grid_identifier) {
         [$session_id, $slot_number]
     );
     return !empty($prepRows) ? $prepRows[0]['prep_id'] : null;
+}
+
+// Helper function to get detailed grid information for a microscope session
+function getMicroscopeSessionGridDetails($db, $sessionId) {
+    return $db->query("
+        SELECT 
+            md.*,
+            s.user_name,
+            s.grid_box_name,
+            sam.sample_name,
+            gt.grid_type_name
+        FROM microscope_details md
+        LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+        LEFT JOIN sessions s ON gp.session_id = s.session_id
+        LEFT JOIN samples sam ON s.session_id = sam.session_id
+        LEFT JOIN grids g ON s.session_id = g.session_id
+        LEFT JOIN grid_types gt ON g.grid_type = gt.grid_type_name
+        WHERE md.session_id = ?
+        ORDER BY md.microscope_slot
+    ", [$sessionId]);
+}
+
+// Get all microscope sessions with their details
+function getAllMicroscopeSessions($db) {
+    try {
+        // Get all microscope sessions with basic info and grid count
+        $sessions = $db->query("
+            SELECT 
+                ms.session_id,
+                ms.date,
+                ms.microscope,
+                ms.overnight,
+                ms.clipped_at_microscope,
+                ms.issues,
+                ms.created_at,
+                ms.updated_at,
+                COUNT(md.detail_id) as grid_count,
+                GROUP_CONCAT(DISTINCT s.user_name SEPARATOR ', ') as users
+            FROM microscope_sessions ms
+            LEFT JOIN microscope_details md ON ms.session_id = md.session_id
+            LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            LEFT JOIN sessions s ON gp.session_id = s.session_id
+            GROUP BY ms.session_id, ms.date, ms.microscope, ms.overnight, ms.clipped_at_microscope, ms.issues, ms.created_at, ms.updated_at
+            ORDER BY ms.date DESC, ms.created_at DESC
+        ");
+
+        // For each session, get detailed grid information
+        foreach ($sessions as &$session) {
+            $session['details'] = getMicroscopeSessionGridDetails($db, $session['session_id']);
+        }
+
+        sendResponse($sessions);
+    } catch (Exception $e) {
+        error_log("Error fetching microscope sessions: " . $e->getMessage());
+        sendError('Error fetching microscope sessions: ' . $e->getMessage());
+    }
+}
+
+// Get specific microscope session details
+function getMicroscopeSessionDetails($db, $sessionId) {
+    try {
+        // Get basic microscope session info
+        $sessionRows = $db->query("
+            SELECT * FROM microscope_sessions WHERE session_id = ?
+        ", [$sessionId]);
+        
+        if (empty($sessionRows)) {
+            sendError('Microscope session not found', 404);
+        }
+        
+        $session = $sessionRows[0];
+        
+        // Get detailed grid information using the helper function
+        $session['details'] = getMicroscopeSessionGridDetails($db, $sessionId);
+        $session['grid_count'] = count($session['details']);
+        
+        sendResponse($session);
+    } catch (Exception $e) {
+        error_log("Error fetching microscope session details: " . $e->getMessage());
+        sendError('Error fetching microscope session details: ' . $e->getMessage());
+    }
 }
