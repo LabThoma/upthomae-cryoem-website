@@ -3,6 +3,10 @@
 
 import { showAlert } from "./alertSystem.js";
 import { getCurrentDateForInput } from "../utils/dateUtils.js";
+import {
+  renderInteractiveStarRating,
+  setupStarRatings,
+} from "../utils/starRating.js";
 
 // Global variable to track current session ID for updates
 let currentSessionId = null;
@@ -165,30 +169,9 @@ function generateMicroscopeSlotRows() {
         <option value="automatically">Automatically</option>
       </select></td>
       <td><input name="collected[]" type="checkbox" /></td>
-      <td><div class="star-rating" data-field="grid_quality" data-slot="${i}">
-        <span class="star" data-value="1">★</span>
-        <span class="star" data-value="2">★</span>
-        <span class="star" data-value="3">★</span>
-        <span class="star" data-value="4">★</span>
-        <span class="star" data-value="5">★</span>
-        <input type="hidden" name="grid_quality[]" value="0" />
-      </div></td>
-      <td><div class="star-rating" data-field="particle_number" data-slot="${i}">
-        <span class="star" data-value="1">★</span>
-        <span class="star" data-value="2">★</span>
-        <span class="star" data-value="3">★</span>
-        <span class="star" data-value="4">★</span>
-        <span class="star" data-value="5">★</span>
-        <input type="hidden" name="particle_number[]" value="0" />
-      </div></td>
-      <td><div class="star-rating" data-field="ice_quality" data-slot="${i}">
-        <span class="star" data-value="1">★</span>
-        <span class="star" data-value="2">★</span>
-        <span class="star" data-value="3">★</span>
-        <span class="star" data-value="4">★</span>
-        <span class="star" data-value="5">★</span>
-        <input type="hidden" name="ice_quality[]" value="0" />
-      </div></td>
+      <td>${renderInteractiveStarRating("grid_quality", i, 0)}</td>
+      <td>${renderInteractiveStarRating("particle_number", i, 0)}</td>
+      <td>${renderInteractiveStarRating("ice_quality", i, 0)}</td>
       <td><input name="rescued[]" type="checkbox" /></td>
       <td><textarea name="comments[]" placeholder="Notes" style="width: 100%; height: 40px; resize: vertical; box-sizing: border-box;" rows="2"></textarea></td>
     `;
@@ -435,56 +418,6 @@ async function handleMicroscopeSessionSubmit(event) {
     console.error("Error saving microscope session:", error);
     showAlert(`Failed to save session: ${error.message}`, "error");
   }
-}
-
-// Star Rating Functions
-function setupStarRatings() {
-  const starRatings = document.querySelectorAll(".star-rating");
-
-  starRatings.forEach((rating) => {
-    const stars = rating.querySelectorAll(".star");
-    const hiddenInput = rating.querySelector('input[type="hidden"]');
-
-    stars.forEach((star) => {
-      // Add hover effect
-      star.addEventListener("mouseenter", () => {
-        const value = parseInt(star.dataset.value);
-        highlightStars(rating, value);
-      });
-
-      // Click to set rating
-      star.addEventListener("click", () => {
-        const value = parseInt(star.dataset.value);
-        setStarRating(rating, value);
-        hiddenInput.value = value;
-      });
-    });
-
-    // Reset on mouse leave
-    rating.addEventListener("mouseleave", () => {
-      const currentValue = parseInt(hiddenInput.value);
-      highlightStars(rating, currentValue);
-    });
-  });
-}
-
-function highlightStars(ratingContainer, value) {
-  const stars = ratingContainer.querySelectorAll(".star");
-  stars.forEach((star, index) => {
-    if (index < value) {
-      star.classList.add("active");
-      star.classList.remove("inactive");
-    } else {
-      star.classList.remove("active");
-      star.classList.add("inactive");
-    }
-  });
-}
-
-function setStarRating(ratingContainer, value) {
-  const hiddenInput = ratingContainer.querySelector('input[type="hidden"]');
-  hiddenInput.value = value;
-  highlightStars(ratingContainer, value);
 }
 
 // Foldout Functions
