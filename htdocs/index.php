@@ -177,9 +177,6 @@ $pageTitle = "THOMAE cryoEM";
                   <button id="addNewGridsButton" class="btn btn-primary">
                     Add New Grids
                   </button>
-                  <button id="openMicroscopeSessionBtn" class="btn btn-primary">
-                    New Microscope Session
-                  </button>
                 </div>
                 <div class="grid-summary-container">
                   <table class="grid-table" id="gridSummaryTable">
@@ -208,6 +205,9 @@ $pageTitle = "THOMAE cryoEM";
                   "
                 >
                   <h3 style="margin: 0">Microscope Sessions</h3>
+                  <button id="openMicroscopeSessionBtn" class="btn btn-primary">
+                    New Microscope Session
+                  </button>
                 </div>
                 <div class="microscope-sessions-container">
                   <table class="grid-table" id="microscopeSessionsTable">
