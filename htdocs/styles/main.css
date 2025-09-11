@@ -795,6 +795,7 @@ h2 {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
 }
 
 .grid-detail-table th {
@@ -806,10 +807,14 @@ h2 {
 .grid-detail-table tr:hover {
   background-color: #f1f5f9;
 }
-/* Make the comments column wider */
+/* Make the comments column handle text wrapping */
 .grid-detail-table .comments-col {
-  min-width: 200px;
-  width: 30%;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  vertical-align: top;
+  line-height: 1.4;
+  max-width: 300px;
 }
 
 /* Style for actions column to display buttons inline */

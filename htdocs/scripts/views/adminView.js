@@ -827,20 +827,27 @@ function displayMicroscopeSessions(sessionsData) {
 
       if (gridDetail) {
         // Slot has data
+        // Show 'none' in images if not collected, otherwise show actual image count
+        const imagesDisplay = gridDetail.collected
+          ? gridDetail.images || ""
+          : "none";
+        // Convert newlines to HTML line breaks for display
+        const commentsDisplay = (gridDetail.comments || "").replace(
+          /\n/g,
+          "<br>"
+        );
+
         gridRows += `
           <tr>
             <td>${slot}</td>
             <td>${gridDetail.grid_identifier || ""}</td>
-            <td>${gridDetail.sample_name || ""}</td>
-            <td>${gridDetail.atlas ? "Yes" : "No"}</td>
             <td>${gridDetail.screened || ""}</td>
-            <td>${gridDetail.collected ? "Yes" : "No"}</td>
+            <td>${imagesDisplay}</td>
             <td>${renderStarRating(gridDetail.ice_quality)}</td>
             <td>${renderStarRating(gridDetail.particle_number)}</td>
             <td>${renderStarRating(gridDetail.grid_quality)}</td>
             <td>${gridDetail.rescued ? "Yes" : "No"}</td>
-            <td>${gridDetail.images || ""}</td>
-            <td>${gridDetail.comments || ""}</td>
+            <td class="comments-col">${commentsDisplay}</td>
           </tr>
         `;
       } else {
@@ -848,7 +855,7 @@ function displayMicroscopeSessions(sessionsData) {
         gridRows += `
           <tr style="color: #888; font-style: italic;">
             <td>${slot}</td>
-            <td colspan="11" style="text-align: center;">Empty slot</td>
+            <td colspan="8" style="text-align: center;">Empty slot</td>
           </tr>
         `;
       }
@@ -863,15 +870,12 @@ function displayMicroscopeSessions(sessionsData) {
               <tr>
                 <th>Slot</th>
                 <th>Grid ID</th>
-                <th>Sample</th>
-                <th>Atlas</th>
                 <th>Screened</th>
-                <th>Collected</th>
+                <th>Images</th>
                 <th>Ice Quality</th>
                 <th>Particle #</th>
                 <th>Grid Quality</th>
                 <th>Rescued</th>
-                <th>Images</th>
                 <th>Comments</th>
               </tr>
             </thead>
