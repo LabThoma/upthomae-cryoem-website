@@ -55,7 +55,7 @@ function saveMicroscopeSession($db, $input, $sessionId = null) {
         if ($isUpdate) {
             // Update existing session
             $db->execute(
-                'UPDATE microscope_sessions SET date = ?, microscope = ?, overnight = ?, clipped_at_microscope = ?, issues = ?, updated_at = NOW() WHERE session_id = ?',
+                'UPDATE microscope_sessions SET date = ?, microscope = ?, overnight = ?, clipped_at_microscope = ?, issues = ?, updated_at = NOW() WHERE microscope_session_id = ?',
                 [
                     $input['date'],
                     $input['microscope'],
@@ -67,7 +67,7 @@ function saveMicroscopeSession($db, $input, $sessionId = null) {
             );
 
             // Delete existing microscope_details for this session
-            $db->execute('DELETE FROM microscope_details WHERE session_id = ?', [$sessionId]);
+            $db->execute('DELETE FROM microscope_details WHERE microscope_session_id = ?', [$sessionId]);
         } else {
             // Create new session
             $result = $db->execute(
@@ -121,7 +121,7 @@ function saveMicroscopeSession($db, $input, $sessionId = null) {
 
                 $detailResult = $db->execute(
                     'INSERT INTO microscope_details (
-                        session_id, microscope_slot, grid_identifier, prep_id, atlas, screened, collected, multigrid, px_size, magnification, exposure_e, exposure_time, spot_size, illumination_area, exp_per_hole, images, comments, nominal_defocus, objective, slit_width, rescued, particle_number, ice_quality, grid_quality
+                        microscope_session_id, microscope_slot, grid_identifier, prep_id, atlas, screened, collected, multigrid, px_size, magnification, exposure_e, exposure_time, spot_size, illumination_area, exp_per_hole, images, comments, nominal_defocus, objective, slit_width, rescued, particle_number, ice_quality, grid_quality
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [
                         $sessionId,
@@ -216,7 +216,7 @@ function getMicroscopeSessionGridDetails($db, $sessionId) {
         LEFT JOIN samples sam ON s.session_id = sam.session_id
         LEFT JOIN grids g ON s.session_id = g.session_id
         LEFT JOIN grid_types gt ON g.grid_type = gt.grid_type_name
-        WHERE md.session_id = ?
+        WHERE md.microscope_session_id = ?
         ORDER BY md.microscope_slot
     ", [$sessionId]);
 }
@@ -227,7 +227,7 @@ function getAllMicroscopeSessions($db) {
         // Get all microscope sessions with basic info and grid count
         $sessions = $db->query("
             SELECT 
-                ms.session_id,
+                ms.microscope_session_id,
                 ms.date,
                 ms.microscope,
                 ms.overnight,
@@ -238,16 +238,16 @@ function getAllMicroscopeSessions($db) {
                 COUNT(md.detail_id) as grid_count,
                 GROUP_CONCAT(DISTINCT s.user_name SEPARATOR ', ') as users
             FROM microscope_sessions ms
-            LEFT JOIN microscope_details md ON ms.session_id = md.session_id
+            LEFT JOIN microscope_details md ON ms.microscope_session_id = md.microscope_session_id
             LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
             LEFT JOIN sessions s ON gp.session_id = s.session_id
-            GROUP BY ms.session_id, ms.date, ms.microscope, ms.overnight, ms.clipped_at_microscope, ms.issues, ms.created_at, ms.updated_at
+            GROUP BY ms.microscope_session_id, ms.date, ms.microscope, ms.overnight, ms.clipped_at_microscope, ms.issues, ms.created_at, ms.updated_at
             ORDER BY ms.date DESC, ms.created_at DESC
         ");
 
         // For each session, get detailed grid information
         foreach ($sessions as &$session) {
-            $session['details'] = getMicroscopeSessionGridDetails($db, $session['session_id']);
+            $session['details'] = getMicroscopeSessionGridDetails($db, $session['microscope_session_id']);
         }
 
         sendResponse($sessions);
@@ -262,7 +262,7 @@ function getMicroscopeSessionDetails($db, $sessionId) {
     try {
         // Get basic microscope session info
         $sessionRows = $db->query("
-            SELECT * FROM microscope_sessions WHERE session_id = ?
+            SELECT * FROM microscope_sessions WHERE microscope_session_id = ?
         ", [$sessionId]);
         
         if (empty($sessionRows)) {

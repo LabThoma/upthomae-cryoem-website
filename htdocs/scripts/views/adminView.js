@@ -867,12 +867,8 @@ function displayMicroscopeSessions(sessionsData) {
     detailCell.innerHTML = `
       <div class="expandable-content" id="microscope-session-details-${idx}">
         <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px; gap: 10px;">
-          <h4 class="detail-subtitle" style="margin: 0;">Details for Session on ${
-            session.date
-          }</h4>
-          <button class="btn-icon btn-warning" onclick="editMicroscopeSession(${
-            session.session_id || session.microscope_session_id || idx
-          }, ${idx})" title="Edit this microscope session">
+          <h4 class="detail-subtitle" style="margin: 0;">Details for Session on ${session.date}</h4>
+          <button class="btn-icon btn-warning" onclick="editMicroscopeSession(${session.microscope_session_id}, ${idx})" title="Edit this microscope session">
             <i class="fas fa-pen-to-square"></i>
           </button>
         </div>
@@ -941,7 +937,7 @@ async function editMicroscopeSession(sessionId, sessionIndex) {
 function openMicroscopeSessionModalForEdit(sessionData) {
   // Open the modal with the session ID for editing and a callback to refresh
   openMicroscopeSessionModal(
-    sessionData.session_id || sessionData.microscope_session_id,
+    sessionData.microscope_session_id,
     loadMicroscopeSessions
   );
 

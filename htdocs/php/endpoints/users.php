@@ -31,16 +31,16 @@ function getUserMicroscopeSessions($db, $username) {
         // Get all microscope sessions for the user, grouped by session
         $rows = $db->query("
             SELECT 
-                ms.session_id,
+                ms.microscope_session_id,
                 ms.date AS microscope_session_date,
                 ms.microscope AS microscope_name,
                 COUNT(md.prep_id) AS grid_count
             FROM microscope_sessions ms
-            LEFT JOIN microscope_details md ON ms.session_id = md.session_id
+            LEFT JOIN microscope_details md ON ms.microscope_session_id = md.microscope_session_id
             LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
             LEFT JOIN sessions s ON gp.session_id = s.session_id
             WHERE s.user_name = ?
-            GROUP BY ms.session_id, ms.date, ms.microscope
+            GROUP BY ms.microscope_session_id, ms.date, ms.microscope
             ORDER BY ms.date DESC
         ", [$username]);
         $result = [];
@@ -51,8 +51,8 @@ function getUserMicroscopeSessions($db, $username) {
                  FROM microscope_details md
                  LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
                  LEFT JOIN samples s ON gp.sample_id = s.sample_id
-                 WHERE md.session_id = ?",
-                [$row['session_id']]
+                 WHERE md.microscope_session_id = ?",
+                [$row['microscope_session_id']]
             );
             $grids = [];
             foreach ($details as $d) {
@@ -70,8 +70,8 @@ function getUserMicroscopeSessions($db, $username) {
             }
             // For each microscope session, find all grid_preparations linked via microscope_details
             $prepRows = $db->query(
-                "SELECT DISTINCT md.prep_id FROM microscope_details md WHERE md.session_id = ? AND md.prep_id IS NOT NULL",
-                [$row['session_id']]
+                "SELECT DISTINCT md.prep_id FROM microscope_details md WHERE md.microscope_session_id = ? AND md.prep_id IS NOT NULL",
+                [$row['microscope_session_id']]
             );
             $prepIds = array_column($prepRows, 'prep_id');
             $boxNames = [];
@@ -191,7 +191,7 @@ function getMicroscopeSessionsForUser($db, $username) {
             FROM microscope_details md
             LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
             LEFT JOIN sessions s ON gp.session_id = s.session_id
-            LEFT JOIN microscope_sessions ms ON md.session_id = ms.session_id
+            LEFT JOIN microscope_sessions ms ON md.microscope_session_id = ms.microscope_session_id
             WHERE s.user_name = ?
             ORDER BY ms.date DESC, md.last_updated DESC
         ", [$username]);

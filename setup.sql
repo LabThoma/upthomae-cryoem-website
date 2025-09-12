@@ -143,7 +143,7 @@ CREATE TABLE `grid_preparations` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 84 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- 7. Create microscope_sessions table
 CREATE TABLE `microscope_sessions` (
-  `session_id` int(11) NOT NULL AUTO_INCREMENT,
+  `microscope_session_id` int(11) NOT NULL AUTO_INCREMENT,
   `date` date NOT NULL,
   `microscope` varchar(255) NOT NULL,
   `overnight` tinyint(1) DEFAULT 0,
@@ -151,12 +151,12 @@ CREATE TABLE `microscope_sessions` (
   `issues` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`session_id`)
+  PRIMARY KEY (`microscope_session_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- 8. Create microscope_details table
 CREATE TABLE `microscope_details` (
   `detail_id` int(11) NOT NULL AUTO_INCREMENT,
-  `session_id` int(11) NOT NULL,
+  `microscope_session_id` int(11) NOT NULL,
   `microscope_slot` int(2) NOT NULL CHECK (
     `microscope_slot` BETWEEN 1 AND 12
   ),
@@ -194,9 +194,9 @@ CREATE TABLE `microscope_details` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`detail_id`),
-  KEY `session_id` (`session_id`),
+  KEY `microscope_session_id` (`microscope_session_id`),
   KEY `prep_id` (`prep_id`),
-  CONSTRAINT `microscope_details_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `microscope_sessions` (`session_id`) ON DELETE CASCADE,
+  CONSTRAINT `microscope_details_ibfk_1` FOREIGN KEY (`microscope_session_id`) REFERENCES `microscope_sessions` (`microscope_session_id`) ON DELETE CASCADE,
   CONSTRAINT `microscope_details_ibfk_2` FOREIGN KEY (`prep_id`) REFERENCES `grid_preparations` (`prep_id`) ON DELETE
   SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
