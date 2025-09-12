@@ -11,6 +11,9 @@ import {
 // Global variable to track current session ID for updates
 let currentSessionId = null;
 
+// Global callback for when session is saved/updated
+let onSessionSavedCallback = null;
+
 // Microscope Session Modal Functions
 export function setupMicroscopeSessionModal() {
   const modal = document.getElementById("microscopeSessionModal");
@@ -27,13 +30,17 @@ export function setupMicroscopeSessionModal() {
   }
 }
 
-export function openMicroscopeSessionModal() {
+export function openMicroscopeSessionModal(
+  sessionId = null,
+  onSavedCallback = null
+) {
   const modal = document.getElementById("microscopeSessionModal");
   const content = document.getElementById("microscopeSessionModalContent");
 
   if (modal && content) {
-    // Reset session tracking for new modal
-    currentSessionId = null;
+    // Set session tracking based on parameter
+    currentSessionId = sessionId;
+    onSessionSavedCallback = onSavedCallback;
 
     // Add wide class for this modal
     modal.querySelector(".modal-content").classList.add("wide");
@@ -47,6 +54,16 @@ export function openMicroscopeSessionModal() {
   }
 }
 
+// Function to set the current session ID (for editing)
+export function setCurrentSessionId(sessionId) {
+  currentSessionId = sessionId;
+}
+
+// Function to get the current session ID
+export function getCurrentSessionId() {
+  return currentSessionId;
+}
+
 function closeMicroscopeSessionModal() {
   const modal = document.getElementById("microscopeSessionModal");
   if (modal) {
@@ -56,6 +73,7 @@ function closeMicroscopeSessionModal() {
     modal.querySelector(".modal-content").classList.remove("wide");
     // Reset session tracking when closing
     currentSessionId = null;
+    onSessionSavedCallback = null;
   }
 }
 
@@ -398,6 +416,10 @@ async function handleMicroscopeSessionSubmit(event) {
         `Microscope session updated successfully! Session ID: ${currentSessionId}`,
         "success"
       );
+      // Call the callback to refresh the admin table
+      if (onSessionSavedCallback) {
+        onSessionSavedCallback();
+      }
     } else {
       // First save - store the session ID and change button text
       currentSessionId = result.id;
@@ -411,6 +433,10 @@ async function handleMicroscopeSessionSubmit(event) {
         `Microscope session saved successfully! Session ID: ${result.id}`,
         "success"
       );
+      // Call the callback to refresh the admin table
+      if (onSessionSavedCallback) {
+        onSessionSavedCallback();
+      }
     }
 
     // Don't close the modal - keep it open for further edits
