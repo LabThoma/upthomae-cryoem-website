@@ -8,6 +8,28 @@ import {
   setupStarRatings,
 } from "../utils/starRating.js";
 import { autoSaveManager } from "../utils/autoSave.js";
+import {
+  populateDropdownFromAPI,
+  handleAddNewOption,
+} from "../utils/autocomplete.js";
+
+/**
+ * Populate microscope dropdown specifically for this modal
+ * @param {string} elementId - ID of the select element to populate
+ */
+async function populateMicroscopeDropdown(elementId = "sessionMicroscope") {
+  return await populateDropdownFromAPI(
+    elementId,
+    "/api/microscope-sessions/microscopes",
+    "Select Microscope...",
+    null,
+    (error) => {
+      console.error("Failed to load microscopes:", error);
+      // Could show user-friendly message here if needed
+    },
+    true // Enable "Add new" option
+  );
+}
 
 // Global variable to track current session ID for updates
 let currentSessionId = null;
@@ -149,7 +171,10 @@ function generateMicroscopeSessionForm() {
         </div>
         <div class="form-group">
           <label for="sessionMicroscope">Microscope *</label>
-          <input type="text" name="microscope" id="sessionMicroscope" required placeholder="e.g. Krios1" />
+          <select name="microscope" id="sessionMicroscope" required>
+            <option value="">Select Microscope...</option>
+            <!-- Microscopes will be populated dynamically from the API -->
+          </select>
         </div>
         <div class="form-group checkbox-group">
           <input type="checkbox" id="sessionOvernight" name="overnight" />
@@ -216,6 +241,17 @@ function setupMicroscopeSessionForm() {
 
   // Setup foldout functionality for collected checkboxes
   setupCollectedFoldouts();
+
+  // Populate microscope dropdown
+  populateMicroscopeDropdown("sessionMicroscope");
+
+  // Setup "Add new" functionality for microscope dropdown
+  const microscopeSelect = document.getElementById("sessionMicroscope");
+  if (microscopeSelect) {
+    microscopeSelect.addEventListener("change", function () {
+      handleAddNewOption(this, "Enter new microscope name...");
+    });
+  }
 
   // Handle form submission
   if (form) {

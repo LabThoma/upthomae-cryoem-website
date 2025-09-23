@@ -6,6 +6,8 @@ function handleMicroscopeSessions($method, $path, $db, $input) {
         case 'GET':
             if ($path === '/api/microscope-sessions') {
                 getAllMicroscopeSessions($db);
+            } elseif ($path === '/api/microscope-sessions/microscopes') {
+                getMicroscopes($db);
             } elseif (preg_match('/^\/api\/microscope-sessions\/(\d+)$/', $path, $matches)) {
                 $sessionId = (int)$matches[1];
                 getMicroscopeSessionDetails($db, $sessionId);
@@ -279,5 +281,31 @@ function getMicroscopeSessionDetails($db, $sessionId) {
     } catch (Exception $e) {
         error_log("Error fetching microscope session details: " . $e->getMessage());
         sendError('Error fetching microscope session details: ' . $e->getMessage());
+    }
+}
+
+function getMicroscopes($db) {
+    try {
+        // Get distinct microscope names ordered alphabetically
+        $query = "
+            SELECT DISTINCT microscope
+            FROM microscope_sessions 
+            WHERE microscope IS NOT NULL 
+            AND microscope != ''
+            ORDER BY microscope ASC
+        ";
+        
+        $result = $db->query($query);
+        
+        // Extract just the microscope names for autocomplete
+        $microscopes = array_map(function($row) {
+            return $row['microscope'];
+        }, $result);
+        
+        sendResponse($microscopes);
+        
+    } catch (Exception $e) {
+        error_log("Error fetching microscopes: " . $e->getMessage());
+        sendError('Error fetching microscopes: ' . $e->getMessage());
     }
 }
