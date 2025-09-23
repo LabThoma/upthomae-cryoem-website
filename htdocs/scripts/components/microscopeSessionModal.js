@@ -7,6 +7,7 @@ import {
   renderInteractiveStarRating,
   setupStarRatings,
 } from "../utils/starRating.js";
+import { autoSaveManager } from "../utils/autoSave.js";
 
 // Global variable to track current session ID for updates
 let currentSessionId = null;
@@ -57,6 +58,14 @@ export function openMicroscopeSessionModal(
     if (modalAlertContainer) {
       modalAlertContainer.innerHTML = "";
     }
+
+    // Start auto-save system using the utility
+    autoSaveManager.start({
+      formId: "microscopeSessionForm",
+      extractDataFn: extractFormData,
+      saveFn: saveMicroscopeSessionData,
+      alertContainerId: "modalAlertContainer",
+    });
   }
 }
 
@@ -80,7 +89,51 @@ function closeMicroscopeSessionModal() {
     // Reset session tracking when closing
     currentSessionId = null;
     onSessionSavedCallback = null;
+
+    // Stop auto-save system using the utility
+    autoSaveManager.stop();
   }
+}
+
+// Auto-save wrapper function for microscope sessions
+async function saveMicroscopeSessionData(payload) {
+  // Determine if this is a new session or an update
+  const isUpdate = currentSessionId !== null;
+  const method = isUpdate ? "PUT" : "POST";
+  const url = isUpdate
+    ? `/api/microscope-sessions/${currentSessionId}`
+    : "/api/microscope-sessions";
+
+  const response = await fetch(url, {
+    method: method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || `Server returned ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  // If this was the first save, update the session ID
+  if (!isUpdate && result.id) {
+    currentSessionId = result.id;
+    const submitButton = document.querySelector(
+      '#microscopeSessionForm button[type="submit"]'
+    );
+    if (submitButton) {
+      submitButton.textContent = "Update Session";
+    }
+  }
+
+  // Call the callback to refresh the admin table if provided
+  if (onSessionSavedCallback) {
+    onSessionSavedCallback();
+  }
+
+  return result;
 }
 
 function generateMicroscopeSessionForm() {
@@ -453,6 +506,9 @@ async function handleMicroscopeSessionSubmit(event) {
         onSessionSavedCallback();
       }
     }
+
+    // Reset change tracking after successful manual save using auto-save utility
+    autoSaveManager.markSaved();
 
     // Don't close the modal - keep it open for further edits
   } catch (error) {

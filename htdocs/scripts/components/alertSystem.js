@@ -42,8 +42,17 @@ export function showModalAlert(
 
   const alert = document.createElement("div");
   alert.className = `alert alert-${type}`;
+
+  // Add special styling for auto-save messages
+  if (type === "info" && message.includes("Auto-sav")) {
+    alert.classList.add("alert-auto-save");
+  }
+
   alert.textContent = message;
 
   modalContainer.appendChild(alert);
-  setTimeout(() => alert.remove(), 5000);
+
+  // Auto-save messages disappear faster (3 seconds instead of 5)
+  const timeout = alert.classList.contains("alert-auto-save") ? 3000 : 5000;
+  setTimeout(() => alert.remove(), timeout);
 }
