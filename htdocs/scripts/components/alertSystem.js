@@ -25,3 +25,25 @@ export function showAlert(message, type = "success") {
     }
   });
 }
+
+// Modal-specific alert function that shows alerts within a specific container
+export function showModalAlert(
+  message,
+  type = "success",
+  containerId = "modalAlertContainer"
+) {
+  const modalContainer = document.getElementById(containerId);
+
+  if (!modalContainer) {
+    // Fallback to global alert system if modal container not found
+    showAlert(message, type);
+    return;
+  }
+
+  const alert = document.createElement("div");
+  alert.className = `alert alert-${type}`;
+  alert.textContent = message;
+
+  modalContainer.appendChild(alert);
+  setTimeout(() => alert.remove(), 5000);
+}

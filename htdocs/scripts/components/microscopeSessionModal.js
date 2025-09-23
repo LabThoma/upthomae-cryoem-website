@@ -1,7 +1,7 @@
 // Microscope Session Modal Component
 // This file handles the microscope session modal functionality
 
-import { showAlert } from "./alertSystem.js";
+import { showAlert, showModalAlert } from "./alertSystem.js";
 import { getCurrentDateForInput } from "../utils/dateUtils.js";
 import {
   renderInteractiveStarRating,
@@ -51,6 +51,12 @@ export function openMicroscopeSessionModal(
 
     modal.style.display = "block";
     document.body.classList.add("modal-open");
+
+    // Clear any existing alerts in the modal
+    const modalAlertContainer = document.getElementById("modalAlertContainer");
+    if (modalAlertContainer) {
+      modalAlertContainer.innerHTML = "";
+    }
   }
 }
 
@@ -81,6 +87,7 @@ function generateMicroscopeSessionForm() {
   const todayDate = getCurrentDateForInput();
   return `
     <h2>New Microscope Session</h2>
+    <div id="modalAlertContainer" class="alert-container"></div>
     <form id="microscopeSessionForm">
       <div class="session-info-grid">
         <div class="form-group">
@@ -412,7 +419,7 @@ async function handleMicroscopeSessionSubmit(event) {
     const result = await response.json();
 
     if (isUpdate) {
-      showAlert(
+      showModalAlert(
         `Microscope session updated successfully! Session ID: ${currentSessionId}`,
         "success"
       );
@@ -429,7 +436,7 @@ async function handleMicroscopeSessionSubmit(event) {
       if (submitButton) {
         submitButton.textContent = "Update Session";
       }
-      showAlert(
+      showModalAlert(
         `Microscope session saved successfully! Session ID: ${result.id}`,
         "success"
       );
@@ -442,7 +449,7 @@ async function handleMicroscopeSessionSubmit(event) {
     // Don't close the modal - keep it open for further edits
   } catch (error) {
     console.error("Error saving microscope session:", error);
-    showAlert(`Failed to save session: ${error.message}`, "error");
+    showModalAlert(`Failed to save session: ${error.message}`, "error");
   }
 }
 
