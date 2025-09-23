@@ -267,10 +267,13 @@ function generateMicroscopeSlotRows() {
   }
 }
 
-async function handleMicroscopeSessionSubmit(event) {
-  event.preventDefault();
+// Extract form data into a reusable payload structure
+function extractFormData() {
+  const form = document.getElementById("microscopeSessionForm");
+  if (!form) {
+    throw new Error("Microscope session form not found");
+  }
 
-  const form = event.target;
   const formData = new FormData(form);
 
   // Collect slot details
@@ -388,7 +391,7 @@ async function handleMicroscopeSessionSubmit(event) {
     }
   });
 
-  const payload = {
+  return {
     date: formData.get("date"),
     microscope: formData.get("microscope"),
     overnight: formData.get("overnight") ? 1 : 0,
@@ -396,8 +399,13 @@ async function handleMicroscopeSessionSubmit(event) {
     issues: formData.get("issues") || null,
     details: details,
   };
+}
+
+async function handleMicroscopeSessionSubmit(event) {
+  event.preventDefault();
 
   try {
+    const payload = extractFormData();
     // Determine if this is a new session or an update
     const isUpdate = currentSessionId !== null;
     const method = isUpdate ? "PUT" : "POST";
