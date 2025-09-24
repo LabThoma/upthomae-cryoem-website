@@ -2,6 +2,11 @@
 // This file handles all admin-related functionality including forms and data management
 
 import { showAlert } from "../components/alertSystem.js";
+import {
+  setupMicroscopeSessionModal,
+  openMicroscopeSessionModal,
+} from "../components/microscopeSessionModal.js";
+import { renderStarRating } from "../utils/starRating.js";
 
 // Flag to prevent multiple initialization
 let isAdminViewInitialized = false;
@@ -14,20 +19,29 @@ export function setupAdminView() {
 
   setupAdminButtons();
   setupGridModal();
+  setupMicroscopeSessionModal();
   loadGridSummary();
+  loadMicroscopeSessions();
   // Make handleSelectChange globally available
   window.handleSelectChange = handleSelectChange;
-  // Make toggleGridType globally available for onclick handlers
-  window.toggleGridType = toggleGridType;
 
   isAdminViewInitialized = true;
 }
 
 function setupAdminButtons() {
   const addNewGridsButton = document.getElementById("addNewGridsButton");
+  const openMicroscopeSessionBtn = document.getElementById(
+    "openMicroscopeSessionBtn"
+  );
 
   if (addNewGridsButton) {
     addNewGridsButton.addEventListener("click", openGridModal);
+  }
+
+  if (openMicroscopeSessionBtn) {
+    openMicroscopeSessionBtn.addEventListener("click", () =>
+      openMicroscopeSessionModal(null, loadMicroscopeSessions)
+    );
   }
 }
 
@@ -752,3 +766,360 @@ window.editGridType = editGridType;
 window.markGridTypeEmpty = markGridTypeEmpty;
 window.markGridTypeInUse = markGridTypeInUse;
 window.deleteGridType = deleteGridType;
+
+// Load and display microscope sessions table
+async function loadMicroscopeSessions() {
+  try {
+    const response = await fetch("/api/microscope-sessions");
+    if (!response.ok) {
+      throw new Error("Failed to fetch microscope sessions");
+    }
+
+    const sessionsData = await response.json();
+
+    // Store sessions data globally for editing
+    globalSessionsData = sessionsData;
+
+    displayMicroscopeSessions(sessionsData);
+  } catch (error) {
+    console.error("Error loading microscope sessions:", error);
+    showAlert(`Error loading microscope sessions: ${error.message}`, "error");
+  }
+}
+
+// Display microscope sessions table
+function displayMicroscopeSessions(sessionsData) {
+  const tableBody = document.getElementById("microscopeSessionsTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = "";
+
+  if (sessionsData.length === 0) {
+    tableBody.innerHTML =
+      "<tr><td colspan='6'>No microscope sessions found</td></tr>";
+    return;
+  }
+
+  sessionsData.forEach((session, idx) => {
+    // Main session row
+    const sessionRow = document.createElement("tr");
+    sessionRow.innerHTML = `
+      <td>
+        <span class="expandable-row-icon" data-session-idx="${idx}">▶</span>
+        ${session.date || ""}
+      </td>
+      <td>${session.microscope || ""}</td>
+      <td>${session.users || "N/A"}</td>
+      <td>${session.grid_count || 0}</td>
+      <td>${session.overnight ? "Yes" : "No"}</td>
+      <td>${session.issues || ""}</td>
+    `;
+
+    // Detail row (initially hidden)
+    const detailRow = document.createElement("tr");
+    detailRow.className = "expandable-row";
+    const detailCell = document.createElement("td");
+    detailCell.colSpan = 6;
+
+    // Create grid details table - always show slots 12 down to 1
+    let gridRows = "";
+    for (let slot = 12; slot >= 1; slot--) {
+      const gridDetail = session.details?.find(
+        (detail) => detail.microscope_slot === slot
+      );
+
+      if (gridDetail) {
+        // Slot has data
+        // Show 'none' in images if not collected, otherwise show actual image count
+        const imagesDisplay = gridDetail.collected
+          ? gridDetail.images || ""
+          : "none";
+        // Convert newlines to HTML line breaks for display
+        const commentsDisplay = (gridDetail.comments || "").replace(
+          /\n/g,
+          "<br>"
+        );
+
+        gridRows += `
+          <tr>
+            <td>${slot}</td>
+            <td>${gridDetail.grid_identifier || ""}</td>
+            <td>${gridDetail.screened || ""}</td>
+            <td>${imagesDisplay}</td>
+            <td>${renderStarRating(gridDetail.ice_quality)}</td>
+            <td>${renderStarRating(gridDetail.particle_number)}</td>
+            <td>${renderStarRating(gridDetail.grid_quality)}</td>
+            <td>${gridDetail.rescued ? "Yes" : "No"}</td>
+            <td class="comments-col">${commentsDisplay}</td>
+          </tr>
+        `;
+      } else {
+        // Empty slot
+        gridRows += `
+          <tr style="color: #888; font-style: italic;">
+            <td>${slot}</td>
+            <td colspan="8" style="text-align: center;">Empty slot</td>
+          </tr>
+        `;
+      }
+    }
+
+    detailCell.innerHTML = `
+      <div class="expandable-content" id="microscope-session-details-${idx}">
+        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px; gap: 10px;">
+          <h4 class="detail-subtitle" style="margin: 0;">Details for Session on ${session.date}</h4>
+          <button class="btn-icon btn-warning" onclick="editMicroscopeSession(${session.microscope_session_id}, ${idx})" title="Edit this microscope session">
+            <i class="fas fa-pen-to-square"></i>
+          </button>
+        </div>
+        <div class="grid-detail-container">
+          <table class="grid-detail-table">
+            <thead>
+              <tr>
+                <th>Slot</th>
+                <th>Grid ID</th>
+                <th>Screened</th>
+                <th>Images</th>
+                <th>Ice Quality</th>
+                <th>Particle #</th>
+                <th>Grid Quality</th>
+                <th>Rescued</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gridRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    detailRow.appendChild(detailCell);
+    tableBody.appendChild(sessionRow);
+    tableBody.appendChild(detailRow);
+
+    // Toggle logic for details row and content
+    sessionRow
+      .querySelector(".expandable-row-icon")
+      .addEventListener("click", function () {
+        detailRow.classList.toggle("visible");
+        const content = detailRow.querySelector(".expandable-content");
+        content.classList.toggle("expanded");
+        this.classList.toggle("expanded");
+        this.textContent = this.textContent === "▶" ? "▼" : "▶";
+      });
+  });
+}
+
+// Store sessions data globally for editing
+let globalSessionsData = [];
+
+// Edit microscope session function
+async function editMicroscopeSession(sessionId, sessionIndex) {
+  try {
+    // Get the session data from the global store
+    const sessionData = globalSessionsData[sessionIndex];
+
+    if (!sessionData) {
+      throw new Error("Session data not found");
+    }
+
+    // Open the modal with existing data
+    openMicroscopeSessionModalForEdit(sessionData);
+  } catch (error) {
+    console.error("Error editing microscope session:", error);
+    showAlert(`Error editing microscope session: ${error.message}`, "error");
+  }
+}
+
+// Function to open modal for editing with pre-filled data
+function openMicroscopeSessionModalForEdit(sessionData) {
+  // Open the modal with the session ID for editing and a callback to refresh
+  openMicroscopeSessionModal(
+    sessionData.microscope_session_id,
+    loadMicroscopeSessions
+  );
+
+  // Wait a bit for the modal to render, then populate it
+  setTimeout(async () => {
+    await populateMicroscopeSessionForm(sessionData);
+  }, 100);
+}
+
+// Function to populate the microscope session form with existing data
+async function populateMicroscopeSessionForm(sessionData) {
+  const form = document.getElementById("microscopeSessionForm");
+  if (!form) return;
+
+  // Import the flag from microscopeSessionModal
+  const { setLoadingFormData } = await import(
+    "../components/microscopeSessionModal.js"
+  );
+
+  // Set loading flag to prevent autopopulation during form population
+  setLoadingFormData(true);
+
+  // Set basic session info
+  const dateField = form.querySelector('[name="date"]');
+  if (dateField && sessionData.date) {
+    dateField.value = sessionData.date;
+  }
+
+  const microscopeField = form.querySelector('[name="microscope"]');
+  if (microscopeField && sessionData.microscope) {
+    microscopeField.value = sessionData.microscope;
+  }
+
+  const overnightField = form.querySelector('[name="overnight"]');
+  if (overnightField) {
+    overnightField.checked = sessionData.overnight || false;
+  }
+
+  const clippedField = form.querySelector('[name="clipped_at_microscope"]');
+  if (clippedField) {
+    clippedField.checked = sessionData.clipped_at_microscope || false;
+  }
+
+  const issuesField = form.querySelector('[name="issues"]');
+  if (issuesField && sessionData.issues) {
+    issuesField.value = sessionData.issues;
+  }
+
+  // Change the form title and button text
+  const titleElement = form.parentElement.querySelector("h2");
+  if (titleElement) {
+    titleElement.textContent = `Edit Microscope Session - ${sessionData.date}`;
+  }
+
+  const submitButton = form.querySelector('button[type="submit"]');
+  if (submitButton) {
+    submitButton.textContent = "Update Session";
+  }
+
+  // Populate grid details
+  if (sessionData.details && Array.isArray(sessionData.details)) {
+    sessionData.details.forEach((detail) => {
+      populateSlotData(detail);
+    });
+  }
+
+  // Clear loading flag after a short delay to ensure all events have been processed
+  setTimeout(() => {
+    setLoadingFormData(false);
+  }, 300);
+}
+
+// Function to populate individual slot data
+function populateSlotData(detail) {
+  const slot = detail.microscope_slot;
+  const tbody = document.getElementById("microscopeSlotsTableBody");
+  if (!tbody) return;
+
+  // Find the row for this slot
+  const slotRow = tbody.querySelector(`tr[data-slot="${slot}"]`);
+  if (!slotRow) return;
+
+  // Populate basic grid info
+  const gridIdField = slotRow.querySelector('[name="grid_identifier[]"]');
+  if (gridIdField && detail.grid_identifier) {
+    gridIdField.value = detail.grid_identifier;
+  }
+
+  const atlasField = slotRow.querySelector('[name="atlas[]"]');
+  if (atlasField) {
+    atlasField.checked = detail.atlas || false;
+  }
+
+  const screenedField = slotRow.querySelector('[name="screened[]"]');
+  if (screenedField && detail.screened) {
+    screenedField.value = detail.screened;
+  }
+
+  const collectedField = slotRow.querySelector('[name="collected[]"]');
+  if (collectedField) {
+    collectedField.checked = detail.collected || false;
+    // Trigger change event to show/hide foldout
+    collectedField.dispatchEvent(new Event("change"));
+  }
+
+  // Set star ratings - just set the hidden input values
+  // The setupStarRatings() in the modal will handle the visual state
+  if (detail.grid_quality) {
+    const gridQualityField = slotRow.querySelector('[name="grid_quality[]"]');
+    if (gridQualityField) {
+      gridQualityField.value = detail.grid_quality;
+    }
+  }
+
+  if (detail.particle_number) {
+    const particleNumberField = slotRow.querySelector(
+      '[name="particle_number[]"]'
+    );
+    if (particleNumberField) {
+      particleNumberField.value = detail.particle_number;
+    }
+  }
+
+  if (detail.ice_quality) {
+    const iceQualityField = slotRow.querySelector('[name="ice_quality[]"]');
+    if (iceQualityField) {
+      iceQualityField.value = detail.ice_quality;
+    }
+  }
+
+  const rescuedField = slotRow.querySelector('[name="rescued[]"]');
+  if (rescuedField) {
+    rescuedField.checked = detail.rescued || false;
+  }
+
+  const commentsField = slotRow.querySelector('[name="comments[]"]');
+  if (commentsField && detail.comments) {
+    commentsField.value = detail.comments;
+  }
+
+  // If collected is checked, populate the microscope details
+  if (detail.collected) {
+    setTimeout(() => {
+      populateMicroscopeDetails(slot, detail);
+    }, 200);
+  }
+}
+
+// Function to populate microscope collection details
+function populateMicroscopeDetails(slot, detail) {
+  const foldoutRow = document.querySelector(
+    `.microscope-foldout[data-slot="${slot}"]`
+  );
+  if (!foldoutRow) return;
+
+  // Populate microscope-specific fields
+  const fieldMappings = {
+    "multigrid[]": "multigrid",
+    "px_size[]": "px_size",
+    "magnification[]": "magnification",
+    "exposure_e[]": "exposure_e",
+    "exposure_time[]": "exposure_time",
+    "spot_size[]": "spot_size",
+    "illumination_area[]": "illumination_area",
+    "exp_per_hole[]": "exp_per_hole",
+    "images[]": "images",
+    "nominal_defocus[]": "nominal_defocus",
+    "objective[]": "objective",
+    "slit_width[]": "slit_width",
+  };
+
+  Object.entries(fieldMappings).forEach(([fieldName, dataKey]) => {
+    const field = foldoutRow.querySelector(`[name="${fieldName}"]`);
+    if (field && detail[dataKey] !== undefined && detail[dataKey] !== null) {
+      if (field.type === "checkbox") {
+        field.checked = detail[dataKey] || false;
+      } else {
+        field.value = detail[dataKey];
+      }
+    }
+  });
+}
+
+// Make the edit function globally accessible
+window.editMicroscopeSession = editMicroscopeSession;

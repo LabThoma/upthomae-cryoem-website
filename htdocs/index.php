@@ -114,8 +114,19 @@ $pageTitle = "THOMAE cryoEM";
         <!-- Microscope View -->
         <div id="microscopeView" class="content-view">
           <div class="form-section">
-            <h2 class="section-title">Microscope</h2>
-            <p>Content coming soon...</p>
+            <h2 class="section-title">Users</h2>
+            <div style="overflow-x: auto">
+              <table class="grid-table" id="microscopeUsersTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Last Session</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="microscopeUsersTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -183,6 +194,40 @@ $pageTitle = "THOMAE cryoEM";
                 </div>
               </div>
 
+              <!-- Microscope Sessions Section -->
+              <div class="admin-section">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                  "
+                >
+                  <h3 style="margin: 0">Microscope Sessions</h3>
+                  <button id="openMicroscopeSessionBtn" class="btn btn-primary">
+                    New Microscope Session
+                  </button>
+                </div>
+                <div class="microscope-sessions-container">
+                  <table class="grid-table" id="microscopeSessionsTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Microscope</th>
+                        <th>Users</th>
+                        <th>Number of Grids</th>
+                        <th>Overnight</th>
+                        <th>Issues</th>
+                      </tr>
+                    </thead>
+                    <tbody id="microscopeSessionsTableBody">
+                      <!-- Session rows will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <div class="admin-section">
                 <h3>System Actions</h3>
                 <p>Administrative functions</p>
@@ -201,6 +246,22 @@ $pageTitle = "THOMAE cryoEM";
       <div class="modal-content">
         <span class="close-modal">&times;</span>
         <div id="gridModalContent"></div>
+      </div>
+    </div>
+
+    <!-- Modal for Microscope Sessions -->
+    <div id="microscopeSessionModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="microscopeSessionModalContent"></div>
+      </div>
+    </div>
+
+    <!-- Modal for Microscope Grid Details -->
+    <div id="microscopeGridModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="microscopeGridModalContent"></div>
       </div>
     </div>
 

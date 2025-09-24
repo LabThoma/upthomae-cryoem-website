@@ -12,6 +12,9 @@ function handleUsers($method, $path, $db, $input) {
             } elseif (preg_match('/^\/api\/users\/([^\/]+)\/latest-settings$/', $path, $matches)) {
                 $username = urldecode($matches[1]);
                 getUserLatestSettings($db, $username);
+            } elseif (preg_match('/^\/api\/users\/([^\/]+)\/microscope-sessions$/', $path, $matches)) {
+                $username = urldecode($matches[1]);
+                getUserMicroscopeSessions($db, $username);
             } else {
                 sendError('Users endpoint not found', 404);
             }
@@ -19,6 +22,114 @@ function handleUsers($method, $path, $db, $input) {
             
         default:
             sendError('Method not allowed', 405);
+    }
+}
+
+// Return all microscope sessions for a user
+function getUserMicroscopeSessions($db, $username) {
+    try {
+        // Generate the user's initials pattern to match grid identifiers
+        $userInitials = generateInitials($username);
+        
+        // Get all microscope sessions that have either:
+        // 1. Grids linked via prep_id to sessions owned by the user, OR
+        // 2. Grid identifiers that start with the user's initials
+        $rows = $db->query("
+            SELECT 
+                ms.microscope_session_id,
+                ms.date AS microscope_session_date,
+                ms.microscope AS microscope_name,
+                COUNT(DISTINCT md.detail_id) AS grid_count
+            FROM microscope_sessions ms
+            LEFT JOIN microscope_details md ON ms.microscope_session_id = md.microscope_session_id
+            LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            LEFT JOIN sessions s ON gp.session_id = s.session_id
+            WHERE (s.user_name = ? OR md.grid_identifier LIKE ?)
+            GROUP BY ms.microscope_session_id, ms.date, ms.microscope
+            ORDER BY ms.date DESC
+        ", [$username, $userInitials . '%']);
+        $result = [];
+        foreach ($rows as $row) {
+            // For each microscope session, get microscope_details for:
+            // 1. Grids linked via prep_id to sessions owned by the user, OR
+            // 2. Grid identifiers that start with the user's initials (even if prep_id is NULL/invalid)
+            $details = $db->query(
+                "SELECT md.*, gp.sample_id, s.sample_name
+                 FROM microscope_details md
+                 LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+                 LEFT JOIN sessions sess ON gp.session_id = sess.session_id
+                 LEFT JOIN samples s ON gp.sample_id = s.sample_id
+                 WHERE md.microscope_session_id = ? AND (sess.user_name = ? OR md.grid_identifier LIKE ?)",
+                [$row['microscope_session_id'], $username, $userInitials . '%']
+            );
+            $grids = [];
+            foreach ($details as $d) {
+                $grids[] = [
+                    'grid_identifier' => $d['grid_identifier'],
+                    'microscope_slot' => $d['microscope_slot'],
+                    'sample' => $d['sample_name'] ?? '',
+                    'ice_quality' => $d['ice_quality'],
+                    'particle_concentration' => $d['particle_number'],
+                    'grid_quality' => $d['grid_quality'],
+                    'number_of_images' => $d['images'],
+                    'rescued' => $d['rescued'],
+                    'comments' => $d['comments']
+                ];
+            }
+            // For each microscope session, find grid boxes from:
+            // 1. Grid preparations linked via microscope_details for the user, AND
+            // 2. Infer box names from grid identifiers that match user's initials pattern
+            $prepRows = $db->query(
+                "SELECT DISTINCT md.prep_id FROM microscope_details md WHERE md.microscope_session_id = ? AND md.prep_id IS NOT NULL",
+                [$row['microscope_session_id']]
+            );
+            $prepIds = array_column($prepRows, 'prep_id');
+            $boxNames = [];
+            if (!empty($prepIds)) {
+                // For each prep_id, get its session_id and then the box name - but only for the specific user
+                $inClause = implode(',', array_fill(0, count($prepIds), '?'));
+                $params = $prepIds;
+                $params[] = $username; // Add username parameter for filtering
+                $boxRows = $db->query(
+                    "SELECT DISTINCT s.grid_box_name FROM grid_preparations gp JOIN sessions s ON gp.session_id = s.session_id WHERE gp.prep_id IN ($inClause) AND s.user_name = ? AND s.grid_box_name IS NOT NULL AND s.grid_box_name != '' ORDER BY s.grid_box_name",
+                    $params
+                );
+                $boxNames = array_column($boxRows, 'grid_box_name');
+            }
+            
+            // Also get box names inferred from grid identifiers that match user's initials
+            $inferredBoxRows = $db->query(
+                "SELECT DISTINCT 
+                    CASE 
+                        WHEN md.grid_identifier REGEXP '^[A-Z]+[0-9]+g[0-9]+$' THEN 
+                            SUBSTRING(md.grid_identifier, 1, LENGTH(md.grid_identifier) - LOCATE('g', REVERSE(md.grid_identifier)))
+                        ELSE NULL 
+                    END as inferred_box_name
+                 FROM microscope_details md 
+                 WHERE md.microscope_session_id = ? AND md.grid_identifier LIKE ?
+                 HAVING inferred_box_name IS NOT NULL
+                 ORDER BY inferred_box_name",
+                [$row['microscope_session_id'], $userInitials . '%']
+            );
+            $inferredBoxNames = array_column($inferredBoxRows, 'inferred_box_name');
+            
+            // Combine and deduplicate box names
+            $allBoxNames = array_unique(array_merge($boxNames, $inferredBoxNames));
+            sort($allBoxNames);
+            $boxNames = $allBoxNames;
+            $result[] = [
+                'id' => $row['microscope_session_id'],
+                'date' => $row['microscope_session_date'],
+                'microscope' => $row['microscope_name'],
+                'numberOfGrids' => (int)($row['grid_count'] ?? 0),
+                'gridBoxes' => implode(', ', $boxNames),
+                'grids' => $grids
+            ];
+        }
+        sendResponse($result);
+    } catch (Exception $e) {
+        error_log("Error fetching microscope sessions for user $username: " . $e->getMessage());
+        sendError("Error fetching microscope sessions for user: $username");
     }
 }
 
@@ -70,6 +181,18 @@ function getUsers($db) {
         // Process the results to add computed fields
         $processedUsers = [];
         foreach ($users as $user) {
+            $microscopeSessions = getMicroscopeSessionsForUser($db, $user['user_name']);
+            // Find latest microscope session date
+            $latestMicroscopeDate = null;
+            if (!empty($microscopeSessions)) {
+                foreach ($microscopeSessions as $ms) {
+                    if (!empty($ms['microscope_session_date'])) {
+                        if ($latestMicroscopeDate === null || $ms['microscope_session_date'] > $latestMicroscopeDate) {
+                            $latestMicroscopeDate = $ms['microscope_session_date'];
+                        }
+                    }
+                }
+            }
             $processedUsers[] = [
                 'username' => $user['user_name'],
                 'totalSessions' => (int)($user['total_sessions'] ?? 0),
@@ -78,7 +201,10 @@ function getUsers($db) {
                 'lastSessionDate' => $user['last_session_date'],
                 'firstSessionDate' => $user['first_session_date'],
                 'activeGridBoxes' => $activeBoxesMap[$user['user_name']] ?? 0,
-                'nextBoxName' => generateNextBoxName($user['user_name'], $db)
+                'nextBoxName' => generateNextBoxName($user['user_name'], $db),
+                'microscopeSessions' => $microscopeSessions,
+                'lastMicroscopeSessionDate' => $latestMicroscopeDate,
+                'hasMicroscopeSession' => !empty($latestMicroscopeDate)
             ];
         }
         
@@ -86,6 +212,26 @@ function getUsers($db) {
     } catch (Exception $e) {
         error_log("Error fetching users: " . $e->getMessage());
         sendError('Error fetching users');
+    }
+}
+
+// Helper: Get microscope sessions for a user
+function getMicroscopeSessionsForUser($db, $username) {
+    try {
+        // Join microscope_details -> grid_preparations -> sessions to get user_name
+        $rows = $db->query("
+            SELECT md.*, ms.date AS microscope_session_date, gp.prep_id, s.user_name
+            FROM microscope_details md
+            LEFT JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            LEFT JOIN sessions s ON gp.session_id = s.session_id
+            LEFT JOIN microscope_sessions ms ON md.microscope_session_id = ms.microscope_session_id
+            WHERE s.user_name = ?
+            ORDER BY ms.date DESC, md.last_updated DESC
+        ", [$username]);
+        return $rows;
+    } catch (Exception $e) {
+        error_log("Error fetching microscope sessions for user $username: " . $e->getMessage());
+        return [];
     }
 }
 
