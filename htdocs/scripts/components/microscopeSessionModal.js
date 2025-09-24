@@ -31,11 +31,93 @@ async function populateMicroscopeDropdown(elementId = "sessionMicroscope") {
   );
 }
 
+/**
+ * Fetch last collection parameters for autopopulation
+ * @param {string} microscope - The microscope name
+ * @param {string} gridIdentifier - The grid identifier to extract user from
+ * @returns {Promise<object|null>} The parameters object or null if not found
+ */
+async function fetchLastCollectionParameters(microscope, gridIdentifier) {
+  try {
+    const params = new URLSearchParams({
+      microscope: microscope,
+      grid_identifier: gridIdentifier,
+    });
+
+    const response = await fetch(
+      `/api/microscope-sessions/last-parameters?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching last collection parameters:", error);
+    return null;
+  }
+}
+
+/**
+ * Populate foldout fields with collection parameters
+ * @param {string} slot - The slot number
+ * @param {object} parameters - The parameters object from API
+ */
+function populateFoldoutParameters(slot, parameters) {
+  const foldoutRow = document.querySelector(
+    `.microscope-foldout[data-slot="${slot}"]`
+  );
+  if (!foldoutRow || !parameters) return;
+
+  // Map of parameter names to form field names
+  const parameterMapping = {
+    px_size: "px_size[]",
+    magnification: "magnification[]",
+    exposure_e: "exposure_e[]",
+    exposure_time: "exposure_time[]",
+    spot_size: "spot_size[]",
+    illumination_area: "illumination_area[]",
+    exp_per_hole: "exp_per_hole[]",
+    nominal_defocus: "nominal_defocus[]",
+    objective: "objective[]",
+    slit_width: "slit_width[]",
+  };
+
+  // Populate each field if it has a value AND the field is currently empty
+  Object.entries(parameterMapping).forEach(([paramKey, fieldName]) => {
+    const value = parameters[paramKey];
+    if (value !== null && value !== undefined && value !== "") {
+      const field = foldoutRow.querySelector(`[name="${fieldName}"]`);
+      if (field && field.value.trim() === "") {
+        // Only populate if field is empty
+        field.value = value;
+
+        // Add visual highlighting
+        field.classList.add("autopopulated-field");
+
+        // Remove highlight when user manually edits the field
+        field.addEventListener(
+          "input",
+          () => {
+            field.classList.remove("autopopulated-field");
+          },
+          { once: true }
+        );
+      }
+    }
+  });
+}
+
 // Global variable to track current session ID for updates
 let currentSessionId = null;
 
 // Global callback for when session is saved/updated
 let onSessionSavedCallback = null;
+
+// Flag to track when we're programmatically loading data (vs user interaction)
+let isLoadingFormData = false;
 
 // Microscope Session Modal Functions
 export function setupMicroscopeSessionModal() {
@@ -99,6 +181,11 @@ export function setCurrentSessionId(sessionId) {
 // Function to get the current session ID
 export function getCurrentSessionId() {
   return currentSessionId;
+}
+
+// Function to set the loading flag
+export function setLoadingFormData(loading) {
+  isLoadingFormData = loading;
 }
 
 function closeMicroscopeSessionModal() {
@@ -560,7 +647,7 @@ function setupCollectedFoldouts() {
   );
 
   collectedCheckboxes.forEach((checkbox) => {
-    checkbox.addEventListener("change", function () {
+    checkbox.addEventListener("change", async function () {
       const row = this.closest("tr");
       const slot = row.dataset.slot;
       const foldoutRow = document.querySelector(
@@ -572,6 +659,11 @@ function setupCollectedFoldouts() {
         // Show foldout
         foldoutRow.classList.add("visible");
         content.classList.add("expanded");
+
+        // Only autopopulate if this is the first time (fields are empty)
+        if (shouldOfferAutopopulation(slot)) {
+          await autopopulateCollectionParameters(slot);
+        }
       } else {
         // Hide foldout and clear values
         foldoutRow.classList.remove("visible");
@@ -580,6 +672,143 @@ function setupCollectedFoldouts() {
       }
     });
   });
+}
+
+/**
+ * Check if we should offer autopopulation for this slot
+ * Only offer if we're not currently loading form data programmatically
+ * @param {string} slot - The slot number
+ * @returns {boolean} - Whether to offer autopopulation
+ */
+function shouldOfferAutopopulation(slot) {
+  // Don't offer autopopulation when we're programmatically loading data
+  if (isLoadingFormData) {
+    return false;
+  }
+
+  // Always allow autopopulation for manual user interactions
+  // (whether in new session or editing mode)
+  return true;
+}
+/**
+ * Show preview modal for collection parameters before applying
+ * @param {object} result - The API result with parameters and user info
+ * @param {string} slot - The slot number
+ * @param {Function} onApply - Callback to execute when user clicks Apply
+ */
+function showParametersPreviewModal(result, slot, onApply) {
+  // Create modal HTML
+  const modalHtml = `
+    <div class="modal" id="parametersPreviewModal" style="display: block;">
+      <div class="modal-content" style="max-width: 500px;">
+        <span class="close-modal" onclick="document.getElementById('parametersPreviewModal').remove()">&times;</span>
+        <h3>Load Last Collection Settings?</h3>
+        <p><strong>From:</strong> ${result.user}<br>
+        <strong>Last used:</strong> ${result.last_used}</p>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <h4>Parameters to load:</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+            ${Object.entries(result.parameters)
+              .filter(
+                ([key, value]) =>
+                  value !== null && value !== undefined && value !== ""
+              )
+              .map(([key, value]) => {
+                const displayName = key
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase());
+                return `<div><strong>${displayName}:</strong> ${value}</div>`;
+              })
+              .join("")}
+          </div>
+        </div>
+        
+        <div style="text-align: right; margin-top: 20px;">
+          <button class="btn btn-secondary" onclick="document.getElementById('parametersPreviewModal').remove()" style="margin-right: 10px;">Cancel</button>
+          <button class="btn btn-success" id="applyParametersBtn">Apply These Settings</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add modal to document
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  // Add event listener to Apply button
+  document
+    .getElementById("applyParametersBtn")
+    .addEventListener("click", () => {
+      document.getElementById("parametersPreviewModal").remove();
+      onApply();
+    });
+
+  // Close on background click
+  document
+    .getElementById("parametersPreviewModal")
+    .addEventListener("click", (e) => {
+      if (e.target.id === "parametersPreviewModal") {
+        document.getElementById("parametersPreviewModal").remove();
+      }
+    });
+}
+
+/**
+ * Autopopulate collection parameters when checkbox is first checked
+ * @param {string} slot - The slot number
+ */
+async function autopopulateCollectionParameters(slot) {
+  try {
+    // Get microscope name from the form
+    const microscopeField = document.getElementById("sessionMicroscope");
+    if (!microscopeField || !microscopeField.value) {
+      console.log("No microscope selected, skipping autopopulation");
+      return;
+    }
+
+    // Get grid identifier from the slot row
+    const row = document.querySelector(`tr[data-slot="${slot}"]`);
+    const gridIdentifierField = row?.querySelector(
+      '[name="grid_identifier[]"]'
+    );
+    if (!gridIdentifierField || !gridIdentifierField.value.trim()) {
+      console.log("No grid identifier found, skipping autopopulation");
+      return;
+    }
+
+    const microscope = microscopeField.value;
+    const gridIdentifier = gridIdentifierField.value.trim();
+
+    // Fetch last parameters
+    const result = await fetchLastCollectionParameters(
+      microscope,
+      gridIdentifier
+    );
+
+    if (result && result.parameters) {
+      // Show preview modal with confirmation
+      showParametersPreviewModal(result, slot, () => {
+        // This callback runs when user clicks "Apply These Settings"
+        populateFoldoutParameters(slot, result.parameters);
+
+        // Show success message
+        const message = `Loaded last parameters from ${result.user} (${result.last_used})`;
+        showModalAlert(message, "success");
+
+        console.log("Autopopulated collection parameters:", result);
+      });
+    } else {
+      // Show informational message
+      const message =
+        result?.message || "No previous collection parameters found";
+      showModalAlert(message, "info");
+
+      console.log("No parameters to autopopulate:", result);
+    }
+  } catch (error) {
+    console.error("Error during autopopulation:", error);
+    showModalAlert("Failed to load collection parameters", "error");
+  }
 }
 
 function clearFoldoutValues(slot) {

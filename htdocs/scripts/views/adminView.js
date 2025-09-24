@@ -942,15 +942,23 @@ function openMicroscopeSessionModalForEdit(sessionData) {
   );
 
   // Wait a bit for the modal to render, then populate it
-  setTimeout(() => {
-    populateMicroscopeSessionForm(sessionData);
+  setTimeout(async () => {
+    await populateMicroscopeSessionForm(sessionData);
   }, 100);
 }
 
 // Function to populate the microscope session form with existing data
-function populateMicroscopeSessionForm(sessionData) {
+async function populateMicroscopeSessionForm(sessionData) {
   const form = document.getElementById("microscopeSessionForm");
   if (!form) return;
+
+  // Import the flag from microscopeSessionModal
+  const { setLoadingFormData } = await import(
+    "../components/microscopeSessionModal.js"
+  );
+
+  // Set loading flag to prevent autopopulation during form population
+  setLoadingFormData(true);
 
   // Set basic session info
   const dateField = form.querySelector('[name="date"]');
@@ -995,6 +1003,11 @@ function populateMicroscopeSessionForm(sessionData) {
       populateSlotData(detail);
     });
   }
+
+  // Clear loading flag after a short delay to ensure all events have been processed
+  setTimeout(() => {
+    setLoadingFormData(false);
+  }, 300);
 }
 
 // Function to populate individual slot data

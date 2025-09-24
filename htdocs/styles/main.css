@@ -911,6 +911,14 @@ h2 {
   to {transform: translateY(0); opacity: 1;}
 }
 
+/* Autopopulated field highlighting */
+.autopopulated-field {
+  border-color: var(--success-green) !important;
+  background: linear-gradient(135deg, #E8F4EA 0%, #D4EDC8 10%, transparent 10%);
+  animation: fadeIn 0.5s ease-in;
+  transition: all 0.3s ease;
+}
+
 .close-modal {
   color: #aaa;
   float: right;

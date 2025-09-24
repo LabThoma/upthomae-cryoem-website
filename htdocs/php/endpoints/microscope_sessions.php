@@ -8,6 +8,8 @@ function handleMicroscopeSessions($method, $path, $db, $input) {
                 getAllMicroscopeSessions($db);
             } elseif ($path === '/api/microscope-sessions/microscopes') {
                 getMicroscopes($db);
+            } elseif ($path === '/api/microscope-sessions/last-parameters') {
+                getLastCollectionParameters($db);
             } elseif (preg_match('/^\/api\/microscope-sessions\/(\d+)$/', $path, $matches)) {
                 $sessionId = (int)$matches[1];
                 getMicroscopeSessionDetails($db, $sessionId);
@@ -307,5 +309,119 @@ function getMicroscopes($db) {
     } catch (Exception $e) {
         error_log("Error fetching microscopes: " . $e->getMessage());
         sendError('Error fetching microscopes: ' . $e->getMessage());
+    }
+}
+
+function getLastCollectionParameters($db) {
+    try {
+        // Get query parameters
+        $microscope = $_GET['microscope'] ?? null;
+        $gridIdentifier = $_GET['grid_identifier'] ?? null;
+        
+        if (!$microscope) {
+            sendError('Missing required parameter: microscope', 400);
+            return;
+        }
+        
+        if (!$gridIdentifier) {
+            sendError('Missing required parameter: grid_identifier', 400);
+            return;
+        }
+        
+        // Use existing logic to find prep_id and then get username from session
+        $prep_id = findPrepIdByGridIdentifier($db, $gridIdentifier);
+        
+        if (!$prep_id) {
+            sendResponse([
+                'message' => 'Invalid grid identifier format or no matching preparation found',
+                'parameters' => null
+            ]);
+            return;
+        }
+        
+        // Get username from prep_id -> session_id -> user_name
+        $userQuery = "
+            SELECT s.user_name
+            FROM grid_preparations gp
+            JOIN sessions s ON gp.session_id = s.session_id
+            WHERE gp.prep_id = ?
+        ";
+        
+        $userResult = $db->query($userQuery, [$prep_id]);
+        
+        if (empty($userResult)) {
+            sendResponse([
+                'message' => 'No user found for grid identifier: ' . $gridIdentifier,
+                'parameters' => null
+            ]);
+            return;
+        }
+        
+        $username = $userResult[0]['user_name'];
+        
+        // Get the last collection parameters for this user and microscope
+        $parametersQuery = "
+            SELECT 
+                md.px_size,
+                md.magnification,
+                md.exposure_e,
+                md.exposure_time,
+                md.spot_size,
+                md.illumination_area,
+                md.exp_per_hole,
+                md.nominal_defocus,
+                md.objective,
+                md.slit_width,
+                ms.date as last_used_date,
+                ms.created_at as last_used_timestamp
+            FROM microscope_details md
+            JOIN microscope_sessions ms ON md.microscope_session_id = ms.microscope_session_id
+            JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+            JOIN sessions s ON gp.session_id = s.session_id
+            WHERE ms.microscope = ? 
+              AND s.user_name = ?
+              AND md.collected = 1
+              AND md.px_size IS NOT NULL
+            ORDER BY ms.created_at DESC, md.detail_id DESC
+            LIMIT 1
+        ";
+        
+        $result = $db->query($parametersQuery, [$microscope, $username]);
+        
+        if (empty($result)) {
+            sendResponse([
+                'message' => "No previous collection parameters found for user $username on microscope $microscope",
+                'parameters' => null,
+                'user' => $username
+            ]);
+            return;
+        }
+        
+        $params = $result[0];
+        
+        sendResponse([
+            'success' => true,
+            'message' => "Last collection parameters found for user $username",
+            'user' => $username,
+            'microscope' => $microscope,
+            'parameters' => [
+                'px_size' => $params['px_size'],
+                'magnification' => $params['magnification'],
+                'exposure_e' => $params['exposure_e'],
+                'exposure_time' => $params['exposure_time'],
+                'spot_size' => $params['spot_size'],
+                'illumination_area' => $params['illumination_area'],
+                'exp_per_hole' => $params['exp_per_hole'],
+                'nominal_defocus' => $params['nominal_defocus'],
+                'objective' => $params['objective'],
+                'slit_width' => $params['slit_width']
+            ],
+            'last_used' => $params['last_used_date'],
+            'last_used_timestamp' => $params['last_used_timestamp']
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Error fetching last collection parameters: " . $e->getMessage());
+        sendError('Error fetching last collection parameters: ' . $e->getMessage());
     }
 }
