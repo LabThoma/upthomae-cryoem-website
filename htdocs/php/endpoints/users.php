@@ -118,6 +118,7 @@ function getUserMicroscopeSessions($db, $username) {
             sort($allBoxNames);
             $boxNames = $allBoxNames;
             $result[] = [
+                'id' => $row['microscope_session_id'],
                 'date' => $row['microscope_session_date'],
                 'microscope' => $row['microscope_name'],
                 'numberOfGrids' => (int)($row['grid_count'] ?? 0),

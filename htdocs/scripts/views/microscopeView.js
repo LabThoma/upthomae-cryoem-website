@@ -3,6 +3,11 @@
 // Structure and naming follows databaseView.js for consistency.
 
 import { renderStarRating } from "../utils/starRating.js";
+import {
+  showMicroscopeGridModal,
+  setupMicroscopeGridModal,
+} from "../components/microscopeGridModal.js";
+import { showAlert } from "../components/alertSystem.js";
 
 let isMicroscopeTabInitialized = false;
 
@@ -11,6 +16,7 @@ export function setupMicroscopeTab() {
     return;
   }
   renderMicroscopeUserTable();
+  setupMicroscopeGridModal();
   isMicroscopeTabInitialized = true;
 }
 
@@ -137,7 +143,15 @@ async function renderMicroscopeUserTable() {
                   <td>${
                     grid.rescued == 1 ? "Yes" : grid.rescued == 0 ? "No" : ""
                   }</td>
-                  <td></td>
+                  <td>
+                    <button class="btn-icon view-microscope-grid-btn" 
+                            data-session-id="${session.id}" 
+                            data-grid-identifier="${grid.grid_identifier}" 
+                            data-microscope-slot="${grid.microscope_slot}"
+                            title="View Grid Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
                 </tr>
               `
                 )
@@ -189,13 +203,23 @@ async function renderMicroscopeUserTable() {
       }
     }
 
-    // Event delegation for the new button
+    // Event delegation for microscope view buttons
     document.addEventListener("click", function (event) {
       const button = event.target.closest(".view-user-microscope-btn");
       if (button) {
         const username = button.getAttribute("data-username");
         showUserMicroscopeSessions(username);
       }
+
+      // Handle grid details modal buttons
+      const gridButton = event.target.closest(".view-microscope-grid-btn");
+      if (gridButton) {
+        const sessionId = gridButton.getAttribute("data-session-id");
+        const gridIdentifier = gridButton.getAttribute("data-grid-identifier");
+        const microscopeSlot = gridButton.getAttribute("data-microscope-slot");
+        showMicroscopeGridModal(sessionId, gridIdentifier, microscopeSlot);
+      }
+
       if (event.target.id === "backToMicroscopeUsersButton") {
         // Hide sessions section and show users table again
         const sessionsSection = document.getElementById(
