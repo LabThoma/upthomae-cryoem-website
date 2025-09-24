@@ -332,10 +332,21 @@ function getLastCollectionParameters($db) {
         $prep_id = findPrepIdByGridIdentifier($db, $gridIdentifier);
         
         if (!$prep_id) {
-            sendResponse([
-                'message' => 'Invalid grid identifier format or no matching preparation found',
-                'parameters' => null
-            ]);
+            // Check if it's a format issue or missing data issue
+            if (!preg_match('/^([A-Za-z0-9]+)g(0?[1-9]|1[0-2])$/', $gridIdentifier)) {
+                sendResponse([
+                    'message' => "Invalid grid identifier format: '$gridIdentifier'. Expected format: BoxNameg1-12 (e.g., AJ060g1)",
+                    'parameters' => null,
+                    'error_type' => 'invalid_format'
+                ]);
+            } else {
+                // Format is correct but grid not found in database
+                sendResponse([
+                    'message' => "Grid identifier '$gridIdentifier' not found in database. Please verify the grid ID exists.",
+                    'parameters' => null,
+                    'error_type' => 'not_found'
+                ]);
+            }
             return;
         }
         

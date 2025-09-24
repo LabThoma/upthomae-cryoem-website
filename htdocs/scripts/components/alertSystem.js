@@ -1,7 +1,7 @@
 // This file manages the alert system for displaying messages to the user.
 // It exports a function showAlert that creates and displays alert messages.
 
-export function showAlert(message, type = "success") {
+export function showAlert(message, type = "success", autoDismiss = true) {
   const containers = [
     document.getElementById("alertContainer"),
     document.getElementById("alertContainerBottom"),
@@ -20,8 +20,20 @@ export function showAlert(message, type = "success") {
       alert.className = `alert alert-${type}`;
       alert.textContent = message;
 
+      // Add close button for non-dismissible alerts
+      if (!autoDismiss) {
+        alert.innerHTML = `
+          <span>${message}</span>
+          <button class="alert-close-btn" onclick="this.parentElement.remove()" style="margin-left: 10px; background: none; border: none; color: inherit; font-weight: bold; cursor: pointer;">&times;</button>
+        `;
+      }
+
       container.appendChild(alert);
-      setTimeout(() => alert.remove(), 5000);
+
+      // Only auto-dismiss if autoDismiss is true
+      if (autoDismiss) {
+        setTimeout(() => alert.remove(), 5000);
+      }
     }
   });
 }
@@ -30,13 +42,14 @@ export function showAlert(message, type = "success") {
 export function showModalAlert(
   message,
   type = "success",
+  autoDismiss = true,
   containerId = "modalAlertContainer"
 ) {
   const modalContainer = document.getElementById(containerId);
 
   if (!modalContainer) {
     // Fallback to global alert system if modal container not found
-    showAlert(message, type);
+    showAlert(message, type, autoDismiss);
     return;
   }
 
@@ -48,11 +61,22 @@ export function showModalAlert(
     alert.classList.add("alert-auto-save");
   }
 
-  alert.textContent = message;
+  // Add close button for non-dismissible alerts or set text content
+  if (!autoDismiss) {
+    alert.innerHTML = `
+      <span>${message}</span>
+      <button class="alert-close-btn" onclick="this.parentElement.remove()" style="margin-left: 10px; background: none; border: none; color: inherit; font-weight: bold; cursor: pointer; float: right;">&times;</button>
+    `;
+  } else {
+    alert.textContent = message;
+  }
 
   modalContainer.appendChild(alert);
 
-  // Auto-save messages disappear faster (3 seconds instead of 5)
-  const timeout = alert.classList.contains("alert-auto-save") ? 3000 : 5000;
-  setTimeout(() => alert.remove(), timeout);
+  // Only auto-dismiss if autoDismiss is true
+  if (autoDismiss) {
+    // Auto-save messages disappear faster (3 seconds instead of 5)
+    const timeout = alert.classList.contains("alert-auto-save") ? 3000 : 5000;
+    setTimeout(() => alert.remove(), timeout);
+  }
 }

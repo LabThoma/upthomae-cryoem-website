@@ -32,6 +32,47 @@ async function populateMicroscopeDropdown(elementId = "sessionMicroscope") {
 }
 
 /**
+ * Validate a grid identifier by checking against the database
+ * @param {string} gridIdentifier - The grid identifier to validate
+ * @param {HTMLElement} inputField - The input field for visual feedback
+ */
+async function validateGridIdentifier(gridIdentifier, inputField) {
+  if (!gridIdentifier.trim()) return; // Don't validate empty fields
+
+  try {
+    // Use a dummy microscope name since we only care about grid validation
+    const params = new URLSearchParams({
+      microscope: "validation", // This will be ignored by the API for validation
+      grid_identifier: gridIdentifier,
+    });
+
+    const response = await fetch(
+      `/api/microscope-sessions/last-parameters?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    // Check for grid identifier errors
+    if (result.error_type === "invalid_format") {
+      inputField.classList.add("error");
+      showModalAlert(result.message, "error", false); // Red alert that stays until manually closed
+    } else if (result.error_type === "not_found") {
+      inputField.classList.add("error");
+      showModalAlert(`${result.message}`, "error", false); // Red alert that stays
+    } else {
+      // Valid grid identifier - clear error styling
+      inputField.classList.remove("error");
+    }
+  } catch (error) {
+    console.error("Error validating grid identifier:", error);
+  }
+}
+
+/**
  * Fetch last collection parameters for autopopulation
  * @param {string} microscope - The microscope name
  * @param {string} gridIdentifier - The grid identifier to extract user from
@@ -328,6 +369,9 @@ function setupMicroscopeSessionForm() {
 
   // Setup foldout functionality for collected checkboxes
   setupCollectedFoldouts();
+
+  // Setup grid identifier validation
+  setupGridIdentifierValidation();
 
   // Populate microscope dropdown
   populateMicroscopeDropdown("sessionMicroscope");
@@ -798,10 +842,31 @@ async function autopopulateCollectionParameters(slot) {
         console.log("Autopopulated collection parameters:", result);
       });
     } else {
-      // Show informational message
+      // Determine alert type based on the error type and message
       const message =
         result?.message || "No previous collection parameters found";
-      showModalAlert(message, "info");
+      const errorType = result?.error_type;
+      let alertType = "info";
+
+      // Handle specific error types
+      if (errorType === "invalid_format") {
+        alertType = "error";
+        showModalAlert(message, alertType, false); // false = don't auto-dismiss
+      } else if (errorType === "not_found") {
+        alertType = "error";
+        showModalAlert(`${message}`, alertType, false); // false = don't auto-dismiss
+      } else if (message.includes("No user found")) {
+        alertType = "error";
+        showModalAlert(
+          message +
+            "\n\nThis grid may not be properly linked to a user session.",
+          alertType,
+          false
+        ); // false = don't auto-dismiss
+      } else {
+        // No previous parameters - this is normal for new users or first-time microscope use
+        showModalAlert(message, alertType);
+      }
 
       console.log("No parameters to autopopulate:", result);
     }
@@ -825,4 +890,24 @@ function clearFoldoutValues(slot) {
       }
     });
   }
+}
+
+/**
+ * Setup validation for grid identifier fields
+ */
+function setupGridIdentifierValidation() {
+  const gridIdFields = document.querySelectorAll('[name="grid_identifier[]"]');
+
+  gridIdFields.forEach((field) => {
+    // Validate on blur (when user finishes typing and moves away)
+    field.addEventListener("blur", async function () {
+      const gridId = this.value.trim();
+      if (gridId) {
+        await validateGridIdentifier(gridId, this);
+      } else {
+        // Clear error styling if field is empty
+        this.classList.remove("error");
+      }
+    });
+  });
 }
