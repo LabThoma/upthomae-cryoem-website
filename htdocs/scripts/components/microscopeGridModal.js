@@ -212,16 +212,6 @@ function renderModalContent(gridData, sessionData, modalContent) {
                    <span>${gridData.images ?? "N/A"}</span>
                  </div>
                  <div class="detail-row">
-                   <label>Multigrid:</label>
-                   <span>${
-                     gridData.multigrid == 1
-                       ? "Yes"
-                       : gridData.multigrid == 0
-                       ? "No"
-                       : "N/A"
-                   }</span>
-                 </div>
-                 <div class="detail-row">
                    <label>Pixel Size (Å):</label>
                    <span>${gridData.px_size ?? "N/A"}</span>
                  </div>
@@ -236,22 +226,6 @@ function renderModalContent(gridData, sessionData, modalContent) {
                  <div class="detail-row">
                    <label>Exposure (e⁻/Å²):</label>
                    <span>${gridData.exposure_e ?? "N/A"}</span>
-                 </div>
-                 <div class="detail-row">
-                   <label>Exposure Time (s):</label>
-                   <span>${gridData.exposure_time ?? "N/A"}</span>
-                 </div>
-                 <div class="detail-row">
-                   <label>Spot Size:</label>
-                   <span>${gridData.spot_size ?? "N/A"}</span>
-                 </div>
-                 <div class="detail-row">
-                   <label>Illumination Area:</label>
-                   <span>${gridData.illumination_area ?? "N/A"}</span>
-                 </div>
-                 <div class="detail-row">
-                   <label>Exposures per Hole:</label>
-                   <span>${gridData.exp_per_hole ?? "N/A"}</span>
                  </div>
                  <div class="detail-row">
                    <label>Nominal Defocus:</label>
