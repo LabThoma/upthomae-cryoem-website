@@ -2,6 +2,8 @@
 
 // Structure and naming follows databaseView.js for consistency.
 
+import { renderStarRating } from "../utils/starRating.js";
+
 let isMicroscopeTabInitialized = false;
 
 export function setupMicroscopeTab() {
@@ -128,9 +130,9 @@ async function renderMicroscopeUserTable() {
                 <tr>
                   <td>${grid.grid_identifier || ""}</td>
                   <td>${grid.sample || ""}</td>
-                  <td>${grid.ice_quality ?? ""}</td>
-                  <td>${grid.particle_concentration ?? ""}</td>
-                  <td>${grid.grid_quality ?? ""}</td>
+                  <td>${renderStarRating(grid.ice_quality)}</td>
+                  <td>${renderStarRating(grid.particle_concentration)}</td>
+                  <td>${renderStarRating(grid.grid_quality)}</td>
                   <td>${grid.number_of_images ?? ""}</td>
                   <td>${
                     grid.rescued == 1 ? "Yes" : grid.rescued == 0 ? "No" : ""
