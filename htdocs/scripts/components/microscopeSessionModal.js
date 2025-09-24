@@ -741,14 +741,32 @@ function shouldOfferAutopopulation(slot) {
  * @param {Function} onApply - Callback to execute when user clicks Apply
  */
 function showParametersPreviewModal(result, slot, onApply) {
+  // Determine the source and messaging based on whether this is a fallback
+  const isFallback = result.is_fallback;
+  const sourceUser = isFallback ? result.fallback_user : result.user;
+  const title = isFallback
+    ? "Load Default Collection Settings?"
+    : "Load Last Collection Settings?";
+
+  let sourceMessage;
+  if (isFallback) {
+    sourceMessage = `<div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107;">
+      <strong>Note:</strong> No previous parameters found for ${result.user}.<br>
+      Using last parameters from <strong>${sourceUser}</strong> on ${result.microscope}
+    </div>
+    <p><strong>Last used:</strong> ${result.last_used}</p>`;
+  } else {
+    sourceMessage = `<p><strong>From:</strong> ${sourceUser}<br>
+    <strong>Last used:</strong> ${result.last_used}</p>`;
+  }
+
   // Create modal HTML
   const modalHtml = `
     <div class="modal" id="parametersPreviewModal" style="display: block;">
       <div class="modal-content" style="max-width: 500px;">
         <span class="close-modal" onclick="document.getElementById('parametersPreviewModal').remove()">&times;</span>
-        <h3>Load Last Collection Settings?</h3>
-        <p><strong>From:</strong> ${result.user}<br>
-        <strong>Last used:</strong> ${result.last_used}</p>
+        <h3>${title}</h3>
+        ${sourceMessage}
         
         <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
           <h4>Parameters to load:</h4>
@@ -835,8 +853,13 @@ async function autopopulateCollectionParameters(slot) {
         // This callback runs when user clicks "Apply These Settings"
         populateFoldoutParameters(slot, result.parameters);
 
-        // Show success message
-        const message = `Loaded last parameters from ${result.user} (${result.last_used})`;
+        // Show success message - different for fallback vs user-specific
+        let message;
+        if (result.is_fallback) {
+          message = `Loaded default parameters from ${result.fallback_user} (${result.last_used})`;
+        } else {
+          message = `Loaded last parameters from ${result.user} (${result.last_used})`;
+        }
         showModalAlert(message, "success");
 
         console.log("Autopopulated collection parameters:", result);

@@ -400,10 +400,69 @@ function getLastCollectionParameters($db) {
         $result = $db->query($parametersQuery, [$microscope, $username]);
         
         if (empty($result)) {
+            // Fallback: Try to get the last parameters for this microscope from any user
+            $fallbackQuery = "
+                SELECT 
+                    md.px_size,
+                    md.magnification,
+                    md.exposure_e,
+                    md.exposure_time,
+                    md.spot_size,
+                    md.illumination_area,
+                    md.exp_per_hole,
+                    md.nominal_defocus,
+                    md.objective,
+                    md.slit_width,
+                    ms.date as last_used_date,
+                    ms.created_at as last_used_timestamp,
+                    s.user_name as fallback_user
+                FROM microscope_details md
+                JOIN microscope_sessions ms ON md.microscope_session_id = ms.microscope_session_id
+                JOIN grid_preparations gp ON md.prep_id = gp.prep_id
+                JOIN sessions s ON gp.session_id = s.session_id
+                WHERE ms.microscope = ?
+                  AND md.collected = 1
+                  AND md.px_size IS NOT NULL
+                ORDER BY ms.created_at DESC, md.detail_id DESC
+                LIMIT 1
+            ";
+            
+            $fallbackResult = $db->query($fallbackQuery, [$microscope]);
+            
+            if (empty($fallbackResult)) {
+                sendResponse([
+                    'message' => "No collection parameters found for microscope $microscope",
+                    'parameters' => null,
+                    'user' => $username
+                ]);
+                return;
+            }
+            
+            // Use fallback parameters
+            $params = $fallbackResult[0];
+            $fallbackUser = $params['fallback_user'];
+            
             sendResponse([
-                'message' => "No previous collection parameters found for user $username on microscope $microscope",
-                'parameters' => null,
-                'user' => $username
+                'success' => true,
+                'message' => "No parameters found for $username. Using last parameters from $fallbackUser on $microscope",
+                'user' => $username,
+                'fallback_user' => $fallbackUser,
+                'microscope' => $microscope,
+                'is_fallback' => true,
+                'parameters' => [
+                    'px_size' => $params['px_size'],
+                    'magnification' => $params['magnification'],
+                    'exposure_e' => $params['exposure_e'],
+                    'exposure_time' => $params['exposure_time'],
+                    'spot_size' => $params['spot_size'],
+                    'illumination_area' => $params['illumination_area'],
+                    'exp_per_hole' => $params['exp_per_hole'],
+                    'nominal_defocus' => $params['nominal_defocus'],
+                    'objective' => $params['objective'],
+                    'slit_width' => $params['slit_width']
+                ],
+                'last_used' => $params['last_used_date'],
+                'last_used_timestamp' => $params['last_used_timestamp']
             ]);
             return;
         }
