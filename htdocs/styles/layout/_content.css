@@ -1,0 +1,90 @@
+/* ===================================
+   CONTENT & LAYOUT STYLES
+   ===================================*/
+
+/* Main content area */
+.content {
+    padding: 40px;
+}
+
+/* Content view switching */
+.content-view {
+    display: none;
+}
+
+.content-view.active {
+    display: block;
+}
+
+/* Section title styling */
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #2d3748;
+    text-align: center;
+    border-bottom: 3px solid #609BBF;
+    padding-bottom: 10px;
+}
+
+/* Database view section title override */
+#databaseView .section-title {
+    background: transparent;
+    border-radius: 0;
+    padding: inherit;
+    margin-bottom: 20px;
+    box-shadow: none;
+    border: none;
+    border-bottom: 3px solid #609BBF;
+}
+
+/* Name preview display */
+.name-preview-display {
+    padding: 12px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.name-preview-display em {
+    color: #9ca3af;
+    font-style: italic;
+    font-family: inherit;
+}
+
+/* Glow discharge grid layout */
+.glow-discharge {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #header h1 {
+        font-size: 2rem;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,65 @@
+/* Inline Editing System */
+
+/* Edit Value Containers */
+.grid-detail-value-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+}
+
+.edit-field-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+
+/* Edit Icons */
+.edit-icon {
+    font-size: 14px;
+    color: #609BBF;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.edit-icon:hover {
+    opacity: 1;
+    background-color: rgba(79, 172, 254, 0.1);
+}
+
+/* Inline Edit Inputs */
+.inline-edit-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: white;
+    min-width: 120px;
+}
+
+.inline-edit-input:focus {
+    outline: none;
+    border-color: #609BBF;
+    box-shadow: 0 0 0 2px rgba(96, 155, 191, 0.2);
+}
+
+.inline-edit-input[type="number"] {
+    min-width: 80px;
+}
+
+.inline-edit-input[type="textarea"] {
+    min-height: 60px;
+    resize: vertical;
+}
+
+/* Inline Edit Checkboxes */
+.inline-edit-checkbox {
+    transform: scale(1.2);
+    margin: 0 8px;
+}
