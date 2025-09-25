@@ -1605,13 +1605,12 @@ h2 {
   border-radius: 8px;
 }
 
-.checkbox-group {
-  display: flex;
-  align-items: center;
+.checkbox-group--compact {
   gap: 8px;
+  margin-bottom: 0;
 }
 
-.checkbox-group input[type="checkbox"] {
+.checkbox-group--compact input[type="checkbox"] {
   margin: 0;
 }
 

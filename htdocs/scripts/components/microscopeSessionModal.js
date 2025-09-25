@@ -304,11 +304,11 @@ function generateMicroscopeSessionForm() {
             <!-- Microscopes will be populated dynamically from the API -->
           </select>
         </div>
-        <div class="form-group checkbox-group">
+        <div class="form-group checkbox-group checkbox-group--compact">
           <input type="checkbox" id="sessionOvernight" name="overnight" />
           <label for="sessionOvernight">Overnight Session</label>
         </div>
-        <div class="form-group checkbox-group">
+        <div class="form-group checkbox-group checkbox-group--compact">
           <input type="checkbox" id="sessionClipped" name="clipped_at_microscope" />
           <label for="sessionClipped">Clipped at Microscope</label>
         </div>
