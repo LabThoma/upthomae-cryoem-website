@@ -1,6 +1,7 @@
 @import url('base/_variables.css');
 @import url('base/_reset.css');
 @import url('utils/_animations.css');
+@import url('components/_buttons.css');
 
 .container {
     max-width: 1200px;
@@ -100,40 +101,7 @@
     background-color: var(--accent-orange);
 }
 
-/* Logout button styling in header */
-.logout-container {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    padding: 0 15px;
-}
 
-.logout-container .btn-logout {
-    background: linear-gradient(135deg, #D9984A 0%, #F4B366 100%);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.8em;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: normal;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.logout-container .btn-logout:hover {
-    background: linear-gradient(135deg, #c8803d 0%, #e6a355 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(217, 152, 74, 0.3);
-}
-
-.btn-logout i {
-    font-size: 0.9em;
-}
 
 .content {
     padding: 40px;
@@ -485,170 +453,9 @@ h2 {
     font-family: inherit;
 }
 
-.button-group {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 30px;
-    flex-wrap: wrap;
-}
 
-.btn {
-    padding: 15px 30px;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
-}
 
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
 
-.btn:hover::before {
-    left: 100%;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #609BBF 0%, #A9C6D9 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(96, 155, 191, 0.4);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(96, 155, 191, 0.5);
-}
-
-.btn-secondary {
-    background: linear-gradient(135deg, #D9984A 0%, #F4B366 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(217, 152, 74, 0.4);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(217, 152, 74, 0.5);
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, #C5504B 0%, #E06B66 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(197, 80, 75, 0.4);
-}
-
-.btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(197, 80, 75, 0.5);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #5A9367 0%, #7BB682 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(90, 147, 103, 0.4);
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(90, 147, 103, 0.5);
-}
-
-.btn-small {
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    min-width: auto;
-}
-
-/* Icon button styles for database actions */
-.btn-icon {
-    padding: 8px 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin: 0 3px;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    height: 32px;
-}
-
-.btn-icon:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.btn-icon i {
-    font-size: 14px;
-}
-
-/* Ship/unship grid button background (orange accent) */
-.btn-icon.btn-info,
-.btn-icon.btn-warning {
-    background: linear-gradient(135deg, var(--accent-orange) 0%, #F4B366 100%) !important;
-    color: white !important;
-    box-shadow: 0 2px 8px rgba(217, 152, 74, 0.3);
-}
-
-.btn-icon.btn-info:hover,
-.btn-icon.btn-warning:hover {
-    box-shadow: 0 4px 12px rgba(217, 152, 74, 0.4);
-}
-
-/* Default icon button styling (for view button) */
-.btn-icon.view-grid-btn,
-.btn-icon.view-user-grids-btn,
-.btn-icon.view-microscope-grid-btn,
-.btn-icon.view-user-microscope-btn {
-    background: linear-gradient(135deg, #609BBF 0%, #A9C6D9 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(96, 155, 191, 0.3);
-}
-
-.btn-icon.view-grid-btn:hover,
-.btn-icon.view-user-grids-btn:hover,
-.btn-icon.view-microscope-grid-btn:hover,
-.btn-icon.view-user-microscope-btn:hover {
-    box-shadow: 0 4px 12px rgba(96, 155, 191, 0.4);
-}
-
-/* Danger button styling (for trash button) */
-.btn-icon.btn-danger {
-    background: linear-gradient(135deg, #C5504B 0%, #E06B66 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(197, 80, 75, 0.3);
-}
-
-.btn-icon.btn-danger:hover {
-    box-shadow: 0 4px 12px rgba(197, 80, 75, 0.4);
-}
-
-/* Success button styling (for untrash button) */
-.btn-icon.btn-success {
-    background: linear-gradient(135deg, #5A9367 0%, #7BB682 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(90, 147, 103, 0.3);
-}
-
-.btn-icon.btn-success:hover {
-    box-shadow: 0 4px 12px rgba(90, 147, 103, 0.4);
-}
 
 .alert {
     padding: 15px 20px;
@@ -1149,39 +956,7 @@ h2 {
     margin: 0 8px;
 }
 
-.save-edit-btn,
-.cancel-edit-btn {
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
 
-.save-edit-btn {
-    background-color: #27ae60;
-    color: white;
-}
-
-.save-edit-btn:hover {
-    background-color: #229954;
-    transform: scale(1.1);
-}
-
-.cancel-edit-btn {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.cancel-edit-btn:hover {
-    background-color: #c0392b;
-    transform: scale(1.1);
-}
 
 .error:focus {
     border-color: #e74c3c !important;
@@ -1433,58 +1208,7 @@ h2 {
     min-width: 800px; /* Ensures table doesn't get too cramped */
 }
 
-.action-buttons {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
 
-.action-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-.action-btn.edit {
-    background-color: #ffc107;
-    color: #000;
-}
-
-.action-btn.edit:hover {
-    background-color: #e0a800;
-}
-
-.action-btn.delete {
-    background-color: #dc3545;
-    color: white;
-}
-
-.action-btn.delete:hover {
-    background-color: #c82333;
-}
-
-.action-btn.empty {
-    background-color: #6c757d;
-    color: white;
-}
-
-.action-btn.empty:hover {
-    background-color: #5a6268;
-}
-
-.action-btn.in-use {
-    background-color: #007bff;
-    color: white;
-}
-
-.action-btn.in-use:hover {
-    background-color: #0056b3;
-}
 
 /* Grid selection dropdown styling */
 #gridType, #gridBatch {
