@@ -1,0 +1,149 @@
+/* Validation System */
+
+/* Field States */
+.error {
+    border: 2px solid #e74c3c !important;
+    background-color: #fdf2f2 !important;
+    box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25) !important;
+}
+
+.error:focus {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.5) !important;
+}
+
+.valid {
+    border: 2px solid #27ae60 !important;
+    background-color: #f2fff2 !important;
+}
+
+/* Autopopulated Field Highlighting */
+.autopopulated-field {
+    border-color: var(--success-green) !important;
+    background: linear-gradient(135deg, #E8F4EA 0%, #D4EDC8 10%, transparent 10%);
+    animation: fieldFadeIn 0.5s ease-in;
+    transition: all 0.3s ease;
+}
+
+/* Error Messages */
+.error-message {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+    animation: fieldFadeIn 0.3s ease-in;
+}
+
+/* Validation Summary */
+.validation-summary {
+    background-color: #fdf2f2;
+    border: 1px solid #e74c3c;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    color: #721c24;
+}
+
+.validation-summary h4 {
+    color: #e74c3c;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.validation-summary ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.validation-summary li {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+/* Success Messages */
+.success-message {
+    background-color: #f2fff2;
+    border: 1px solid #27ae60;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    color: #155724;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Loading States */
+.form-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.form-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ccc;
+    border-top: 2px solid #609BBF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+/* Field Groups for Validation */
+.field-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.field-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.field-group .required::after {
+    content: " *";
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Validation Tooltips */
+.validation-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+}
+
+.validation-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.validation-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 10px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid #333;
+}
