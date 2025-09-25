@@ -2,6 +2,7 @@
 @import url('base/_reset.css');
 @import url('utils/_animations.css');
 @import url('components/_buttons.css');
+@import url('components/_alerts.css');
 
 .container {
     max-width: 1200px;
@@ -457,41 +458,7 @@ h2 {
 
 
 
-.alert {
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    font-weight: 500;
-    animation: contentSlideIn 0.3s ease;
-}
 
-.alert-success {
-    background: linear-gradient(135deg, #E8F4EA 0%, #D4EDC8 100%);
-    color: #2D5233;
-    border: 1px solid #7BB682;
-}
-
-.alert-error {
-    background: linear-gradient(135deg, #FAEAEA 0%, #F4D6D5 100%);
-    color: #721c24;
-    border: 1px solid #C5504B;
-}
-
-.alert-info {
-    background: linear-gradient(135deg, #E8F2F7 0%, #D4E7F0 100%);
-    color: #1C4A5A;
-    border: 1px solid #A9C6D9;
-}
-
-.alert-warning {
-    background: linear-gradient(135deg, #FBF3E6 0%, #F7E6CC 100%);
-    color: #5A3E0A;
-    border: 1px solid #D9984A;
-}
-
-#alertContainerBottom {
-    margin-top: 20px;
-}
 
 .expandable-row {
   display: none; /* Hide by default */
