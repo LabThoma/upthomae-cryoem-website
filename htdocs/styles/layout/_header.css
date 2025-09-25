@@ -47,7 +47,7 @@
     content: '';
     width: 120px;
     height: 60px;
-    background: url('../images/mountains.svg') right bottom / contain no-repeat;
+    background: url('../../images/mountains.svg') right bottom / contain no-repeat;
     flex-shrink: 0;
 }
 
@@ -65,7 +65,7 @@
     content: '';
     width: 140px;
     height: 60px;
-    background: url('../images/microscope.svg') left bottom / contain no-repeat;
+    background: url('../../images/microscope.svg') left bottom / contain no-repeat;
     flex-shrink: 0;
 }
 
