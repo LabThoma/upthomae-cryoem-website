@@ -1,0 +1,192 @@
+/* Modal System */
+
+/* Base Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+  animation: modalFadeIn 0.3s;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 30px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 900px;
+  border-radius: 15px;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: modalSlideIn 0.3s;
+}
+
+/* Modal Close Button */
+.close-modal {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+  color: #609BBF;
+  text-decoration: none;
+}
+
+/* Modal Variants */
+.modal-content.wide {
+  width: 95vw;
+  max-width: none;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Modal Titles */
+.grid-modal-title {
+  color: #609BBF;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #609BBF;
+}
+
+/* Microscope Grid Modal Specific Styles */
+.microscope-grid-modal .modal-title {
+  color: #609BBF;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #609BBF;
+  font-size: 1.5rem;
+}
+
+.microscope-grid-modal .grid-detail-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.microscope-grid-modal .detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.microscope-grid-modal .detail-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.microscope-grid-modal .detail-row label {
+  font-weight: 600;
+  color: #4a5568;
+  margin-right: 10px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.microscope-grid-modal .detail-row span {
+  color: #2d3748;
+  text-align: right;
+}
+
+.microscope-grid-modal .star-rating-display {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.microscope-grid-modal .images-placeholder {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.microscope-grid-modal .text-muted {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Special styling for comments row to handle longer text */
+.microscope-grid-modal .comments-row {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.microscope-grid-modal .comments-row label {
+  margin-bottom: 8px;
+  min-width: auto;
+}
+
+.microscope-grid-modal .comments-content {
+  width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.microscope-grid-modal .comments-content p {
+  margin: 0;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* Modal Content Containers */
+.microscope-table-container {
+  overflow-x: auto;
+  margin: 16px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.microscope-table-container table {
+  min-width: 1200px;
+  width: 100%;
+}
+
+.session-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* Modal Textarea Styling */
+.microscope-table-container textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px;
+  resize: vertical;
+  min-height: 40px;
+}
+
+.microscope-table-container textarea:focus {
+  outline: none;
+  border-color: #609BBF;
+  box-shadow: 0 0 0 2px rgba(96, 155, 191, 0.2);
+}
+
+/* Modal Body State */
+body.modal-open {
+  overflow: hidden;
+}
