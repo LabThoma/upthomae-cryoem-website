@@ -1,0 +1,57 @@
+/* Star Rating System */
+
+/* Interactive Star Rating Component */
+.star-rating {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
+}
+
+.star-rating .star {
+  font-size: 18px;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+.star-rating .star:hover {
+  color: #609BBF;
+}
+
+.star-rating .star.active {
+  color: #609BBF;
+}
+
+.star-rating .star.inactive {
+  color: #ddd;
+}
+
+/* Read-only Star Display System */
+.star-display {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
+}
+
+.star-display .star {
+  font-size: 16px;
+  user-select: none;
+}
+
+.star-display .star.filled {
+  color: #609BBF;
+}
+
+.star-display .star.empty {
+  color: #ddd;
+}
+
+.star-display.empty-rating {
+  color: #999;
+  font-style: italic;
+  justify-content: center;
+  align-items: center;
+}
