@@ -1,5 +1,6 @@
 @import url('base/_variables.css');
 @import url('base/_reset.css');
+@import url('utils/_animations.css');
 
 .container {
     max-width: 1200px;
@@ -884,15 +885,7 @@ h2 {
   animation: modalSlideIn 0.3s;
 }
 
-@keyframes modalFadeIn {
-  from {opacity: 0}
-  to {opacity: 1}
-}
 
-@keyframes modalSlideIn {
-  from {transform: translateY(-50px); opacity: 0;}
-  to {transform: translateY(0); opacity: 1;}
-}
 
 /* Autopopulated field highlighting */
 .autopopulated-field {
@@ -1050,16 +1043,7 @@ h2 {
   line-height: 1.5;
 }
 
-@keyframes contentSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+
 
 .glow-discharge {
     display: grid;
@@ -1214,16 +1198,7 @@ h2 {
     animation: fieldFadeIn 0.3s ease-in;
 }
 
-@keyframes fieldFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+
 
 /* Success styling for valid fields */
 .valid {
@@ -1290,10 +1265,7 @@ h2 {
     transform: translate(-50%, -50%);
 }
 
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
+
 
 /* Field group styling for better validation layout */
 .field-group {
