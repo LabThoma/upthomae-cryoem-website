@@ -1,0 +1,10 @@
+/* Color Scheme Variables */
+:root {
+    --primary-dark: #3D5A73;
+    --primary: #609BBF;
+    --primary-light: #A9C6D9;
+    --accent-orange: #D9984A;
+    --background-light: #A2BCD3;
+    --warning-red: #C5504B;
+    --success-green: #5A9367;
+}

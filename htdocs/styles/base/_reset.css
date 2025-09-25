@@ -1,0 +1,13 @@
+/* CSS Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #3D5A73 0%, #609BBF 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
