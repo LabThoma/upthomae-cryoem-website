@@ -248,24 +248,111 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Placeholder functions for functionality we'll implement later
-function showContributeForm() {
-  console.log("Show contribute form - to be implemented");
-  alert("New post form coming soon!");
+// Single Post View Functions
+async function loadFullPost(slug) {
+  try {
+    const response = await fetch(`/api/blog/${slug}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const post = await response.json();
+    displaySinglePost(post);
+  } catch (error) {
+    console.error("Error loading full post:", error);
+    
+    const blogContent = document.getElementById("blogContent");
+    if (blogContent) {
+      blogContent.innerHTML = `
+        <div class="error-message">
+          <p>Unable to load the blog post. Please try again later.</p>
+          <button onclick="showBlogList()" class="btn btn-secondary">Back to Blog</button>
+        </div>
+      `;
+    }
+  }
 }
 
-function loadFullPost(slug) {
-  console.log("Load full post:", slug, "- to be implemented");
-  alert(`Loading post: ${slug} - coming soon!`);
+function displaySinglePost(post) {
+  const blogContent = document.getElementById("blogContent");
+  if (!blogContent) return;
+  
+  const postHtml = `
+    <div class="single-post-view">
+      <div class="single-post-header">
+        <button onclick="showBlogList()" class="btn btn-outline btn-small back-button">
+          ← Back to Blog
+        </button>
+      </div>
+      
+      <article class="single-post">
+        <header class="single-post-meta">
+          <h1 class="single-post-title">${escapeHtml(post.title)}</h1>
+          <div class="single-post-details">
+            <span class="post-category category-${post.category.toLowerCase()}">${post.category}</span>
+            <span class="post-author">by ${escapeHtml(post.author)}</span>
+            <span class="post-date">${formatTimestamp(post.created_at)}</span>
+            ${
+              post.last_modified_by && post.last_modified_by !== post.author
+                ? `<span class="post-modified">• edited by ${escapeHtml(post.last_modified_by)} on ${formatTimestamp(post.updated_at)}</span>`
+                : ""
+            }
+          </div>
+        </header>
+        
+        <div class="single-post-content">
+          ${post.content}
+        </div>
+        
+        <div class="single-post-actions">
+          <button onclick="showEditForm('${post.slug}')" class="btn btn-primary">Edit Post</button>
+          <button onclick="deletePost('${post.slug}')" class="btn btn-danger">Delete Post</button>
+        </div>
+      </article>
+    </div>
+  `;
+  
+  blogContent.innerHTML = postHtml;
+}
+
+function showBlogList() {
+  const blogContent = document.getElementById("blogContent");
+  if (!blogContent) return;
+  
+  // Restore the original blog list view
+  blogContent.innerHTML = `
+    <div class="blog-controls">
+      <div class="blog-search">
+        <input type="text" id="blogSearchInput" placeholder="Search blog posts..." class="search-input">
+        <button id="clearSearchBtn" class="clear-search-btn" style="display: none;">×</button>
+      </div>
+      <div class="blog-filters">
+        <select id="categoryFilter" class="filter-select">
+          <option value="">All Categories</option>
+        </select>
+        <select id="authorFilter" class="filter-select">
+          <option value="">All Authors</option>
+        </select>
+      </div>
+      <button onclick="showContributeForm()" class="btn btn-primary">+ New Post</button>
+    </div>
+    <div id="blogPostsList"></div>
+  `;
+  
+  // Re-initialize the blog view
+  setupBlogView();
+}
+
+// Placeholder functions for upcoming features
+function showContributeForm() {
+  alert("Contribute new post - coming soon!");
 }
 
 function showEditForm(slug) {
-  console.log("Show edit form for:", slug, "- to be implemented");
   alert(`Edit post: ${slug} - coming soon!`);
 }
 
 function deletePost(slug) {
-  console.log("Delete post:", slug, "- to be implemented");
   alert(`Delete post: ${slug} - coming soon!`);
 }
 
@@ -390,3 +477,8 @@ function applyFilters() {
 // Make functions available globally for retry button and inline handlers
 window.loadBlogPosts = loadBlogPosts;
 window.clearAllFilters = clearAllFilters;
+window.loadFullPost = loadFullPost;
+window.showBlogList = showBlogList;
+window.showEditForm = showEditForm;
+window.showContributeForm = showContributeForm;
+window.deletePost = deletePost;

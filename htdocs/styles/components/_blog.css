@@ -273,3 +273,157 @@
     padding: 1rem;
   }
 }
+
+/* Single Post View Styles */
+.single-post-view {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.single-post-header {
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.single-post {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.single-post-meta {
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.single-post-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.single-post-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.single-post-details .post-category {
+  font-weight: 600;
+}
+
+.single-post-content {
+  line-height: 1.7;
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 2rem;
+}
+
+.single-post-content h1,
+.single-post-content h2,
+.single-post-content h3,
+.single-post-content h4 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.single-post-content h2 {
+  font-size: 1.8rem;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.single-post-content h3 {
+  font-size: 1.4rem;
+}
+
+.single-post-content p {
+  margin-bottom: 1.2rem;
+}
+
+.single-post-content ul,
+.single-post-content ol {
+  margin-bottom: 1.2rem;
+  padding-left: 2rem;
+}
+
+.single-post-content li {
+  margin-bottom: 0.5rem;
+}
+
+.single-post-content blockquote {
+  border-left: 4px solid #007bff;
+  background-color: #f8f9fa;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+}
+
+.single-post-content code {
+  background-color: #f1f3f4;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+.single-post-content pre {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.single-post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.single-post-actions {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e9ecef;
+}
+
+/* Responsive Single Post View */
+@media (max-width: 768px) {
+  .single-post-view {
+    margin: 0 1rem;
+  }
+  
+  .single-post {
+    padding: 1.5rem;
+  }
+  
+  .single-post-title {
+    font-size: 2rem;
+  }
+  
+  .single-post-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .single-post-actions {
+    flex-direction: column;
+  }
+}
