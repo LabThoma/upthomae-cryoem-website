@@ -15,6 +15,9 @@ import * as sessionController from "./controllers/sessionController.js";
 // Import tabs functionality
 import { setupTabs } from "./components/tabs.js";
 
+// Import modal components
+import { setupBlogPostModal } from "./components/blogPostModal.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   initializePage();
 });
@@ -32,6 +35,9 @@ function initializePage() {
 
     // Additional setup
     setupEventListeners();
+    
+    // Setup modals
+    setupBlogPostModal();
   });
 }
 

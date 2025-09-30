@@ -4,6 +4,10 @@ function handleBlog($method, $path, $db, $input) {
         case 'GET':
             if ($path === '/api/blog') {
                 getBlogPosts($db);
+            } elseif ($path === '/api/blog/categories') {
+                getBlogCategories($db);
+            } elseif ($path === '/api/blog/authors') {
+                getBlogAuthors($db);
             } elseif (preg_match('/^\/api\/blog\/([^\/]+)$/', $path, $matches)) {
                 getBlogPost($db, $matches[1]);
             } elseif (preg_match('/^\/api\/blog\/image\/([^\/]+)\/([^\/]+)$/', $path, $matches)) {
@@ -398,6 +402,40 @@ function removeDirectory($dir) {
             }
         }
         rmdir($dir);
+    }
+}
+
+function getBlogCategories($db) {
+    try {
+        // Get unique categories from existing blog posts
+        $categories = $db->query("SELECT DISTINCT category FROM blog_posts WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
+        
+        // Extract just the category values
+        $categoryList = array_map(function($row) {
+            return $row['category'];
+        }, $categories);
+        
+        sendResponse($categoryList);
+    } catch (Exception $e) {
+        error_log("Error fetching blog categories: " . $e->getMessage());
+        sendError('Failed to fetch blog categories', 500);
+    }
+}
+
+function getBlogAuthors($db) {
+    try {
+        // Get unique authors from existing blog posts
+        $authors = $db->query("SELECT DISTINCT author FROM blog_posts WHERE author IS NOT NULL AND author != '' ORDER BY author ASC");
+        
+        // Extract just the author values
+        $authorList = array_map(function($row) {
+            return $row['author'];
+        }, $authors);
+        
+        sendResponse($authorList);
+    } catch (Exception $e) {
+        error_log("Error fetching blog authors: " . $e->getMessage());
+        sendError('Failed to fetch blog authors', 500);
     }
 }
 ?>

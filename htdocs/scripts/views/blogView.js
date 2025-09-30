@@ -150,12 +150,13 @@ function displayBlogPosts(posts) {
   const searchInput = document.getElementById("blogSearchInput");
   const categoryFilter = document.getElementById("categoryFilter");
   const authorFilter = document.getElementById("authorFilter");
-  const isFiltered = (searchInput && searchInput.value.trim()) || 
-                     (categoryFilter && categoryFilter.value) ||
-                     (authorFilter && authorFilter.value);
-  
+  const isFiltered =
+    (searchInput && searchInput.value.trim()) ||
+    (categoryFilter && categoryFilter.value) ||
+    (authorFilter && authorFilter.value);
+
   if (posts.length === 0) {
-    const emptyMessage = isFiltered 
+    const emptyMessage = isFiltered
       ? `
         <div class="empty-state">
           <h3>No posts found</h3>
@@ -170,7 +171,7 @@ function displayBlogPosts(posts) {
           <button onclick="showContributeForm()" class="btn btn-primary">Write First Post</button>
         </div>
       `;
-    
+
     postsContainer.innerHTML = emptyMessage;
     return;
   }
@@ -229,9 +230,9 @@ function displayBlogPosts(posts) {
   // Create posts count display
   const totalPosts = allBlogPosts.length;
   const displayedPosts = posts.length;
-  const countsText = isFiltered 
+  const countsText = isFiltered
     ? `Showing ${displayedPosts} of ${totalPosts} posts`
-    : `${totalPosts} post${totalPosts === 1 ? '' : 's'}`;
+    : `${totalPosts} post${totalPosts === 1 ? "" : "s"}`;
 
   postsContainer.innerHTML = `
         <div class="posts-count">${countsText}</div>
@@ -255,12 +256,12 @@ async function loadFullPost(slug) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const post = await response.json();
     displaySinglePost(post);
   } catch (error) {
     console.error("Error loading full post:", error);
-    
+
     const blogContent = document.getElementById("blogContent");
     if (blogContent) {
       blogContent.innerHTML = `
@@ -276,7 +277,7 @@ async function loadFullPost(slug) {
 function displaySinglePost(post) {
   const blogContent = document.getElementById("blogContent");
   if (!blogContent) return;
-  
+
   const postHtml = `
     <div class="single-post-view">
       <div class="single-post-header">
@@ -289,12 +290,16 @@ function displaySinglePost(post) {
         <header class="single-post-meta">
           <h1 class="single-post-title">${escapeHtml(post.title)}</h1>
           <div class="single-post-details">
-            <span class="post-category category-${post.category.toLowerCase()}">${post.category}</span>
+            <span class="post-category category-${post.category.toLowerCase()}">${
+    post.category
+  }</span>
             <span class="post-author">by ${escapeHtml(post.author)}</span>
             <span class="post-date">${formatTimestamp(post.created_at)}</span>
             ${
               post.last_modified_by && post.last_modified_by !== post.author
-                ? `<span class="post-modified">• edited by ${escapeHtml(post.last_modified_by)} on ${formatTimestamp(post.updated_at)}</span>`
+                ? `<span class="post-modified">• edited by ${escapeHtml(
+                    post.last_modified_by
+                  )} on ${formatTimestamp(post.updated_at)}</span>`
                 : ""
             }
           </div>
@@ -305,20 +310,24 @@ function displaySinglePost(post) {
         </div>
         
         <div class="single-post-actions">
-          <button onclick="showEditForm('${post.slug}')" class="btn btn-primary">Edit Post</button>
-          <button onclick="deletePost('${post.slug}')" class="btn btn-danger">Delete Post</button>
+          <button onclick="showEditForm('${
+            post.slug
+          }')" class="btn btn-primary">Edit Post</button>
+          <button onclick="deletePost('${
+            post.slug
+          }')" class="btn btn-danger">Delete Post</button>
         </div>
       </article>
     </div>
   `;
-  
+
   blogContent.innerHTML = postHtml;
 }
 
 function showBlogList() {
   const blogContent = document.getElementById("blogContent");
   if (!blogContent) return;
-  
+
   // Restore the original blog list view
   blogContent.innerHTML = `
     <div class="blog-controls">
@@ -338,37 +347,64 @@ function showBlogList() {
     </div>
     <div id="blogPostsList"></div>
   `;
-  
+
   // Re-initialize the blog view
   setupBlogView();
 }
 
-// Placeholder functions for upcoming features
+// Import modal functions
+import {
+  showNewPostModal,
+  showEditPostModal,
+} from "../components/blogPostModal.js";
+
+// Post Creation and Editing Functions
 function showContributeForm() {
-  alert("Contribute new post - coming soon!");
+  showNewPostModal();
 }
 
-function showEditForm(slug) {
-  alert(`Edit post: ${slug} - coming soon!`);
+async function showEditForm(slug) {
+  showEditPostModal(slug);
 }
 
 function deletePost(slug) {
-  alert(`Delete post: ${slug} - coming soon!`);
+  if (
+    !confirm(
+      "Are you sure you want to delete this blog post? This action cannot be undone."
+    )
+  ) {
+    return;
+  }
+
+  fetch(`/api/blog/${slug}`, {
+    method: "DELETE",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      alert("Blog post deleted successfully!");
+      showBlogList();
+    })
+    .catch((error) => {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete blog post. Please try again.");
+    });
 }
 
 // Filter population functions
 function populateCategoryFilter(posts) {
   // Extract unique categories from posts
-  const categories = [...new Set(posts.map(post => post.category))].sort();
-  
+  const categories = [...new Set(posts.map((post) => post.category))].sort();
+
   // Use the autocomplete utility to populate the dropdown
   populateDropdown("categoryFilter", categories, "All Categories");
 }
 
 function populateAuthorFilter(posts) {
   // Extract unique authors from posts
-  const authors = [...new Set(posts.map(post => post.author))].sort();
-  
+  const authors = [...new Set(posts.map((post) => post.author))].sort();
+
   // Use the autocomplete utility to populate the dropdown
   populateDropdown("authorFilter", authors, "All Authors");
 }
@@ -378,41 +414,42 @@ function handleSearch() {
   const searchInput = document.getElementById("blogSearchInput");
   const clearBtn = document.getElementById("clearSearchBtn");
   const searchTerm = searchInput.value.toLowerCase().trim();
-  
+
   if (searchTerm === "") {
     clearBtn.style.display = "none";
     applyFilters();
     return;
   }
-  
+
   clearBtn.style.display = "inline-block";
-  
+
   // Filter posts by search term (title, content, author)
-  const searchResults = allBlogPosts.filter(post => 
-    post.title.toLowerCase().includes(searchTerm) ||
-    post.excerpt.toLowerCase().includes(searchTerm) ||
-    post.author.toLowerCase().includes(searchTerm) ||
-    post.category.toLowerCase().includes(searchTerm)
+  const searchResults = allBlogPosts.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.excerpt.toLowerCase().includes(searchTerm) ||
+      post.author.toLowerCase().includes(searchTerm) ||
+      post.category.toLowerCase().includes(searchTerm)
   );
-  
+
   // Apply category filter to search results
   const categoryFilter = document.getElementById("categoryFilter");
   const selectedCategory = categoryFilter.value;
-  
-  filteredPosts = selectedCategory 
-    ? searchResults.filter(post => post.category === selectedCategory)
+
+  filteredPosts = selectedCategory
+    ? searchResults.filter((post) => post.category === selectedCategory)
     : searchResults;
-  
+
   displayBlogPosts(filteredPosts);
 }
 
 function clearSearch() {
   const searchInput = document.getElementById("blogSearchInput");
   const clearBtn = document.getElementById("clearSearchBtn");
-  
+
   searchInput.value = "";
   clearBtn.style.display = "none";
-  
+
   applyFilters();
 }
 
@@ -421,12 +458,12 @@ function clearAllFilters() {
   const categoryFilter = document.getElementById("categoryFilter");
   const authorFilter = document.getElementById("authorFilter");
   const clearBtn = document.getElementById("clearSearchBtn");
-  
+
   if (searchInput) searchInput.value = "";
   if (categoryFilter) categoryFilter.value = "";
   if (authorFilter) authorFilter.value = "";
   if (clearBtn) clearBtn.style.display = "none";
-  
+
   applyFilters();
 }
 
@@ -442,34 +479,35 @@ function applyFilters() {
   const categoryFilter = document.getElementById("categoryFilter");
   const authorFilter = document.getElementById("authorFilter");
   const searchInput = document.getElementById("blogSearchInput");
-  
+
   const selectedCategory = categoryFilter ? categoryFilter.value : "";
   const selectedAuthor = authorFilter ? authorFilter.value : "";
   const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
-  
+
   // Start with all posts
   let filtered = [...allBlogPosts];
-  
+
   // Apply search filter
   if (searchTerm) {
-    filtered = filtered.filter(post => 
-      post.title.toLowerCase().includes(searchTerm) ||
-      post.excerpt.toLowerCase().includes(searchTerm) ||
-      post.author.toLowerCase().includes(searchTerm) ||
-      post.category.toLowerCase().includes(searchTerm)
+    filtered = filtered.filter(
+      (post) =>
+        post.title.toLowerCase().includes(searchTerm) ||
+        post.excerpt.toLowerCase().includes(searchTerm) ||
+        post.author.toLowerCase().includes(searchTerm) ||
+        post.category.toLowerCase().includes(searchTerm)
     );
   }
-  
+
   // Apply category filter
   if (selectedCategory) {
-    filtered = filtered.filter(post => post.category === selectedCategory);
+    filtered = filtered.filter((post) => post.category === selectedCategory);
   }
-  
+
   // Apply author filter
   if (selectedAuthor) {
-    filtered = filtered.filter(post => post.author === selectedAuthor);
+    filtered = filtered.filter((post) => post.author === selectedAuthor);
   }
-  
+
   filteredPosts = filtered;
   displayBlogPosts(filteredPosts);
 }

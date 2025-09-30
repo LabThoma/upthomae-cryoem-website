@@ -262,6 +262,14 @@ $pageTitle = "THOMAE cryoEM";
       </div>
     </div>
 
+    <!-- Modal for Blog Post Creation/Editing -->
+    <div id="blogPostModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="blogPostModalContent"></div>
+      </div>
+    </div>
+
     
     <!-- Load main script as a module -->
     <script type="module" src="scripts/main.js"></script>
