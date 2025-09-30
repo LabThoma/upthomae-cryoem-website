@@ -1,6 +1,11 @@
 // Blog view functionality
 
 import { formatTimestamp } from "../utils/dateUtils.js";
+import { populateDropdown } from "../utils/autocomplete.js";
+
+// Global variables for blog functionality
+let allBlogPosts = [];
+let filteredPosts = [];
 
 export function setupBlogView() {
   console.log("Setting up blog view");
@@ -23,6 +28,26 @@ export function setupBlogView() {
                 <button id="newPostBtn" class="btn btn-primary">
                     <i class="icon">✏️</i> New Post
                 </button>
+            </div>
+            
+            <!-- Search and Filter Controls -->
+            <div class="blog-controls">
+                <div class="search-container">
+                    <input type="text" id="blogSearchInput" placeholder="Search blog posts..." class="search-input">
+                    <button id="clearSearchBtn" class="btn btn-small" style="display: none;">Clear</button>
+                </div>
+                <div class="filter-container">
+                    <label for="categoryFilter">Category:</label>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="filter-container">
+                    <label for="authorFilter">Author:</label>
+                    <select id="authorFilter" class="filter-select">
+                        <option value="">All Authors</option>
+                    </select>
+                </div>
             </div>
             
             <div id="blogContent">
@@ -52,6 +77,33 @@ function setupBlogEventListeners() {
   if (newPostBtn) {
     newPostBtn.addEventListener("click", showContributeForm);
   }
+
+  // Search functionality
+  const searchInput = document.getElementById("blogSearchInput");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
+  if (searchInput) {
+    searchInput.addEventListener("input", handleSearch);
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        handleSearch();
+      }
+    });
+  }
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", clearSearch);
+  }
+
+  // Category filter
+  const categoryFilter = document.getElementById("categoryFilter");
+  if (categoryFilter) {
+    categoryFilter.addEventListener("change", handleCategoryFilter);
+  }
+
+  // Author filter
+  const authorFilter = document.getElementById("authorFilter");
+  if (authorFilter) {
+    authorFilter.addEventListener("change", handleAuthorFilter);
+  }
 }
 
 async function loadBlogPosts() {
@@ -66,7 +118,15 @@ async function loadBlogPosts() {
     const posts = await response.json();
     console.log("Loaded posts:", posts);
 
-    displayBlogPosts(posts);
+    // Store all posts for filtering/searching
+    allBlogPosts = posts;
+    filteredPosts = [...posts];
+
+    // Populate filters with actual data from posts
+    populateCategoryFilter(posts);
+    populateAuthorFilter(posts);
+
+    displayBlogPosts(filteredPosts);
   } catch (error) {
     console.error("Error loading blog posts:", error);
 
@@ -86,14 +146,32 @@ function displayBlogPosts(posts) {
   const postsContainer = document.getElementById("blogPostsList");
   if (!postsContainer) return;
 
+  // Add posts count
+  const searchInput = document.getElementById("blogSearchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const authorFilter = document.getElementById("authorFilter");
+  const isFiltered = (searchInput && searchInput.value.trim()) || 
+                     (categoryFilter && categoryFilter.value) ||
+                     (authorFilter && authorFilter.value);
+  
   if (posts.length === 0) {
-    postsContainer.innerHTML = `
-            <div class="empty-state">
-                <h3>No blog posts yet</h3>
-                <p>Be the first to contribute to our CryoEM blog!</p>
-                <button onclick="showContributeForm()" class="btn btn-primary">Write First Post</button>
-            </div>
-        `;
+    const emptyMessage = isFiltered 
+      ? `
+        <div class="empty-state">
+          <h3>No posts found</h3>
+          <p>No blog posts match your current search or filter criteria.</p>
+          <button onclick="clearAllFilters();" class="btn btn-secondary">Clear Filters</button>
+        </div>
+      `
+      : `
+        <div class="empty-state">
+          <h3>No blog posts yet</h3>
+          <p>Be the first to contribute to our CryoEM blog!</p>
+          <button onclick="showContributeForm()" class="btn btn-primary">Write First Post</button>
+        </div>
+      `;
+    
+    postsContainer.innerHTML = emptyMessage;
     return;
   }
 
@@ -148,7 +226,15 @@ function displayBlogPosts(posts) {
     )
     .join("");
 
+  // Create posts count display
+  const totalPosts = allBlogPosts.length;
+  const displayedPosts = posts.length;
+  const countsText = isFiltered 
+    ? `Showing ${displayedPosts} of ${totalPosts} posts`
+    : `${totalPosts} post${totalPosts === 1 ? '' : 's'}`;
+
   postsContainer.innerHTML = `
+        <div class="posts-count">${countsText}</div>
         <div class="blog-posts-grid">
             ${postsHTML}
         </div>
@@ -183,5 +269,124 @@ function deletePost(slug) {
   alert(`Delete post: ${slug} - coming soon!`);
 }
 
-// Make loadBlogPosts available globally for retry button
+// Filter population functions
+function populateCategoryFilter(posts) {
+  // Extract unique categories from posts
+  const categories = [...new Set(posts.map(post => post.category))].sort();
+  
+  // Use the autocomplete utility to populate the dropdown
+  populateDropdown("categoryFilter", categories, "All Categories");
+}
+
+function populateAuthorFilter(posts) {
+  // Extract unique authors from posts
+  const authors = [...new Set(posts.map(post => post.author))].sort();
+  
+  // Use the autocomplete utility to populate the dropdown
+  populateDropdown("authorFilter", authors, "All Authors");
+}
+
+// Search and Filter Functions
+function handleSearch() {
+  const searchInput = document.getElementById("blogSearchInput");
+  const clearBtn = document.getElementById("clearSearchBtn");
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  
+  if (searchTerm === "") {
+    clearBtn.style.display = "none";
+    applyFilters();
+    return;
+  }
+  
+  clearBtn.style.display = "inline-block";
+  
+  // Filter posts by search term (title, content, author)
+  const searchResults = allBlogPosts.filter(post => 
+    post.title.toLowerCase().includes(searchTerm) ||
+    post.excerpt.toLowerCase().includes(searchTerm) ||
+    post.author.toLowerCase().includes(searchTerm) ||
+    post.category.toLowerCase().includes(searchTerm)
+  );
+  
+  // Apply category filter to search results
+  const categoryFilter = document.getElementById("categoryFilter");
+  const selectedCategory = categoryFilter.value;
+  
+  filteredPosts = selectedCategory 
+    ? searchResults.filter(post => post.category === selectedCategory)
+    : searchResults;
+  
+  displayBlogPosts(filteredPosts);
+}
+
+function clearSearch() {
+  const searchInput = document.getElementById("blogSearchInput");
+  const clearBtn = document.getElementById("clearSearchBtn");
+  
+  searchInput.value = "";
+  clearBtn.style.display = "none";
+  
+  applyFilters();
+}
+
+function clearAllFilters() {
+  const searchInput = document.getElementById("blogSearchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const authorFilter = document.getElementById("authorFilter");
+  const clearBtn = document.getElementById("clearSearchBtn");
+  
+  if (searchInput) searchInput.value = "";
+  if (categoryFilter) categoryFilter.value = "";
+  if (authorFilter) authorFilter.value = "";
+  if (clearBtn) clearBtn.style.display = "none";
+  
+  applyFilters();
+}
+
+function handleCategoryFilter() {
+  applyFilters();
+}
+
+function handleAuthorFilter() {
+  applyFilters();
+}
+
+function applyFilters() {
+  const categoryFilter = document.getElementById("categoryFilter");
+  const authorFilter = document.getElementById("authorFilter");
+  const searchInput = document.getElementById("blogSearchInput");
+  
+  const selectedCategory = categoryFilter ? categoryFilter.value : "";
+  const selectedAuthor = authorFilter ? authorFilter.value : "";
+  const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  
+  // Start with all posts
+  let filtered = [...allBlogPosts];
+  
+  // Apply search filter
+  if (searchTerm) {
+    filtered = filtered.filter(post => 
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.excerpt.toLowerCase().includes(searchTerm) ||
+      post.author.toLowerCase().includes(searchTerm) ||
+      post.category.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  // Apply category filter
+  if (selectedCategory) {
+    filtered = filtered.filter(post => post.category === selectedCategory);
+  }
+  
+  // Apply author filter
+  if (selectedAuthor) {
+    filtered = filtered.filter(post => post.author === selectedAuthor);
+  }
+  
+  filteredPosts = filtered;
+  displayBlogPosts(filteredPosts);
+}
+
+// Make functions available globally for retry button and inline handlers
 window.loadBlogPosts = loadBlogPosts;
+window.clearAllFilters = clearAllFilters;
