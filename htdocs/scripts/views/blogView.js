@@ -1,7 +1,10 @@
 // Blog view functionality
 
 import { formatTimestamp } from "../utils/dateUtils.js";
-import { populateDropdown } from "../utils/autocomplete.js";
+import {
+  populateDropdown,
+  populateDropdownFromAPI,
+} from "../utils/autocomplete.js";
 
 // Global variables for blog functionality
 let allBlogPosts = [];
@@ -122,9 +125,12 @@ async function loadBlogPosts() {
     allBlogPosts = posts;
     filteredPosts = [...posts];
 
-    // Populate filters with actual data from posts
-    populateCategoryFilter(posts);
-    populateAuthorFilter(posts);
+    // Populate filters from API (independent of current posts)
+    Promise.all([populateCategoryFilter(), populateAuthorFilter()]).catch(
+      (error) => {
+        console.error("Error populating filters:", error);
+      }
+    );
 
     displayBlogPosts(filteredPosts);
   } catch (error) {
@@ -350,6 +356,13 @@ function showBlogList() {
 
   // Re-initialize the blog view
   setupBlogView();
+
+  // Ensure filters are populated when returning to blog list
+  Promise.all([populateCategoryFilter(), populateAuthorFilter()]).catch(
+    (error) => {
+      console.error("Error populating filters on return to blog list:", error);
+    }
+  );
 }
 
 // Import modal functions
@@ -393,20 +406,44 @@ function deletePost(slug) {
 }
 
 // Filter population functions
-function populateCategoryFilter(posts) {
-  // Extract unique categories from posts
-  const categories = [...new Set(posts.map((post) => post.category))].sort();
-
-  // Use the autocomplete utility to populate the dropdown
-  populateDropdown("categoryFilter", categories, "All Categories");
+async function populateCategoryFilter() {
+  try {
+    await populateDropdownFromAPI(
+      "categoryFilter",
+      "/api/blog/categories",
+      "All Categories",
+      null,
+      (error) => {
+        console.error("Failed to load categories for filtering:", error);
+        // Fallback to empty dropdown with just default option
+        populateDropdown("categoryFilter", [], "All Categories");
+      },
+      false // No "Add new" option for filtering
+    );
+  } catch (error) {
+    console.error("Error populating category filter:", error);
+    populateDropdown("categoryFilter", [], "All Categories");
+  }
 }
 
-function populateAuthorFilter(posts) {
-  // Extract unique authors from posts
-  const authors = [...new Set(posts.map((post) => post.author))].sort();
-
-  // Use the autocomplete utility to populate the dropdown
-  populateDropdown("authorFilter", authors, "All Authors");
+async function populateAuthorFilter() {
+  try {
+    await populateDropdownFromAPI(
+      "authorFilter",
+      "/api/blog/authors",
+      "All Authors",
+      null,
+      (error) => {
+        console.error("Failed to load authors for filtering:", error);
+        // Fallback to empty dropdown with just default option
+        populateDropdown("authorFilter", [], "All Authors");
+      },
+      false // No "Add new" option for filtering
+    );
+  } catch (error) {
+    console.error("Error populating author filter:", error);
+    populateDropdown("authorFilter", [], "All Authors");
+  }
 }
 
 // Search and Filter Functions
