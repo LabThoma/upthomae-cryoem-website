@@ -7,6 +7,7 @@ require_once 'endpoints/users.php';
 require_once 'endpoints/grid_preparations.php';
 require_once 'endpoints/dashboard.php';
 require_once 'endpoints/microscope_sessions.php';
+require_once 'endpoints/blog.php';
 
 // Set API headers for all API requests
 setApiHeaders();
@@ -70,6 +71,12 @@ function route($method, $path, $db, $input = null) {
     // Dashboard endpoint
     if (strpos($path, '/api/dashboard') === 0) {
         handleDashboard($method, $path, $db, $input);
+        return;
+    }
+    
+    // Blog endpoints
+    if (strpos($path, '/api/blog') === 0) {
+        handleBlog($method, $path, $db, $input);
         return;
     }
     
