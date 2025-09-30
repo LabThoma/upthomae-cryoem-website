@@ -3,6 +3,7 @@ private/config.local.php
 private/config.production.php
 htdocs/entra/.env*
 *.env*
+private/tinymce-config.php
 
 !htdocs/entra/.env.example
 

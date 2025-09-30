@@ -11,6 +11,7 @@ import {
 // Store current post data for editing
 let currentPostData = null;
 let isEditMode = false;
+let tinyMCEEditor = null;
 
 /**
  * Show the blog post modal for creating a new post
@@ -119,21 +120,12 @@ function createPostModalHTML(post = null) {
       
       <div class="form-group">
         <label for="modalPostContent">Content *</label>
-        <div class="editor-toolbar">
-          <button type="button" onclick="formatModalText('bold')" class="toolbar-btn" title="Bold"><b>B</b></button>
-          <button type="button" onclick="formatModalText('italic')" class="toolbar-btn" title="Italic"><i>I</i></button>
-          <button type="button" onclick="formatModalText('underline')" class="toolbar-btn" title="Underline"><u>U</u></button>
-          <button type="button" onclick="formatModalText('insertUnorderedList')" class="toolbar-btn" title="Bullet List">•</button>
-          <button type="button" onclick="formatModalText('insertOrderedList')" class="toolbar-btn" title="Numbered List">1.</button>
-          <button type="button" onclick="formatModalText('formatBlock', 'h2')" class="toolbar-btn" title="Heading">H2</button>
-          <button type="button" onclick="formatModalText('formatBlock', 'h3')" class="toolbar-btn" title="Subheading">H3</button>
-        </div>
-        <div 
+        <textarea 
           id="modalPostContent" 
-          contenteditable="true" 
-          class="content-editor" 
-          placeholder="Write your blog post content here..."
-        >${post ? post.content : ""}</div>
+          name="content"
+          class="tinymce-editor" 
+          style="width: 100%; height: 400px;"
+        >${post ? post.content : ""}</textarea>
         <div class="field-error" id="modalContentError"></div>
       </div>
       
@@ -160,9 +152,17 @@ async function initializePostForm(post = null) {
   // Set up "Add new" functionality
   setupAddNewHandlers();
 
+  // Initialize TinyMCE editor with content if editing
+  const initialContent = post?.content || "";
+  setTimeout(() => {
+    initializeTinyMCE(initialContent);
+  }, 100);
+
   // Load draft data if creating new post and draft exists
   if (!isEditMode) {
-    loadDraftData();
+    setTimeout(() => {
+      loadDraftData();
+    }, 300); // Wait a bit longer for TinyMCE to be ready
   }
 }
 
@@ -258,13 +258,58 @@ function setupAddNewHandlers() {
 }
 
 /**
- * Rich text editor formatting for modal
- * @param {string} command - The formatting command
- * @param {string} value - Optional value for the command
+ * Initialize TinyMCE editor for blog content
+ * @param {string} initialContent - Optional initial content for the editor
  */
-export function formatModalText(command, value = null) {
-  document.execCommand(command, false, value);
-  document.getElementById("modalPostContent").focus();
+function initializeTinyMCE(initialContent = "") {
+  // Remove existing editor instance if it exists
+  if (tinyMCEEditor) {
+    tinymce.remove("#modalPostContent");
+    tinyMCEEditor = null;
+  }
+
+  // Initialize TinyMCE
+  tinymce.init({
+    selector: "#modalPostContent",
+    apiKey: window.TINYMCE_CONFIG ? window.TINYMCE_CONFIG.apiKey : "",
+    height: 400,
+    menubar: false,
+    plugins: [
+      "advlist",
+      "autolink",
+      "lists",
+      "link",
+      "charmap",
+      "anchor",
+      "searchreplace",
+      "visualblocks",
+      "code",
+      "insertdatetime",
+      "table",
+      "preview",
+      "help",
+      "wordcount",
+    ],
+    toolbar:
+      "undo redo | blocks | " +
+      "bold italic backcolor | alignleft aligncenter " +
+      "alignright alignjustify | bullist numlist outdent indent | " +
+      "removeformat | link | help",
+    content_style:
+      'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; margin: 10px; }',
+    placeholder: "Write your blog post content here...",
+    setup: function (editor) {
+      editor.on("init", function () {
+        tinyMCEEditor = editor;
+        // Set initial content if provided
+        if (initialContent) {
+          editor.setContent(initialContent);
+        }
+      });
+    },
+    branding: false,
+    resize: false,
+  });
 }
 
 /**
@@ -309,11 +354,16 @@ function validateBlogPostForm() {
     isValid = false;
   }
 
-  // Validate content
-  const content = document.getElementById("modalPostContent").innerHTML.trim();
+  // Validate content (TinyMCE)
+  let content = "";
+  if (tinyMCEEditor) {
+    content = tinyMCEEditor.getContent().trim();
+  }
+
   if (
     !content ||
-    content === "<br>" ||
+    content === "<p></p>" ||
+    content === "<p><br></p>" ||
     content.replace(/<[^>]*>/g, "").trim().length < 10
   ) {
     document.getElementById("modalContentError").textContent =
@@ -329,11 +379,16 @@ function validateBlogPostForm() {
  * @returns {Object} The form data
  */
 function gatherFormData() {
+  let content = "";
+  if (tinyMCEEditor) {
+    content = tinyMCEEditor.getContent();
+  }
+
   return {
     title: document.getElementById("modalPostTitle")?.value.trim() || "",
     author: document.getElementById("modalPostAuthor")?.value.trim() || "",
     category: document.getElementById("modalPostCategory")?.value.trim() || "",
-    content: document.getElementById("modalPostContent")?.innerHTML || "",
+    content: content,
   };
 }
 
@@ -426,12 +481,20 @@ function loadDraftData() {
         const titleEl = document.getElementById("modalPostTitle");
         const authorEl = document.getElementById("modalPostAuthor");
         const categoryEl = document.getElementById("modalPostCategory");
-        const contentEl = document.getElementById("modalPostContent");
 
         if (titleEl) titleEl.value = draftData.title || "";
         if (authorEl) authorEl.value = draftData.author || "";
         if (categoryEl) categoryEl.value = draftData.category || "";
-        if (contentEl) contentEl.innerHTML = draftData.content || "";
+
+        // Load content into TinyMCE when it's ready
+        if (draftData.content) {
+          const waitForTinyMCE = setInterval(() => {
+            if (tinyMCEEditor) {
+              tinyMCEEditor.setContent(draftData.content);
+              clearInterval(waitForTinyMCE);
+            }
+          }, 100);
+        }
       }
     }
   } catch (error) {
@@ -461,8 +524,18 @@ export function setupBlogPostModal() {
  * Close the blog post modal
  */
 export function closeBlogPostModal() {
+  // Clean up TinyMCE editor
+  if (tinyMCEEditor) {
+    tinymce.remove("#modalPostContent");
+    tinyMCEEditor = null;
+  }
+
   const modal = document.getElementById("blogPostModal");
   modal.style.display = "none";
+
+  // Reset form state
+  isEditMode = false;
+  currentPostData = null;
 }
 
 /**
@@ -478,7 +551,6 @@ function escapeHtml(text) {
 }
 
 // Make functions available globally for onclick handlers
-window.formatModalText = formatModalText;
 window.submitBlogPost = submitBlogPost;
 window.saveBlogPostDraft = saveBlogPostDraft;
 window.closeBlogPostModal = closeBlogPostModal;
