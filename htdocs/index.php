@@ -132,10 +132,7 @@ $pageTitle = "THOMAE cryoEM";
 
         <!-- Blog View -->
         <div id="blogView" class="content-view">
-          <div class="form-section">
-            <h2 class="section-title">Blog</h2>
-            <p>Blog content coming soon...</p>
-          </div>
+          <!-- Blog content will be dynamically loaded by blogView.js -->
         </div>
 
         <!-- Admin View -->
