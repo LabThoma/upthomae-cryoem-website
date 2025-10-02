@@ -194,6 +194,16 @@
     box-shadow: 0 4px 12px rgba(90, 147, 103, 0.4);
 }
 
+.btn-icon.btn-primary {
+    background: linear-gradient(135deg, #609BBF 0%, #A9C6D9 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(96, 155, 191, 0.3);
+}
+
+.btn-icon.btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(96, 155, 191, 0.4);
+}
+
 /* Action Buttons */
 .action-btn {
     padding: 6px 12px;

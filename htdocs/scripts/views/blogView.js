@@ -56,7 +56,7 @@ export function setupBlogView() {
             <div class="blog-header">
                 <h2 class="section-title">CryoEM Blog</h2>
                 <button id="newPostBtn" class="btn btn-primary">
-                    <i class="icon">✏️</i> New Post
+                    New Post
                 </button>
             </div>
             
@@ -248,12 +248,6 @@ function displayBlogPosts(posts) {
                 <button onclick="loadFullPost('${
                   post.slug
                 }')" class="btn btn-secondary btn-small">Read More</button>
-                <button onclick="showEditForm('${
-                  post.slug
-                }')" class="btn btn-outline btn-small">Edit</button>
-                <button onclick="deletePost('${
-                  post.slug
-                }')" class="btn btn-danger btn-small">Delete</button>
             </div>
         </article>
     `
@@ -314,14 +308,28 @@ function displaySinglePost(post) {
   const postHtml = `
     <div class="single-post-view">
       <div class="single-post-header">
-        <button onclick="showBlogList()" class="btn btn-outline btn-small back-button">
+        <button onclick="showBlogList()" class="btn btn-secondary btn-small back-button">
           ← Back to Blog
         </button>
       </div>
       
       <article class="single-post">
         <header class="single-post-meta">
-          <h1 class="single-post-title">${escapeHtml(post.title)}</h1>
+          <div class="single-post-title-row">
+            <h1 class="single-post-title">${escapeHtml(post.title)}</h1>
+            <div class="single-post-title-actions">
+              <button onclick="showEditForm('${
+                post.slug
+              }')" class="btn-icon btn-primary" title="Edit Post">
+                <i class="fas fa-pen-to-square"></i>
+              </button>
+              <button onclick="deletePost('${
+                post.slug
+              }')" class="btn-icon btn-danger" title="Delete Post">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
           <div class="single-post-details">
             <span class="post-category ${getCategoryColorClass(
               post.category
@@ -340,15 +348,6 @@ function displaySinglePost(post) {
         
         <div class="single-post-content">
           ${post.content}
-        </div>
-        
-        <div class="single-post-actions">
-          <button onclick="showEditForm('${
-            post.slug
-          }')" class="btn btn-primary">Edit Post</button>
-          <button onclick="deletePost('${
-            post.slug
-          }')" class="btn btn-danger">Delete Post</button>
         </div>
       </article>
     </div>
