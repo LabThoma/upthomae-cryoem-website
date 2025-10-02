@@ -91,6 +91,27 @@
     box-shadow: 0 10px 25px rgba(90, 147, 103, 0.5);
 }
 
+/* Outline Button Variant */
+.btn-outline {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #666;
+    box-shadow: none;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.btn-outline:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-outline::before {
+    display: none;
+}
+
 /* Button Size Modifiers */
 .btn-small {
     padding: 8px 16px;
@@ -171,6 +192,16 @@
 
 .btn-icon.btn-success:hover {
     box-shadow: 0 4px 12px rgba(90, 147, 103, 0.4);
+}
+
+.btn-icon.btn-primary {
+    background: linear-gradient(135deg, #609BBF 0%, #A9C6D9 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(96, 155, 191, 0.3);
+}
+
+.btn-icon.btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(96, 155, 191, 0.4);
 }
 
 /* Action Buttons */

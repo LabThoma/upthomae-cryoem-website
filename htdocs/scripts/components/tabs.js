@@ -3,6 +3,7 @@
 import { setupDatabaseView } from "../views/databaseView.js";
 import { setupAdminView } from "../views/adminView.js";
 import { setupMicroscopeTab } from "../views/microscopeView.js";
+import { setupBlogView } from "../views/blogView.js";
 
 const ADMIN_PASSWORD = "NoGlycerol!";
 let isAdminAuthenticated = false;
@@ -43,6 +44,8 @@ export function setupTabs() {
         setupDatabaseView();
       } else if (targetView === "microscopeView") {
         setupMicroscopeTab();
+      } else if (targetView === "blogView") {
+        setupBlogView();
       } else if (targetView === "adminView" && isAdminAuthenticated) {
         setupAdminView();
       }

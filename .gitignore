@@ -3,6 +3,7 @@ private/config.local.php
 private/config.production.php
 htdocs/entra/.env*
 *.env*
+private/tinymce-config.php
 
 !htdocs/entra/.env.example
 
@@ -14,7 +15,12 @@ vendor/
 logs/
 sessions/
 tmp/
-*.DS_Store
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
 
 # Debug files  
 debug-*.php
@@ -25,3 +31,7 @@ debug-*.html
 tests_website/
 database_backups/
 .vscode/
+
+# Blog content (user-generated content should not be in version control)
+private/blog_content/posts/
+private/blog_content/images/

@@ -7,4 +7,44 @@
     --background-light: #A2BCD3;
     --warning-red: #C5504B;
     --success-green: #5A9367;
+    
+    /* Neutral Colors */
+    --text-dark: #333;
+    --text-medium: #555;
+    --text-light: #666;
+    --text-muted: #888;
+    
+    /* Border Colors */
+    --border-light: #eee;
+    --border-medium: #ddd;
+    --border-dark: #e0e0e0;
+    
+    /* Background Colors */
+    --bg-white: #fff;
+    --bg-light: #f8f9fa;
+    --bg-section: #fefefe;
+    
+    /* Interactive Colors */
+    --focus-color: var(--primary);
+    --focus-shadow: rgba(96, 155, 191, 0.25);
+    --hover-bg: #f8f9fa;
+    
+    /* Spacing System */
+    --spacing-xs: 0.5rem;   /* 8px */
+    --spacing-sm: 1rem;     /* 16px */
+    --spacing-md: 1.5rem;   /* 24px */
+    --spacing-lg: 2rem;     /* 32px */
+    --spacing-xl: 3rem;     /* 48px */
+    --spacing-xxl: 4rem;    /* 64px */
+    
+    /* Border Radius System */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    
+    /* Layout System */
+    --content-max-width: 800px;
+    --breakpoint-mobile: 768px;
+    --breakpoint-tablet: 1024px;
+    --breakpoint-desktop: 1200px;
 }

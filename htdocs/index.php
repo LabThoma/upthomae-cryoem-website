@@ -2,6 +2,7 @@
 // Load Composer autoloader and authentication
 require_once('vendor/autoload.php');
 require_once('entra/auth_check.php');
+require_once('../private/tinymce-config.php');
 
 // Require authentication for this page
 requireAuth();
@@ -132,10 +133,7 @@ $pageTitle = "THOMAE cryoEM";
 
         <!-- Blog View -->
         <div id="blogView" class="content-view">
-          <div class="form-section">
-            <h2 class="section-title">Blog</h2>
-            <p>Blog content coming soon...</p>
-          </div>
+          <!-- Blog content will be dynamically loaded by blogView.js -->
         </div>
 
         <!-- Admin View -->
@@ -265,6 +263,21 @@ $pageTitle = "THOMAE cryoEM";
       </div>
     </div>
 
+    <!-- Modal for Blog Post Creation/Editing -->
+    <div id="blogPostModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="blogPostModalContent"></div>
+      </div>
+    </div>
+
+    <!-- TinyMCE CDN with Secure API Key -->
+    <script src="<?php echo getTinyMCECdnUrl(); ?>" referrerpolicy="origin"></script>
+    
+    <!-- TinyMCE Configuration -->
+    <script>
+    <?php outputTinyMCEJSConfig(); ?>
+    </script>
     
     <!-- Load main script as a module -->
     <script type="module" src="scripts/main.js"></script>

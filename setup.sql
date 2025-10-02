@@ -23,6 +23,8 @@
 -- Disable foreign key checks to avoid order issues
 SET FOREIGN_KEY_CHECKS = 0;
 -- Drop tables in reverse order of dependencies
+DROP TABLE IF EXISTS `blog_images`;
+DROP TABLE IF EXISTS `blog_posts`;
 DROP TABLE IF EXISTS `grid_preparations`;
 DROP TABLE IF EXISTS `vitrobot_settings`;
 DROP TABLE IF EXISTS `grids`;
@@ -199,6 +201,37 @@ CREATE TABLE `microscope_details` (
   CONSTRAINT `microscope_details_ibfk_1` FOREIGN KEY (`microscope_session_id`) REFERENCES `microscope_sessions` (`microscope_session_id`) ON DELETE CASCADE,
   CONSTRAINT `microscope_details_ibfk_2` FOREIGN KEY (`prep_id`) REFERENCES `grid_preparations` (`prep_id`) ON DELETE
   SET NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+-- 9. Blog Posts Table
+CREATE TABLE `blog_posts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `slug` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `category` varchar(50) NOT NULL,
+  `author` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_modified_by` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `idx_category` (`category`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+-- 10. Blog Images Table (for TinyMCE image uploads)
+CREATE TABLE `blog_images` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `filename` varchar(255) NOT NULL,
+  `original_name` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `file_size` int(11) NOT NULL,
+  `url` varchar(500) NOT NULL,
+  `alt_text` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `uploaded_by` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_filename` (`filename`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
