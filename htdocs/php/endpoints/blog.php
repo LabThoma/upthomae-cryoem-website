@@ -3,6 +3,8 @@ function handleBlog($method, $path, $db, $input) {
     switch ($method) {
         case 'GET':
             if ($path === '/api/blog') {
+                // Clean up old temp images on blog list requests
+                cleanupTempImages();
                 getBlogPosts($db);
             } elseif ($path === '/api/blog/categories') {
                 getBlogCategories($db);
@@ -297,8 +299,8 @@ function uploadBlogImage($db, $postData, $files) {
         
         // Move uploaded file
         if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // Record in database with API URL
-            $apiUrl = '/api/blog/serve-image/' . $filename;
+            // Record in database with temp URL (will be updated when assigned to post)
+            $apiUrl = '/api/blog/image/temp/' . $filename;
             $db->execute("INSERT INTO blog_images (filename, original_name, mime_type, file_size, url, created_at) VALUES (?, ?, ?, ?, ?, NOW())", [
                 $filename,
                 $file['name'],
@@ -406,9 +408,70 @@ function slugExists($db, $slug) {
 }
 
 function processImagePaths($content, $slug) {
-    // Convert local image references to proper paths (no processing needed - images are served directly)
-    // Images are now served through API endpoints like /api/blog/serve-image/filename.jpg
-    return $content;
+    global $db;
+    
+    // Move temp images to post-specific folder and update URLs
+    $tempImagePattern = '/\/api\/blog\/image\/temp\/([^"\'>\s]+)/';
+    
+    $processedContent = preg_replace_callback($tempImagePattern, function($matches) use ($slug, $db) {
+        $filename = $matches[1];
+        
+        // Source path (temp folder)
+        $tempPath = __DIR__ . "/../../../private/blog_content/images/temp/" . $filename;
+        
+        // Destination path (post-specific folder)
+        $postImageDir = __DIR__ . "/../../../private/blog_content/images/{$slug}";
+        if (!is_dir($postImageDir)) {
+            mkdir($postImageDir, 0755, true);
+        }
+        $postPath = $postImageDir . "/" . $filename;
+        
+        // Move file if it exists in temp
+        if (file_exists($tempPath)) {
+            if (rename($tempPath, $postPath)) {
+                error_log("Moved image from temp to post folder: {$filename} -> {$slug}/{$filename}");
+                
+                // Update database URL
+                $newUrl = "/api/blog/image/{$slug}/{$filename}";
+                try {
+                    $db->execute("UPDATE blog_images SET url = ? WHERE filename = ?", [$newUrl, $filename]);
+                    error_log("Updated database URL for image: {$filename}");
+                } catch (Exception $e) {
+                    error_log("Failed to update database URL for image {$filename}: " . $e->getMessage());
+                }
+            } else {
+                error_log("Failed to move image: {$filename}");
+            }
+        }
+        
+        // Return updated URL pointing to post-specific folder
+        return "/api/blog/image/{$slug}/{$filename}";
+    }, $content);
+    
+    return $processedContent;
+}
+
+function cleanupTempImages() {
+    // Clean up temp images older than 24 hours that weren't moved to posts
+    $tempDir = __DIR__ . "/../../../private/blog_content/images/temp/";
+    
+    if (!is_dir($tempDir)) {
+        return;
+    }
+    
+    $files = scandir($tempDir);
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        
+        $filePath = $tempDir . $file;
+        if (is_file($filePath)) {
+            // Delete files older than 24 hours
+            if (time() - filemtime($filePath) > 24 * 3600) {
+                unlink($filePath);
+                error_log("Cleaned up old temp image: {$file}");
+            }
+        }
+    }
 }
 
 function removeDirectory($dir) {
