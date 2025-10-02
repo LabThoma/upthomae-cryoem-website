@@ -279,6 +279,7 @@ function initializeTinyMCE(initialContent = "") {
       "autolink",
       "lists",
       "link",
+      "image",
       "charmap",
       "anchor",
       "searchreplace",
@@ -294,10 +295,24 @@ function initializeTinyMCE(initialContent = "") {
       "undo redo | blocks | " +
       "bold italic backcolor | alignleft aligncenter " +
       "alignright alignjustify | bullist numlist outdent indent | " +
-      "removeformat | link | help",
+      "removeformat | link image | help",
     content_style:
       'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; margin: 10px; }',
     placeholder: "Write your blog post content here...",
+    // Image upload configuration
+    images_upload_handler: uploadImage,
+    images_upload_base_path: window.location.origin + "/api/blog/serve-image/",
+    images_upload_url: "/api/blog/upload-image",
+    images_upload_credentials: true,
+    convert_urls: false,
+    relative_urls: false,
+
+    // Image settings
+    image_advtab: true,
+    image_caption: true,
+    automatic_uploads: true,
+    paste_data_images: true,
+
     setup: function (editor) {
       editor.on("init", function () {
         tinyMCEEditor = editor;
@@ -310,6 +325,90 @@ function initializeTinyMCE(initialContent = "") {
     branding: false,
     resize: false,
   });
+}
+
+/**
+ * Handle image upload for TinyMCE
+ * @param {File} blobInfo - The image file blob
+ * @param {Function} progress - Progress callback
+ * @returns {Promise<string>} Promise that resolves to the image URL
+ */
+function uploadImage(blobInfo, progress) {
+  return new Promise((resolve, reject) => {
+    console.log("Starting image upload:", blobInfo.filename());
+
+    const formData = new FormData();
+    formData.append("image", blobInfo.blob(), blobInfo.filename());
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        progress((e.loaded / e.total) * 100);
+      }
+    };
+
+    xhr.onload = () => {
+      console.log("Upload response:", xhr.status, xhr.responseText);
+
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          console.log("Parsed response:", response);
+
+          if (response.success && response.url) {
+            console.log("Upload successful:", response.url);
+            resolve(response.url);
+          } else {
+            console.error("Upload failed:", response.error);
+            reject(response.error || "Upload failed");
+          }
+        } catch (e) {
+          console.error("JSON parse error:", e);
+          reject("Invalid response from server: " + xhr.responseText);
+        }
+      } else {
+        console.error("HTTP error:", xhr.status, xhr.responseText);
+        reject(
+          `Upload failed with status: ${xhr.status} - ${xhr.responseText}`
+        );
+      }
+    };
+
+    xhr.onerror = () => {
+      console.error("Network error during upload");
+      reject("Upload failed - network error");
+    };
+
+    xhr.open("POST", "/api/blog/upload-image");
+    xhr.send(formData);
+  });
+}
+
+/**
+ * Get list of available images for TinyMCE image list
+ * @returns {Promise<Array>} Promise that resolves to array of image objects
+ */
+async function getImageList() {
+  try {
+    console.log("Fetching image list...");
+    const response = await fetch("/api/blog/images");
+
+    console.log("Image list response:", response.status);
+
+    if (!response.ok) {
+      console.warn("Could not load image list, status:", response.status);
+      return [];
+    }
+
+    const images = await response.json();
+    console.log("Retrieved images:", images);
+
+    return images;
+  } catch (error) {
+    console.error("Error loading image list:", error);
+    return [];
+  }
 }
 
 /**

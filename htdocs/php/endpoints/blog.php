@@ -8,6 +8,8 @@ function handleBlog($method, $path, $db, $input) {
                 getBlogCategories($db);
             } elseif ($path === '/api/blog/authors') {
                 getBlogAuthors($db);
+            } elseif ($path === '/api/blog/images') {
+                getBlogImages($db);
             } elseif (preg_match('/^\/api\/blog\/([^\/]+)$/', $path, $matches)) {
                 getBlogPost($db, $matches[1]);
             } elseif (preg_match('/^\/api\/blog\/image\/([^\/]+)\/([^\/]+)$/', $path, $matches)) {
@@ -252,17 +254,20 @@ function deleteBlogPost($db, $slug) {
 
 function uploadBlogImage($db, $postData, $files) {
     try {
-        if (!isset($files['image']) || !isset($postData['post_slug'])) {
-            sendError('Missing image file or post slug', 400);
+        if (!isset($files['image'])) {
+            sendError('No image file uploaded', 400);
         }
         
         $file = $files['image'];
-        $postSlug = $postData['post_slug'];
         
         // Validate file type
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-        if (!in_array($file['type'], $allowedTypes)) {
-            sendError('Invalid file type. Allowed: JPEG, PNG, GIF, WebP, SVG', 400);
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($mimeType, $allowedTypes)) {
+            sendError('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.', 400);
         }
         
         // Validate file size (5MB max)
@@ -270,34 +275,51 @@ function uploadBlogImage($db, $postData, $files) {
             sendError('File too large. Maximum size: 5MB', 400);
         }
         
-        // Create image directory if it doesn't exist
-        $imageDir = __DIR__ . "/../../../private/blog_content/images/{$postSlug}";
+        // Create temp directory for uploaded images (until they're assigned to posts)
+        $imageDir = __DIR__ . "/../../../private/blog_content/images/temp/";
         if (!is_dir($imageDir)) {
             mkdir($imageDir, 0755, true);
         }
         
-        // Generate unique filename
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = time() . '_' . uniqid() . '.' . $extension;
-        $targetPath = "{$imageDir}/{$filename}";
+        // Generate unique filename with proper extension
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp'
+        ];
+        $extension = $extensions[$mimeType] ?? 'jpg';
+        
+        do {
+            $filename = date('Y-m-d_H-i-s_') . uniqid() . '.' . $extension;
+            $targetPath = $imageDir . $filename;
+        } while (file_exists($targetPath));
         
         // Move uploaded file
         if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // Record in database
-            $db->execute("INSERT INTO blog_images (post_id, filename, original_name, uploaded_by) SELECT id, ?, ?, ? FROM blog_posts WHERE slug = ?", [
+            // Record in database with API URL
+            $apiUrl = '/api/blog/serve-image/' . $filename;
+            $db->execute("INSERT INTO blog_images (filename, original_name, mime_type, file_size, url, created_at) VALUES (?, ?, ?, ?, ?, NOW())", [
                 $filename,
                 $file['name'],
-                $postData['uploaded_by'] ?? 'Unknown',
-                $postSlug
+                $mimeType,
+                $file['size'],
+                $apiUrl
             ]);
+            
+            // Return URL using existing image serving endpoint with 'temp' as slug for newly uploaded images
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
+            $fullUrl = $protocol . '://' . $host . '/api/blog/image/temp/' . $filename;
             
             sendResponse([
                 'success' => true,
-                'filename' => $filename,
-                'message' => 'Image uploaded successfully'
+                'url' => $fullUrl,
+                'location' => $fullUrl, // TinyMCE expects this
+                'filename' => $filename
             ]);
         } else {
-            sendError('Failed to upload image', 500);
+            sendError('Failed to save uploaded file', 500);
         }
         
     } catch (Exception $e) {
@@ -308,12 +330,15 @@ function uploadBlogImage($db, $postData, $files) {
 
 function serveBlogImage($db, $slug, $filename) {
     try {
-        // Verify the image request is for a published post
-        $posts = $db->query("SELECT id FROM blog_posts WHERE slug = ?", [$slug]);
-        
-        if (empty($posts)) {
-            http_response_code(404);
-            exit('Image not found');
+        // Special case for temp images (newly uploaded, not yet assigned to posts)
+        if ($slug !== 'temp') {
+            // Verify the image request is for a published post
+            $posts = $db->query("SELECT id FROM blog_posts WHERE slug = ?", [$slug]);
+            
+            if (empty($posts)) {
+                http_response_code(404);
+                exit('Image not found');
+            }
         }
         
         // Validate slug and filename format (basic security)
@@ -381,12 +406,9 @@ function slugExists($db, $slug) {
 }
 
 function processImagePaths($content, $slug) {
-    // Convert local image references to API calls
-    return preg_replace(
-        '/src="images\/([^"]+)"/i',
-        'src="/api/blog/image/' . $slug . '/$1"',
-        $content
-    );
+    // Convert local image references to proper paths (no processing needed - images are served directly)
+    // Images are now served through API endpoints like /api/blog/serve-image/filename.jpg
+    return $content;
 }
 
 function removeDirectory($dir) {
@@ -436,6 +458,36 @@ function getBlogAuthors($db) {
     } catch (Exception $e) {
         error_log("Error fetching blog authors: " . $e->getMessage());
         sendError('Failed to fetch blog authors', 500);
+    }
+}
+
+function getBlogImages($db) {
+    try {
+        $images = $db->query("
+            SELECT id, filename, original_name, url, created_at 
+            FROM blog_images 
+            ORDER BY created_at DESC 
+            LIMIT 100
+        ");
+        
+        // Format the response for TinyMCE image list
+        $formattedImages = array_map(function($img) {
+            return [
+                'title' => $img['original_name'] ?: $img['filename'],
+                'value' => $img['url'],
+                'meta' => [
+                    'id' => $img['id'],
+                    'filename' => $img['filename'],
+                    'created_at' => $img['created_at']
+                ]
+            ];
+        }, $images);
+        
+        sendResponse($formattedImages);
+    } catch (Exception $e) {
+        error_log("Error fetching blog images: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        sendError('Failed to fetch blog images', 500);
     }
 }
 ?>

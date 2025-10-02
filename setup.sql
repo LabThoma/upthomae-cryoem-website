@@ -218,18 +218,20 @@ CREATE TABLE `blog_posts` (
   KEY `idx_category` (`category`),
   KEY `idx_created_at` (`created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
--- 10. Blog Images Table (optional, for tracking multiple images per post)
+-- 10. Blog Images Table (for TinyMCE image uploads)
 CREATE TABLE `blog_images` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `post_id` int(11) DEFAULT NULL,
   `filename` varchar(255) NOT NULL,
   `original_name` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `file_size` int(11) NOT NULL,
+  `url` varchar(500) NOT NULL,
   `alt_text` varchar(255) DEFAULT NULL,
-  `upload_date` timestamp NULL DEFAULT current_timestamp(),
-  `uploaded_by` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `uploaded_by` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_post_id` (`post_id`),
-  CONSTRAINT `blog_images_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `blog_posts` (`id`) ON DELETE CASCADE
+  KEY `idx_filename` (`filename`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;

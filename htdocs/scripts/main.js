@@ -35,7 +35,7 @@ function initializePage() {
 
     // Additional setup
     setupEventListeners();
-    
+
     // Setup modals
     setupBlogPostModal();
   });
