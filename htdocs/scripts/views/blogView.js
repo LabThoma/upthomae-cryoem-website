@@ -10,6 +10,33 @@ import {
 let allBlogPosts = [];
 let filteredPosts = [];
 
+/**
+ * Generate consistent category color class based on category name
+ * @param {string} categoryName - The category name
+ * @returns {string} CSS class name for category color
+ */
+// Store category-to-color assignments
+const categoryColorMap = new Map();
+let nextColorIndex = 1;
+
+function getCategoryColorClass(categoryName) {
+  const categoryLower = categoryName.toLowerCase().trim();
+
+  // Check if we already assigned a color to this category
+  if (categoryColorMap.has(categoryLower)) {
+    return `category-color-${categoryColorMap.get(categoryLower)}`;
+  }
+
+  // Assign the next available color
+  const colorIndex = nextColorIndex;
+  categoryColorMap.set(categoryLower, colorIndex);
+
+  // Move to next color (cycle through 1-10)
+  nextColorIndex = (nextColorIndex % 10) + 1;
+
+  return `category-color-${colorIndex}`;
+}
+
 export function setupBlogView() {
   console.log("Setting up blog view");
 
@@ -195,9 +222,9 @@ function displayBlogPosts(posts) {
                     </a>
                 </h3>
                 <div class="post-meta">
-                    <span class="post-category category-${post.category.toLowerCase()}">${
-        post.category
-      }</span>
+                    <span class="post-category ${getCategoryColorClass(
+                      post.category
+                    )}">${post.category}</span>
                     <span class="post-author">by ${escapeHtml(
                       post.author
                     )}</span>
@@ -296,9 +323,9 @@ function displaySinglePost(post) {
         <header class="single-post-meta">
           <h1 class="single-post-title">${escapeHtml(post.title)}</h1>
           <div class="single-post-details">
-            <span class="post-category category-${post.category.toLowerCase()}">${
-    post.category
-  }</span>
+            <span class="post-category ${getCategoryColorClass(
+              post.category
+            )}">${post.category}</span>
             <span class="post-author">by ${escapeHtml(post.author)}</span>
             <span class="post-date">${formatTimestamp(post.created_at)}</span>
             ${

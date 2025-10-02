@@ -147,11 +147,17 @@
   text-transform: capitalize;
 }
 
-/* Category Colors */
-.category-research { background-color: #e3f2fd; color: #1565c0; }
-.category-protocols { background-color: #f3e5f5; color: #7b1fa2; }
-.category-news { background-color: #e8f5e8; color: #2e7d32; }
-.category-tutorials { background-color: #fff3e0; color: #ef6c00; }
+/* Dynamic Category Colors - Vibrant Colors */
+.category-color-1 { background-color: rgba(106, 7, 199, 0.2); color: var(--text-dark); } /* Purple */
+.category-color-2 { background-color: rgba(11, 184, 75, 0.2); color: var(--text-dark); } /* Light green */
+.category-color-3 { background-color: rgba(241, 6, 6, 0.2); color: var(--text-dark); } /* Red */
+.category-color-4 { background-color: rgba(215, 14, 115, 0.2); color: var(--text-dark); } /* Pinkish */
+.category-color-5 { background-color: rgba(245, 229, 11, 0.2); color: var(--text-dark); } /* Yellow */
+.category-color-6 { background-color: rgba(15, 88, 206, 0.2); color: var(--text-dark); } /* Blue */
+.category-color-7 { background-color: rgba(217, 107, 17, 0.2); color: var(--text-dark); } /* Orange */
+.category-color-8 { background-color: rgba(8, 199, 228, 0.2); color: var(--text-dark); } /* Cyan */
+.category-color-9 { background-color: rgba(7, 13, 207, 0.2); color: var(--text-dark); } /* Dark blue */
+.category-color-10 { background-color: rgba(25, 106, 23, 0.2); color: var(--text-dark); } /* Dark green */
 
 .post-author, .post-date, .post-modified {
   color: var(--text-muted);
