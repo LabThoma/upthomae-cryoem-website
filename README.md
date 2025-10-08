@@ -8,9 +8,9 @@ This website provides a centralized platform for all cryoEM-related information 
 
 - **Vitrobot input form:** Use this form while plunging grids to keep input uniform across the group, while still allowing flexibility for each session.
 - **Grid database:** View all grids from current and past group members. Each grid can be edited and marked as trashed or shipped.
-- **Microscope sessions:** (To be implemented) Log microscope sessions and automatically link grids from plunging to microscope.
-- **Admin functionalities:** For lab managers to track grid usage and users.
-- **Blog:** (To be implemented) For EM-related news and tips.
+- **Microscope sessions:** View microscope session details, sorted by user
+- **Admin functionalities:** For lab managers to enter new microscope sessions, track grid usage and users.
+- **Blog:** For EM-related news and tips.
 
 ## Technologies Used
 
@@ -18,6 +18,7 @@ This website provides a centralized platform for all cryoEM-related information 
 - SQL (MariaDB for database setup)
 - JavaScript (frontend, UI components, validation)
 - HTML/CSS (user interface)
+- TinyMCE (blog)
 
 ## Directory Structure
 
@@ -26,9 +27,8 @@ This website provides a centralized platform for all cryoEM-related information 
 
 ## To Do
 
-- Implement microscope tracking, preferably with the ability to upload images
-- Start the blog
-- Track grids from microscope through data analysis and deposition
+- Completely track grids from microscope through data analysis and deposition
+- Complete validation
 
 ## Installation & Getting Started
 
@@ -42,7 +42,7 @@ This website provides a centralized platform for all cryoEM-related information 
 
 ## Contributing
 
-Pull requests and suggestions are welcome! Please follow coding standards and add tests for new features.
+Pull requests and suggestions are welcome! Please follow coding standards.
 
 ## Contact
 
