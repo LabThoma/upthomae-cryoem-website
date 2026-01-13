@@ -63,6 +63,12 @@ export function setupStarRatings() {
     const stars = rating.querySelectorAll(".star");
     const hiddenInput = rating.querySelector('input[type="hidden"]');
 
+    // Initialize visual state based on current value
+    const initialValue = parseInt(hiddenInput.value) || 0;
+    if (initialValue > 0) {
+      highlightStars(rating, initialValue);
+    }
+
     stars.forEach((star) => {
       // Add hover effect
       star.addEventListener("mouseenter", () => {
@@ -100,6 +106,21 @@ function highlightStars(ratingContainer, value) {
     } else {
       star.classList.remove("active");
       star.classList.add("inactive");
+    }
+  });
+}
+
+/**
+ * Updates the visual state of all star ratings on the page based on their current values
+ * Useful for updating display after programmatically setting values
+ */
+export function updateAllStarRatingsVisuals() {
+  const starRatings = document.querySelectorAll(".star-rating");
+  starRatings.forEach((rating) => {
+    const hiddenInput = rating.querySelector('input[type="hidden"]');
+    const currentValue = parseInt(hiddenInput?.value) || 0;
+    if (currentValue > 0) {
+      highlightStars(rating, currentValue);
     }
   });
 }

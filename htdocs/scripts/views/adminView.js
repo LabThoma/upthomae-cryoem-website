@@ -952,9 +952,12 @@ async function populateMicroscopeSessionForm(sessionData) {
   const form = document.getElementById("microscopeSessionForm");
   if (!form) return;
 
-  // Import the flag from microscopeSessionModal
+  // Import the flag from microscopeSessionModal and updateAllStarRatingsVisuals from utils
   const { setLoadingFormData } = await import(
     "../components/microscopeSessionModal.js"
+  );
+  const { updateAllStarRatingsVisuals } = await import(
+    "../utils/starRating.js"
   );
 
   // Set loading flag to prevent autopopulation during form population
@@ -1003,6 +1006,11 @@ async function populateMicroscopeSessionForm(sessionData) {
       populateSlotData(detail);
     });
   }
+
+  // Update star rating visuals after values are set
+  setTimeout(() => {
+    updateAllStarRatingsVisuals();
+  }, 50);
 
   // Clear loading flag after a short delay to ensure all events have been processed
   setTimeout(() => {
