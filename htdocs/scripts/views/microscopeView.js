@@ -74,7 +74,7 @@ async function renderMicroscopeUserTable() {
         <button id="backToMicroscopeUsersButton" class="btn btn-secondary">Back to Users</button>
       </div>
       <div style="overflow-x: auto">
-        <table class="grid-table" id="microscopeSessionsTable">
+        <table class="grid-table" id="microscopeUserSessionsTable">
           <thead>
             <tr>
               <th>Date</th>
@@ -83,7 +83,7 @@ async function renderMicroscopeUserTable() {
               <th>Grid Boxes</th>
             </tr>
           </thead>
-          <tbody id="microscopeSessionsTableBody">
+          <tbody id="microscopeUserSessionsTableBody">
             <tr><td colspan="4">Loading...</td></tr>
           </tbody>
         </table>
@@ -102,7 +102,9 @@ async function renderMicroscopeUserTable() {
       sessionsSection.style.display = "block";
 
       // Fetch and populate microscope sessions
-      const tableBody = document.getElementById("microscopeSessionsTableBody");
+      const tableBody = document.getElementById(
+        "microscopeUserSessionsTableBody"
+      );
       if (!tableBody) return;
       tableBody.innerHTML = `<tr><td colspan='4'>Loading...</td></tr>`;
       try {
