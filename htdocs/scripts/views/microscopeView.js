@@ -70,7 +70,7 @@ async function renderMicroscopeUserTable() {
         sessionsSection.className = "form-section";
         sessionsSection.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-        <h2 class="section-title" style="margin: 0;">Microscope Sessions for ${username}</h2>
+        <h2 class="section-title microscope-sessions-title" style="margin: 0;">Microscope Sessions for ${username}</h2>
         <button id="backToMicroscopeUsersButton" class="btn btn-secondary">Back to Users</button>
       </div>
       <div style="overflow-x: auto">
@@ -90,6 +90,14 @@ async function renderMicroscopeUserTable() {
       </div>
     `;
         document.getElementById("microscopeView").appendChild(sessionsSection);
+      } else {
+        // Update the title for the selected user
+        const titleElement = sessionsSection.querySelector(
+          ".microscope-sessions-title"
+        );
+        if (titleElement) {
+          titleElement.textContent = `Microscope Sessions for ${username}`;
+        }
       }
       sessionsSection.style.display = "block";
 
