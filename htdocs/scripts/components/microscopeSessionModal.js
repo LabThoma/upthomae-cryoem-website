@@ -828,8 +828,11 @@ async function autopopulateCollectionParameters(slot) {
       return;
     }
 
-    // Get grid identifier from the slot row
-    const row = document.querySelector(`tr[data-slot="${slot}"]`);
+    // Get grid identifier from the slot row (scope to microscopeSlotsTableBody)
+    const tbody = document.getElementById("microscopeSlotsTableBody");
+    const row = tbody?.querySelector(
+      `tr[data-slot="${slot}"]:not(.microscope-foldout)`
+    );
     const gridIdentifierField = row?.querySelector(
       '[name="grid_identifier[]"]'
     );
