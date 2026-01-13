@@ -449,7 +449,7 @@ function generateMicroscopeSlotRows() {
             </div>
             <div class="form-group">
               <label>Exposure Time (s)</label>
-              <input name="exposure_time[]" type="number" step="0.1" placeholder="e.g. 2.5" />
+              <input name="exposure_time[]" type="number" step="0.01" placeholder="e.g. 2.5" />
             </div>
             <div class="form-group">
               <label>Spot Size</label>
