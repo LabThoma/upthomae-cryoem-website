@@ -438,8 +438,10 @@ function displayGridSummary(summaryData) {
     tableBody.appendChild(detailRow);
   });
 
-  // Set up expand/collapse functionality using existing pattern
-  const expandIcons = document.querySelectorAll(".expandable-row-icon");
+  // Set up expand/collapse functionality scoped to grid summary table only
+  const gridSummaryTable = document.getElementById("gridSummaryTableBody");
+  const expandIcons =
+    gridSummaryTable?.querySelectorAll(".expandable-row-icon") || [];
   expandIcons.forEach((icon) => {
     // Remove any existing event listeners by cloning the element
     const newIcon = icon.cloneNode(true);

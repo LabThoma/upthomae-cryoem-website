@@ -512,7 +512,10 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
     tableBody.appendChild(detailRow);
   });
 
-  const expandIcons = document.querySelectorAll(".expandable-row-icon");
+  // Scope the query to only database table to avoid interfering with other views
+  const databaseTable = document.getElementById("databaseTableBody");
+  const expandIcons =
+    databaseTable?.querySelectorAll(".expandable-row-icon") || [];
   expandIcons.forEach((icon) => {
     // Remove any existing event listeners by cloning the element
     const newIcon = icon.cloneNode(true);
