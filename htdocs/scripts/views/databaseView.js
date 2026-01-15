@@ -2,7 +2,10 @@
 
 // Import the showAlert function
 import { showAlert } from "../components/alertSystem.js";
-import { setupGridModalEventListeners } from "../components/gridModal.js";
+import {
+  setupGridModalEventListeners,
+  showGridModal,
+} from "../components/gridModal.js";
 import { formatDate } from "../utils/dateUtils.js";
 
 // Flag to prevent multiple initialization
@@ -44,6 +47,27 @@ function setupDatabaseEventListeners() {
       showUserGrids(username);
     }
   });
+
+  // Event delegation for grid view buttons - override to pass refresh callback
+  document.addEventListener(
+    "click",
+    function (event) {
+      const button = event.target.closest(".view-grid-btn");
+      if (
+        button &&
+        document.getElementById("databaseView")?.style.display !== "none"
+      ) {
+        event.stopPropagation(); // Prevent the default gridModal handler
+        const sessionId = button.getAttribute("data-session-id");
+        const slotNumber = button.getAttribute("data-slot");
+        // Pass callback to refresh the view after editing
+        showGridModal(sessionId, slotNumber, () => {
+          refreshCurrentView();
+        });
+      }
+    },
+    true
+  ); // Use capture phase to run before gridModal's listener
 
   // Back to users button
   document.addEventListener("click", function (event) {
