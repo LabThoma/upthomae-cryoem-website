@@ -636,6 +636,8 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         additives_override: updatedGrid.additives_override,
         comments: updatedGrid.comments,
         include_in_session: true,
+        trashed: updatedGrid.trashed,
+        shipped: updatedGrid.shipped,
       });
     } else if (existingGrid && existingGrid.include_in_session) {
       // Preserve existing grids unchanged
@@ -654,6 +656,8 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         additives_override: existingGrid.additives_override,
         comments: existingGrid.comments,
         include_in_session: true,
+        trashed: existingGrid.trashed,
+        shipped: existingGrid.shipped,
       });
     }
   }
