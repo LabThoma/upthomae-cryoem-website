@@ -7,6 +7,7 @@ import {
   showGridModal,
 } from "../components/gridModal.js";
 import { formatDate } from "../utils/dateUtils.js";
+import { getExpandedRowIds, restoreExpandedState } from "../utils/domUtils.js";
 
 // Flag to prevent multiple initialization
 let isDatabaseViewInitialized = false;
@@ -205,6 +206,9 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
   console.log("Sessions data structure:", JSON.stringify(sessions, null, 2));
   const tableBody = document.getElementById("databaseTableBody");
   if (!tableBody) return;
+
+  // Save which sessions are currently expanded before clearing the table
+  const expandedSessionIds = getExpandedRowIds("databaseTableBody");
 
   tableBody.innerHTML = "";
 
@@ -559,6 +563,9 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
   // Set up grid modal event listeners once after all rows are created
   setupGridModalEventListeners();
+
+  // Restore the expanded state after rendering
+  restoreExpandedState("databaseTableBody", expandedSessionIds);
 }
 
 export function updateUsersTable(users, showInactiveUsers = false) {
