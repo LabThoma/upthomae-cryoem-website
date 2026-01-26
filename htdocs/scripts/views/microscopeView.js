@@ -145,7 +145,7 @@ async function renderMicroscopeUserTable() {
                   (grid) => `
                 <tr>
                   <td>${grid.grid_identifier || ""}</td>
-                  <td>${grid.sample || ""}</td>
+                  <td class="sample-col">${grid.sample || ""}</td>
                   <td>${renderStarRating(grid.grid_quality)}</td>
                   <td>${renderStarRating(grid.ice_quality)}</td>
                   <td>${renderStarRating(grid.particle_concentration)}</td>
@@ -177,7 +177,7 @@ async function renderMicroscopeUserTable() {
                     <thead>
                       <tr>
                         <th>Grid Name</th>
-                        <th>Sample</th>
+                        <th class="sample-col">Sample</th>
                         <th>Grid Quality</th>
                         <th>Ice Quality</th>
                         <th>Particle Concentration</th>

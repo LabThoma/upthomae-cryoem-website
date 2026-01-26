@@ -126,7 +126,7 @@ function renderModalContent(gridData, sessionData, modalContent) {
           </div>
           <div class="detail-row">
             <label>Sample:</label>
-            <span>${gridData.sample_name || "N/A"}</span>
+            <span class="sample-value">${gridData.sample_name || "N/A"}</span>
           </div>
         </div>
 

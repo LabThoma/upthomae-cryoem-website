@@ -221,6 +221,21 @@
     word-break: break-word;
 }
 
+/* Make the sample column handle text wrapping for long words */
+.grid-detail-table td.sample-col {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 200px;
+}
+
+/* Make sample value in modal break long words */
+.sample-value {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
 /* Style for actions column to display buttons inline */
 .grid-detail-table td:last-child:not(.comments-col) {
     white-space: nowrap;
