@@ -173,7 +173,7 @@ CREATE TABLE `microscope_details` (
     `magnification` BETWEEN 0 AND 500000
   ),
   `exposure_e` int(11) DEFAULT NULL,
-  `exposure_time` int(11) DEFAULT NULL,
+  `exposure_time` decimal(5, 2) DEFAULT NULL,
   `spot_size` int(11) DEFAULT NULL,
   `illumination_area` decimal(10, 4) DEFAULT NULL,
   `exp_per_hole` int(11) DEFAULT NULL,

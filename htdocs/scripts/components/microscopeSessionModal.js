@@ -27,7 +27,7 @@ async function populateMicroscopeDropdown(elementId = "sessionMicroscope") {
       console.error("Failed to load microscopes:", error);
       // Could show user-friendly message here if needed
     },
-    true // Enable "Add new" option
+    true, // Enable "Add new" option
   );
 }
 
@@ -47,7 +47,7 @@ async function validateGridIdentifier(gridIdentifier, inputField) {
     });
 
     const response = await fetch(
-      `/api/microscope-sessions/last-parameters?${params}`
+      `/api/microscope-sessions/last-parameters?${params}`,
     );
 
     if (!response.ok) {
@@ -57,12 +57,15 @@ async function validateGridIdentifier(gridIdentifier, inputField) {
     const result = await response.json();
 
     // Check for grid identifier errors
+    // Use grid_error_message if available (when fallback parameters exist), otherwise use message
+    const errorMessage = result.grid_error_message || result.message;
+
     if (result.error_type === "invalid_format") {
       inputField.classList.add("error");
-      showModalAlert(result.message, "error", false); // Red alert that stays until manually closed
+      showModalAlert(errorMessage, "error", false); // Red alert that stays until manually closed
     } else if (result.error_type === "not_found") {
       inputField.classList.add("error");
-      showModalAlert(`${result.message}`, "error", false); // Red alert that stays
+      showModalAlert(errorMessage, "error", false); // Red alert that stays
     } else {
       // Valid grid identifier - clear error styling
       inputField.classList.remove("error");
@@ -86,7 +89,7 @@ async function fetchLastCollectionParameters(microscope, gridIdentifier) {
     });
 
     const response = await fetch(
-      `/api/microscope-sessions/last-parameters?${params}`
+      `/api/microscope-sessions/last-parameters?${params}`,
     );
 
     if (!response.ok) {
@@ -108,7 +111,7 @@ async function fetchLastCollectionParameters(microscope, gridIdentifier) {
  */
 function populateFoldoutParameters(slot, parameters) {
   const foldoutRow = document.querySelector(
-    `.microscope-foldout[data-slot="${slot}"]`
+    `.microscope-foldout[data-slot="${slot}"]`,
   );
   if (!foldoutRow || !parameters) return;
 
@@ -144,7 +147,7 @@ function populateFoldoutParameters(slot, parameters) {
           () => {
             field.classList.remove("autopopulated-field");
           },
-          { once: true }
+          { once: true },
         );
       }
     }
@@ -178,7 +181,7 @@ export function setupMicroscopeSessionModal() {
 
 export function openMicroscopeSessionModal(
   sessionId = null,
-  onSavedCallback = null
+  onSavedCallback = null,
 ) {
   const modal = document.getElementById("microscopeSessionModal");
   const content = document.getElementById("microscopeSessionModalContent");
@@ -271,7 +274,7 @@ async function saveMicroscopeSessionData(payload) {
   if (!isUpdate && result.id) {
     currentSessionId = result.id;
     const submitButton = document.querySelector(
-      '#microscopeSessionForm button[type="submit"]'
+      '#microscopeSessionForm button[type="submit"]',
     );
     if (submitButton) {
       submitButton.textContent = "Update Session";
@@ -329,8 +332,8 @@ function generateMicroscopeSessionForm() {
               <th>Screened</th>
               <th>Collected</th>
               <th>Grid Quality</th>
-              <th>Particle Number</th>
               <th>Ice Quality</th>
+              <th>Particle Number</th>
               <th>Rescued</th>
               <th>Comments</th>
             </tr>
@@ -415,8 +418,8 @@ function generateMicroscopeSlotRows() {
       </select></td>
       <td><input name="collected[]" type="checkbox" /></td>
       <td>${renderInteractiveStarRating("grid_quality", i, 0)}</td>
-      <td>${renderInteractiveStarRating("particle_number", i, 0)}</td>
       <td>${renderInteractiveStarRating("ice_quality", i, 0)}</td>
+      <td>${renderInteractiveStarRating("particle_number", i, 0)}</td>
       <td><input name="rescued[]" type="checkbox" /></td>
       <td><textarea name="comments[]" placeholder="Notes" style="width: 100%; height: 40px; resize: vertical; box-sizing: border-box;" rows="2"></textarea></td>
     `;
@@ -449,7 +452,7 @@ function generateMicroscopeSlotRows() {
             </div>
             <div class="form-group">
               <label>Exposure Time (s)</label>
-              <input name="exposure_time[]" type="number" step="0.1" placeholder="e.g. 2.5" />
+              <input name="exposure_time[]" type="number" step="0.01" placeholder="e.g. 2.5" />
             </div>
             <div class="form-group">
               <label>Spot Size</label>
@@ -506,7 +509,7 @@ function extractFormData() {
     }
 
     const gridIdentifierElement = tr.querySelector(
-      '[name="grid_identifier[]"]'
+      '[name="grid_identifier[]"]',
     );
     if (!gridIdentifierElement) {
       return; // Skip if this isn't a main slot row
@@ -533,41 +536,41 @@ function extractFormData() {
       if (collectedElement && collectedElement.checked) {
         const slot = tr.dataset.slot;
         const foldoutRow = document.querySelector(
-          `.microscope-foldout[data-slot="${slot}"]`
+          `.microscope-foldout[data-slot="${slot}"]`,
         );
 
         if (foldoutRow) {
           const multigridElement = foldoutRow.querySelector(
-            '[name="multigrid[]"]'
+            '[name="multigrid[]"]',
           );
           const pxSizeElement = foldoutRow.querySelector('[name="px_size[]"]');
           const magnificationElement = foldoutRow.querySelector(
-            '[name="magnification[]"]'
+            '[name="magnification[]"]',
           );
           const exposureEElement = foldoutRow.querySelector(
-            '[name="exposure_e[]"]'
+            '[name="exposure_e[]"]',
           );
           const exposureTimeElement = foldoutRow.querySelector(
-            '[name="exposure_time[]"]'
+            '[name="exposure_time[]"]',
           );
           const spotSizeElement = foldoutRow.querySelector(
-            '[name="spot_size[]"]'
+            '[name="spot_size[]"]',
           );
           const illuminationAreaElement = foldoutRow.querySelector(
-            '[name="illumination_area[]"]'
+            '[name="illumination_area[]"]',
           );
           const expPerHoleElement = foldoutRow.querySelector(
-            '[name="exp_per_hole[]"]'
+            '[name="exp_per_hole[]"]',
           );
           const imagesElement = foldoutRow.querySelector('[name="images[]"]');
           const nominalDefocusElement = foldoutRow.querySelector(
-            '[name="nominal_defocus[]"]'
+            '[name="nominal_defocus[]"]',
           );
           const objectiveElement = foldoutRow.querySelector(
-            '[name="objective[]"]'
+            '[name="objective[]"]',
           );
           const slitWidthElement = foldoutRow.querySelector(
-            '[name="slit_width[]"]'
+            '[name="slit_width[]"]',
           );
 
           detail.multigrid = multigridElement
@@ -649,7 +652,7 @@ async function handleMicroscopeSessionSubmit(event) {
     if (isUpdate) {
       showModalAlert(
         `Microscope session updated successfully! Session ID: ${currentSessionId}`,
-        "success"
+        "success",
       );
       // Call the callback to refresh the admin table
       if (onSessionSavedCallback) {
@@ -659,14 +662,14 @@ async function handleMicroscopeSessionSubmit(event) {
       // First save - store the session ID and change button text
       currentSessionId = result.id;
       const submitButton = document.querySelector(
-        '#microscopeSessionForm button[type="submit"]'
+        '#microscopeSessionForm button[type="submit"]',
       );
       if (submitButton) {
         submitButton.textContent = "Update Session";
       }
       showModalAlert(
         `Microscope session saved successfully! Session ID: ${result.id}`,
-        "success"
+        "success",
       );
       // Call the callback to refresh the admin table
       if (onSessionSavedCallback) {
@@ -687,7 +690,7 @@ async function handleMicroscopeSessionSubmit(event) {
 // Foldout Functions
 function setupCollectedFoldouts() {
   const collectedCheckboxes = document.querySelectorAll(
-    'input[name="collected[]"]'
+    'input[name="collected[]"]',
   );
 
   collectedCheckboxes.forEach((checkbox) => {
@@ -695,7 +698,7 @@ function setupCollectedFoldouts() {
       const row = this.closest("tr");
       const slot = row.dataset.slot;
       const foldoutRow = document.querySelector(
-        `.microscope-foldout[data-slot="${slot}"]`
+        `.microscope-foldout[data-slot="${slot}"]`,
       );
       const content = document.getElementById(`microscope-details-${slot}`);
 
@@ -774,7 +777,7 @@ function showParametersPreviewModal(result, slot, onApply) {
             ${Object.entries(result.parameters)
               .filter(
                 ([key, value]) =>
-                  value !== null && value !== undefined && value !== ""
+                  value !== null && value !== undefined && value !== "",
               )
               .map(([key, value]) => {
                 const displayName = key
@@ -828,10 +831,13 @@ async function autopopulateCollectionParameters(slot) {
       return;
     }
 
-    // Get grid identifier from the slot row
-    const row = document.querySelector(`tr[data-slot="${slot}"]`);
+    // Get grid identifier from the slot row (scope to microscopeSlotsTableBody)
+    const tbody = document.getElementById("microscopeSlotsTableBody");
+    const row = tbody?.querySelector(
+      `tr[data-slot="${slot}"]:not(.microscope-foldout)`,
+    );
     const gridIdentifierField = row?.querySelector(
-      '[name="grid_identifier[]"]'
+      '[name="grid_identifier[]"]',
     );
     if (!gridIdentifierField || !gridIdentifierField.value.trim()) {
       console.log("No grid identifier found, skipping autopopulation");
@@ -844,7 +850,7 @@ async function autopopulateCollectionParameters(slot) {
     // Fetch last parameters
     const result = await fetchLastCollectionParameters(
       microscope,
-      gridIdentifier
+      gridIdentifier,
     );
 
     if (result && result.parameters) {
@@ -884,7 +890,7 @@ async function autopopulateCollectionParameters(slot) {
           message +
             "\n\nThis grid may not be properly linked to a user session.",
           alertType,
-          false
+          false,
         ); // false = don't auto-dismiss
       } else {
         // No previous parameters - this is normal for new users or first-time microscope use
@@ -901,7 +907,7 @@ async function autopopulateCollectionParameters(slot) {
 
 function clearFoldoutValues(slot) {
   const foldoutRow = document.querySelector(
-    `.microscope-foldout[data-slot="${slot}"]`
+    `.microscope-foldout[data-slot="${slot}"]`,
   );
   if (foldoutRow) {
     const inputs = foldoutRow.querySelectorAll("input");

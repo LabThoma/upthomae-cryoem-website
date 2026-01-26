@@ -31,7 +31,7 @@ export function setupAdminView() {
 function setupAdminButtons() {
   const addNewGridsButton = document.getElementById("addNewGridsButton");
   const openMicroscopeSessionBtn = document.getElementById(
-    "openMicroscopeSessionBtn"
+    "openMicroscopeSessionBtn",
   );
 
   if (addNewGridsButton) {
@@ -40,7 +40,7 @@ function setupAdminButtons() {
 
   if (openMicroscopeSessionBtn) {
     openMicroscopeSessionBtn.addEventListener("click", () =>
-      openMicroscopeSessionModal(null, loadMicroscopeSessions)
+      openMicroscopeSessionModal(null, loadMicroscopeSessions),
     );
   }
 }
@@ -115,7 +115,7 @@ async function handleGridFormSubmit(event) {
   const extraLayer = getFieldValue("extraLayer", "extraLayerOther");
   const extraLayerThickness = getFieldValue(
     "extraLayerThickness",
-    "extraLayerThicknessOther"
+    "extraLayerThicknessOther",
   );
 
   // Generate the shortened grid type name
@@ -126,7 +126,7 @@ async function handleGridFormSubmit(event) {
     gridMaterial,
     gridMesh,
     extraLayer,
-    extraLayerThickness
+    extraLayerThickness,
   );
 
   const gridData = {
@@ -160,14 +160,14 @@ async function handleGridFormSubmit(event) {
       const errorData = await response.json();
       throw new Error(
         errorData.error ||
-          `Failed to ${isEditMode ? "update" : "add"} grid type`
+          `Failed to ${isEditMode ? "update" : "add"} grid type`,
       );
     }
 
     const result = await response.json();
     showAlert(
       `Grid type ${isEditMode ? "updated" : "added"} successfully!`,
-      "success"
+      "success",
     );
     clearGridForm();
     closeGridModal();
@@ -175,11 +175,11 @@ async function handleGridFormSubmit(event) {
   } catch (error) {
     console.error(
       `Error ${isEditMode ? "updating" : "adding"} grid type:`,
-      error
+      error,
     );
     showAlert(
       `Error ${isEditMode ? "updating" : "adding"} grid type: ${error.message}`,
-      "error"
+      "error",
     );
   }
 }
@@ -256,7 +256,7 @@ function updateGridTypeNamePreview() {
   const extraLayer = getFieldValue("extraLayer", "extraLayerOther");
   const extraLayerThickness = getFieldValue(
     "extraLayerThickness",
-    "extraLayerThicknessOther"
+    "extraLayerThicknessOther",
   );
 
   // Generate the preview name
@@ -267,7 +267,7 @@ function updateGridTypeNamePreview() {
     gridMaterial,
     gridMesh,
     extraLayer,
-    extraLayerThickness
+    extraLayerThickness,
   );
 
   // Update the preview display
@@ -302,7 +302,7 @@ function generateGridTypeName(
   gridMaterial,
   gridMesh,
   extraLayer,
-  extraLayerThickness
+  extraLayerThickness,
 ) {
   let nameParts = [];
 
@@ -323,8 +323,8 @@ function generateGridTypeName(
     manufacturer === "Quantifoil"
       ? "QF"
       : manufacturer === "Ultrafoil"
-      ? "UF"
-      : null;
+        ? "UF"
+        : null;
   const shouldOmitSupport =
     (support === "Holey Carbon" && manufacturerShort === "QF") ||
     (support === "Holey Gold" && manufacturerShort === "UF");
@@ -404,11 +404,11 @@ function displayGridSummary(summaryData) {
     summaryRow.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-grid-type-name="${encodeURIComponent(
-          gridType.grid_type_name
+          gridType.grid_type_name,
         )}">▶</span>
         ${gridType.grid_type_name || "Unnamed Grid Type"} (${
-      gridType.batch_count
-    } batch${gridType.batch_count !== 1 ? "es" : ""})
+          gridType.batch_count
+        } batch${gridType.batch_count !== 1 ? "es" : ""})
       </td>
       <td>${gridType.total_unused_grids || 0}</td>
       <td>${gridType.total_used_last_3_months || 0}</td>
@@ -422,7 +422,7 @@ function displayGridSummary(summaryData) {
     detailCell.colSpan = 3;
     detailCell.innerHTML = `
       <div class="expandable-content" id="grid-details-${encodeURIComponent(
-        gridType.grid_type_name
+        gridType.grid_type_name,
       )}">
         <h4 class="detail-subtitle">Individual Batches for "${
           gridType.grid_type_name
@@ -438,8 +438,10 @@ function displayGridSummary(summaryData) {
     tableBody.appendChild(detailRow);
   });
 
-  // Set up expand/collapse functionality using existing pattern
-  const expandIcons = document.querySelectorAll(".expandable-row-icon");
+  // Set up expand/collapse functionality scoped to grid summary table only
+  const gridSummaryTable = document.getElementById("gridSummaryTableBody");
+  const expandIcons =
+    gridSummaryTable?.querySelectorAll(".expandable-row-icon") || [];
   expandIcons.forEach((icon) => {
     // Remove any existing event listeners by cloning the element
     const newIcon = icon.cloneNode(true);
@@ -447,10 +449,10 @@ function displayGridSummary(summaryData) {
 
     newIcon.addEventListener("click", function () {
       const gridTypeName = decodeURIComponent(
-        this.getAttribute("data-grid-type-name")
+        this.getAttribute("data-grid-type-name"),
       );
       const content = document.getElementById(
-        `grid-details-${encodeURIComponent(gridTypeName)}`
+        `grid-details-${encodeURIComponent(gridTypeName)}`,
       );
       const detailRow = this.closest("tr").nextElementSibling;
 
@@ -462,7 +464,7 @@ function displayGridSummary(summaryData) {
       // Load batch details if expanding and not already loaded
       if (this.classList.contains("expanded")) {
         const batchContainer = document.getElementById(
-          `batch-details-${encodeURIComponent(gridTypeName)}`
+          `batch-details-${encodeURIComponent(gridTypeName)}`,
         );
         if (
           batchContainer &&
@@ -480,7 +482,7 @@ async function loadGridTypeBatches(gridTypeName, container) {
   try {
     container.innerHTML = "Fetching batch data...";
     const response = await fetch(
-      `/api/grid-types/batches?type=${encodeURIComponent(gridTypeName)}`
+      `/api/grid-types/batches?type=${encodeURIComponent(gridTypeName)}`,
     );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -629,7 +631,7 @@ function populateGridForm(gridType) {
   setFormFieldValue(
     form,
     "extraLayerThickness",
-    gridType.extra_layer_thickness
+    gridType.extra_layer_thickness,
   );
 
   // Set text fields
@@ -672,7 +674,7 @@ function setFormFieldValue(form, fieldName, value) {
 async function markGridTypeEmpty(gridTypeId) {
   if (
     !confirm(
-      "Are you sure you want to mark this grid type as empty? This will set the quantity to 0."
+      "Are you sure you want to mark this grid type as empty? This will set the quantity to 0.",
     )
   ) {
     return;
@@ -703,7 +705,7 @@ async function markGridTypeEmpty(gridTypeId) {
 async function deleteGridType(gridTypeId) {
   if (
     !confirm(
-      "Are you sure you want to delete this grid type? This action cannot be undone."
+      "Are you sure you want to delete this grid type? This action cannot be undone.",
     )
   ) {
     return;
@@ -734,7 +736,7 @@ async function deleteGridType(gridTypeId) {
 async function markGridTypeInUse(gridTypeId) {
   if (
     !confirm(
-      "Are you sure you want to mark this grid type as 'In Use'? This indicates the batch is currently being used."
+      "Are you sure you want to mark this grid type as 'In Use'? This indicates the batch is currently being used.",
     )
   ) {
     return;
@@ -803,6 +805,9 @@ function displayMicroscopeSessions(sessionsData) {
   sessionsData.forEach((session, idx) => {
     // Main session row
     const sessionRow = document.createElement("tr");
+    // Convert newlines to HTML line breaks for issues display
+    const issuesDisplay = (session.issues || "").replace(/\n/g, "<br>");
+
     sessionRow.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-idx="${idx}">▶</span>
@@ -812,7 +817,7 @@ function displayMicroscopeSessions(sessionsData) {
       <td>${session.users || "N/A"}</td>
       <td>${session.grid_count || 0}</td>
       <td>${session.overnight ? "Yes" : "No"}</td>
-      <td>${session.issues || ""}</td>
+      <td class="issues-col">${issuesDisplay}</td>
     `;
 
     // Detail row (initially hidden)
@@ -825,7 +830,7 @@ function displayMicroscopeSessions(sessionsData) {
     let gridRows = "";
     for (let slot = 12; slot >= 1; slot--) {
       const gridDetail = session.details?.find(
-        (detail) => detail.microscope_slot === slot
+        (detail) => detail.microscope_slot === slot,
       );
 
       if (gridDetail) {
@@ -837,7 +842,7 @@ function displayMicroscopeSessions(sessionsData) {
         // Convert newlines to HTML line breaks for display
         const commentsDisplay = (gridDetail.comments || "").replace(
           /\n/g,
-          "<br>"
+          "<br>",
         );
 
         gridRows += `
@@ -846,9 +851,9 @@ function displayMicroscopeSessions(sessionsData) {
             <td>${gridDetail.grid_identifier || ""}</td>
             <td>${gridDetail.screened || ""}</td>
             <td>${imagesDisplay}</td>
+            <td>${renderStarRating(gridDetail.grid_quality)}</td>
             <td>${renderStarRating(gridDetail.ice_quality)}</td>
             <td>${renderStarRating(gridDetail.particle_number)}</td>
-            <td>${renderStarRating(gridDetail.grid_quality)}</td>
             <td>${gridDetail.rescued ? "Yes" : "No"}</td>
             <td class="comments-col">${commentsDisplay}</td>
           </tr>
@@ -873,18 +878,29 @@ function displayMicroscopeSessions(sessionsData) {
           </button>
         </div>
         <div class="grid-detail-container">
-          <table class="grid-detail-table">
+          <table class="microscope-grid-table">
+            <colgroup>
+              <col style="width: 5%;">
+              <col style="width: 10%;">
+              <col style="width: 8%;">
+              <col style="width: 8%;">
+              <col style="width: 12%;">
+              <col style="width: 12%;">
+              <col style="width: 12%;">
+              <col style="width: 8%;">
+              <col style="width: 25%;">
+            </colgroup>
             <thead>
               <tr>
                 <th>Slot</th>
                 <th>Grid ID</th>
                 <th>Screened</th>
                 <th>Images</th>
+                <th>Grid Quality</th>
                 <th>Ice Quality</th>
                 <th>Particle #</th>
-                <th>Grid Quality</th>
                 <th>Rescued</th>
-                <th>Comments</th>
+                <th class="comments-col">Comments</th>
               </tr>
             </thead>
             <tbody>
@@ -938,7 +954,7 @@ function openMicroscopeSessionModalForEdit(sessionData) {
   // Open the modal with the session ID for editing and a callback to refresh
   openMicroscopeSessionModal(
     sessionData.microscope_session_id,
-    loadMicroscopeSessions
+    loadMicroscopeSessions,
   );
 
   // Wait a bit for the modal to render, then populate it
@@ -952,10 +968,11 @@ async function populateMicroscopeSessionForm(sessionData) {
   const form = document.getElementById("microscopeSessionForm");
   if (!form) return;
 
-  // Import the flag from microscopeSessionModal
-  const { setLoadingFormData } = await import(
-    "../components/microscopeSessionModal.js"
-  );
+  // Import the flag from microscopeSessionModal and updateAllStarRatingsVisuals from utils
+  const { setLoadingFormData } =
+    await import("../components/microscopeSessionModal.js");
+  const { updateAllStarRatingsVisuals } =
+    await import("../utils/starRating.js");
 
   // Set loading flag to prevent autopopulation during form population
   setLoadingFormData(true);
@@ -1003,6 +1020,11 @@ async function populateMicroscopeSessionForm(sessionData) {
       populateSlotData(detail);
     });
   }
+
+  // Update star rating visuals after values are set
+  setTimeout(() => {
+    updateAllStarRatingsVisuals();
+  }, 50);
 
   // Clear loading flag after a short delay to ensure all events have been processed
   setTimeout(() => {
@@ -1054,7 +1076,7 @@ function populateSlotData(detail) {
 
   if (detail.particle_number) {
     const particleNumberField = slotRow.querySelector(
-      '[name="particle_number[]"]'
+      '[name="particle_number[]"]',
     );
     if (particleNumberField) {
       particleNumberField.value = detail.particle_number;
@@ -1089,7 +1111,7 @@ function populateSlotData(detail) {
 // Function to populate microscope collection details
 function populateMicroscopeDetails(slot, detail) {
   const foldoutRow = document.querySelector(
-    `.microscope-foldout[data-slot="${slot}"]`
+    `.microscope-foldout[data-slot="${slot}"]`,
   );
   if (!foldoutRow) return;
 

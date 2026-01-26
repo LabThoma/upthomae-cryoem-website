@@ -30,6 +30,16 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
+/* Make the issues column handle text wrapping in microscope sessions table */
+.grid-table td.issues-col {
+    white-space: normal !important;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 300px;
+}
+
 /* Grid Table Inputs */
 .grid-table input[type="checkbox"] {
     width: 20px;
@@ -119,10 +129,71 @@
 }
 
 .grid-detail-table {
+    min-width: 800px;
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
     margin: 0 auto;
+    table-layout: fixed;
+}
+
+/* Microscope session detail table (in foldouts) */
+.microscope-grid-table {
+    min-width: 1000px;
+    width: 1000px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin: 0 auto;
+    table-layout: fixed;
+}
+
+.microscope-grid-table th,
+.microscope-grid-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+}
+
+.microscope-grid-table th {
+    background: var(--primary-dark);
+    font-weight: 600;
+    color: white;
+}
+
+.microscope-grid-table tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Make the comments column handle text wrapping */
+.microscope-grid-table td.comments-col {
+    white-space: normal !important;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Style for actions column to display buttons inline */
+.microscope-grid-table td:last-child:not(.comments-col) {
+    white-space: nowrap;
+}
+
+.microscope-grid-table td:last-child .btn-icon {
+    margin: 0 2px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Center star rating columns */
+.microscope-grid-table th:nth-child(5), /* Grid Quality */
+.microscope-grid-table th:nth-child(6), /* Ice Quality */
+.microscope-grid-table th:nth-child(7) { /* Particle Number */
+    text-align: center;
+}
+
+.microscope-grid-table td:nth-child(5), /* Grid Quality */
+.microscope-grid-table td:nth-child(6), /* Ice Quality */
+.microscope-grid-table td:nth-child(7) { /* Particle Number */
+    text-align: center;
 }
 
 .grid-detail-table th,
@@ -144,19 +215,30 @@
 }
 
 /* Make the comments column handle text wrapping */
-.grid-detail-table .comments-col {
-    word-wrap: break-word;
+.grid-detail-table td.comments-col {
+    white-space: normal !important;
+    overflow-wrap: break-word;
     word-break: break-word;
+}
+
+/* Make the sample column handle text wrapping for long words */
+.grid-detail-table td.sample-col {
     white-space: normal;
-    vertical-align: top;
-    line-height: 1.4;
-    max-width: 300px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 200px;
+}
+
+/* Make sample value in modal break long words */
+.sample-value {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 /* Style for actions column to display buttons inline */
-.grid-detail-table td:last-child {
+.grid-detail-table td:last-child:not(.comments-col) {
     white-space: nowrap;
-    min-width: 80px;
 }
 
 .grid-detail-table td:last-child .btn-icon {
@@ -166,15 +248,15 @@
 }
 
 /* Center star rating columns */
-.grid-detail-table th:nth-child(3), /* Ice Quality */
-.grid-detail-table th:nth-child(4), /* Particle Concentration */
-.grid-detail-table th:nth-child(5) { /* Grid Quality */
+.grid-detail-table th:nth-child(3), /* Grid Quality */
+.grid-detail-table th:nth-child(4), /* Ice Quality */
+.grid-detail-table th:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 
-.grid-detail-table td:nth-child(3), /* Ice Quality */
-.grid-detail-table td:nth-child(4), /* Particle Concentration */
-.grid-detail-table td:nth-child(5) { /* Grid Quality */
+.grid-detail-table td:nth-child(3), /* Grid Quality */
+.grid-detail-table td:nth-child(4), /* Ice Quality */
+.grid-detail-table td:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 
@@ -289,6 +371,11 @@
     animation: contentSlideIn 0.3s ease;
 }
 
+.expandable-row td {
+    max-width: 0;
+    overflow: visible;
+}
+
 .expandable-row-icon {
     cursor: pointer;
     display: inline-block;
@@ -327,6 +414,7 @@
     border-bottom: 1px solid #e2e8f0;
     opacity: 1;
     visibility: visible;
+    overflow: visible;
 }
 
 /* =================

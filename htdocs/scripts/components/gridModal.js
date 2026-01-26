@@ -8,8 +8,12 @@ import { formatDate, formatDateForInput } from "../utils/dateUtils.js";
 let currentSessionData = null;
 let currentGridData = null;
 let currentSlotNumber = null;
+let onSavedCallback = null;
 
-export function showGridModal(sessionId, slotNumber) {
+export function showGridModal(sessionId, slotNumber, onSaved = null) {
+  // Store the callback for when edits are saved
+  onSavedCallback = onSaved;
+
   fetch(`/api/sessions/${sessionId}`)
     .then((response) => {
       if (!response.ok) throw new Error(`Failed to fetch session ${sessionId}`);
@@ -506,6 +510,11 @@ async function saveInlineEdit(fieldName) {
     cancelInlineEdit(fieldName);
 
     showAlert("Field updated successfully!", "success");
+
+    // Call the callback if one is registered (to refresh the parent view)
+    if (onSavedCallback) {
+      onSavedCallback();
+    }
   } catch (error) {
     console.error("Error saving field:", error);
     showAlert(`Error saving field: ${error.message}`, "error");
@@ -636,6 +645,8 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         additives_override: updatedGrid.additives_override,
         comments: updatedGrid.comments,
         include_in_session: true,
+        trashed: updatedGrid.trashed,
+        shipped: updatedGrid.shipped,
       });
     } else if (existingGrid && existingGrid.include_in_session) {
       // Preserve existing grids unchanged
@@ -654,6 +665,8 @@ async function saveFieldUpdate(fieldName, newValue, dataType, overrideField) {
         additives_override: existingGrid.additives_override,
         comments: existingGrid.comments,
         include_in_session: true,
+        trashed: existingGrid.trashed,
+        shipped: existingGrid.shipped,
       });
     }
   }

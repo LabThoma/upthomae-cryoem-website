@@ -2,8 +2,12 @@
 
 // Import the showAlert function
 import { showAlert } from "../components/alertSystem.js";
-import { setupGridModalEventListeners } from "../components/gridModal.js";
+import {
+  setupGridModalEventListeners,
+  showGridModal,
+} from "../components/gridModal.js";
 import { formatDate } from "../utils/dateUtils.js";
+import { getExpandedRowIds, restoreExpandedState } from "../utils/domUtils.js";
 
 // Flag to prevent multiple initialization
 let isDatabaseViewInitialized = false;
@@ -44,6 +48,27 @@ function setupDatabaseEventListeners() {
       showUserGrids(username);
     }
   });
+
+  // Event delegation for grid view buttons - override to pass refresh callback
+  document.addEventListener(
+    "click",
+    function (event) {
+      const button = event.target.closest(".view-grid-btn");
+      if (
+        button &&
+        document.getElementById("databaseView")?.style.display !== "none"
+      ) {
+        event.stopPropagation(); // Prevent the default gridModal handler
+        const sessionId = button.getAttribute("data-session-id");
+        const slotNumber = button.getAttribute("data-slot");
+        // Pass callback to refresh the view after editing
+        showGridModal(sessionId, slotNumber, () => {
+          refreshCurrentView();
+        });
+      }
+    },
+    true
+  ); // Use capture phase to run before gridModal's listener
 
   // Back to users button
   document.addEventListener("click", function (event) {
@@ -181,6 +206,9 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
   console.log("Sessions data structure:", JSON.stringify(sessions, null, 2));
   const tableBody = document.getElementById("databaseTableBody");
   if (!tableBody) return;
+
+  // Save which sessions are currently expanded before clearing the table
+  const expandedSessionIds = getExpandedRowIds("databaseTableBody");
 
   tableBody.innerHTML = "";
 
@@ -512,7 +540,10 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
     tableBody.appendChild(detailRow);
   });
 
-  const expandIcons = document.querySelectorAll(".expandable-row-icon");
+  // Scope the query to only database table to avoid interfering with other views
+  const databaseTable = document.getElementById("databaseTableBody");
+  const expandIcons =
+    databaseTable?.querySelectorAll(".expandable-row-icon") || [];
   expandIcons.forEach((icon) => {
     // Remove any existing event listeners by cloning the element
     const newIcon = icon.cloneNode(true);
@@ -532,6 +563,9 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
   // Set up grid modal event listeners once after all rows are created
   setupGridModalEventListeners();
+
+  // Restore the expanded state after rendering
+  restoreExpandedState("databaseTableBody", expandedSessionIds);
 }
 
 export function updateUsersTable(users, showInactiveUsers = false) {
