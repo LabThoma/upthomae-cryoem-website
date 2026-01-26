@@ -851,9 +851,9 @@ function displayMicroscopeSessions(sessionsData) {
             <td>${gridDetail.grid_identifier || ""}</td>
             <td>${gridDetail.screened || ""}</td>
             <td>${imagesDisplay}</td>
+            <td>${renderStarRating(gridDetail.grid_quality)}</td>
             <td>${renderStarRating(gridDetail.ice_quality)}</td>
             <td>${renderStarRating(gridDetail.particle_number)}</td>
-            <td>${renderStarRating(gridDetail.grid_quality)}</td>
             <td>${gridDetail.rescued ? "Yes" : "No"}</td>
             <td class="comments-col">${commentsDisplay}</td>
           </tr>
@@ -896,9 +896,9 @@ function displayMicroscopeSessions(sessionsData) {
                 <th>Grid ID</th>
                 <th>Screened</th>
                 <th>Images</th>
+                <th>Grid Quality</th>
                 <th>Ice Quality</th>
                 <th>Particle #</th>
-                <th>Grid Quality</th>
                 <th>Rescued</th>
                 <th class="comments-col">Comments</th>
               </tr>

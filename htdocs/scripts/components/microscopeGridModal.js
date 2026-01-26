@@ -13,7 +13,7 @@ import { renderStarRating } from "../utils/starRating.js";
 export function showMicroscopeGridModal(
   sessionId,
   gridIdentifier,
-  microscopeSlot
+  microscopeSlot,
 ) {
   const modal = document.getElementById("microscopeGridModal");
   const modalContent = document.getElementById("microscopeGridModalContent");
@@ -39,7 +39,7 @@ export function showMicroscopeGridModal(
     sessionId,
     gridIdentifier,
     microscopeSlot,
-    modalContent
+    modalContent,
   );
 }
 
@@ -54,7 +54,7 @@ async function fetchMicroscopeGridDetails(
   sessionId,
   gridIdentifier,
   microscopeSlot,
-  modalContent
+  modalContent,
 ) {
   try {
     const response = await fetch(`/api/microscope-sessions/${sessionId}`);
@@ -68,12 +68,12 @@ async function fetchMicroscopeGridDetails(
     const gridData = sessionData.details?.find(
       (detail) =>
         detail.grid_identifier === gridIdentifier &&
-        detail.microscope_slot == microscopeSlot
+        detail.microscope_slot == microscopeSlot,
     );
 
     if (!gridData) {
       throw new Error(
-        `Grid ${gridIdentifier} not found in microscope session ${sessionId}`
+        `Grid ${gridIdentifier} not found in microscope session ${sessionId}`,
       );
     }
 
@@ -139,26 +139,26 @@ function renderModalContent(gridData, sessionData, modalContent) {
               gridData.rescued == 1
                 ? "Yes"
                 : gridData.rescued == 0
-                ? "No"
-                : "N/A"
+                  ? "No"
+                  : "N/A"
             }</span>
+          </div>
+          <div class="detail-row">
+            <label>Grid Quality:</label>
+            <span class="star-rating-display">${renderStarRating(
+              gridData.grid_quality,
+            )}</span>
           </div>
           <div class="detail-row">
             <label>Ice Quality:</label>
             <span class="star-rating-display">${renderStarRating(
-              gridData.ice_quality
+              gridData.ice_quality,
             )}</span>
           </div>
           <div class="detail-row">
             <label>Particle Concentration:</label>
             <span class="star-rating-display">${renderStarRating(
-              gridData.particle_number
-            )}</span>
-          </div>
-          <div class="detail-row">
-            <label>Grid Quality:</label>
-            <span class="star-rating-display">${renderStarRating(
-              gridData.grid_quality
+              gridData.particle_number,
             )}</span>
           </div>
         </div>
@@ -178,10 +178,10 @@ function renderModalContent(gridData, sessionData, modalContent) {
               gridData.screened === "no"
                 ? "No"
                 : gridData.screened === "manually"
-                ? "Manually"
-                : gridData.screened === "automatically"
-                ? "Automatically"
-                : gridData.screened || "N/A"
+                  ? "Manually"
+                  : gridData.screened === "automatically"
+                    ? "Automatically"
+                    : gridData.screened || "N/A"
             }</span>
           </div>
           <div class="detail-row comments-row">
@@ -207,7 +207,7 @@ function renderModalContent(gridData, sessionData, modalContent) {
                    </div>
                  </div>`
               : gridData.collected == 1
-              ? `<div class="detail-row">
+                ? `<div class="detail-row">
                    <label>Number of Images:</label>
                    <span>${gridData.images ?? "N/A"}</span>
                  </div>
@@ -239,7 +239,7 @@ function renderModalContent(gridData, sessionData, modalContent) {
                    <label>Slit Width (eV):</label>
                    <span>${gridData.slit_width ?? "N/A"}</span>
                  </div>`
-              : `<div class="detail-row">
+                : `<div class="detail-row">
                    <label>Collection Status:</label>
                    <span>Unknown</span>
                  </div>`

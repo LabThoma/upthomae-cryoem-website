@@ -54,7 +54,7 @@ async function renderMicroscopeUserTable() {
     async function showUserMicroscopeSessions(username) {
       // Hide users table
       const usersSection = document.querySelector(
-        "#microscopeView .form-section"
+        "#microscopeView .form-section",
       );
       if (usersSection) {
         usersSection.style.display = "none";
@@ -62,7 +62,7 @@ async function renderMicroscopeUserTable() {
 
       // Show microscope sessions table
       let sessionsSection = document.getElementById(
-        "microscopeSessionsSection"
+        "microscopeSessionsSection",
       );
       if (!sessionsSection) {
         sessionsSection = document.createElement("div");
@@ -93,7 +93,7 @@ async function renderMicroscopeUserTable() {
       } else {
         // Update the title for the selected user
         const titleElement = sessionsSection.querySelector(
-          ".microscope-sessions-title"
+          ".microscope-sessions-title",
         );
         if (titleElement) {
           titleElement.textContent = `Microscope Sessions for ${username}`;
@@ -103,13 +103,13 @@ async function renderMicroscopeUserTable() {
 
       // Fetch and populate microscope sessions
       const tableBody = document.getElementById(
-        "microscopeUserSessionsTableBody"
+        "microscopeUserSessionsTableBody",
       );
       if (!tableBody) return;
       tableBody.innerHTML = `<tr><td colspan='4'>Loading...</td></tr>`;
       try {
         const response = await fetch(
-          `/api/users/${encodeURIComponent(username)}/microscope-sessions`
+          `/api/users/${encodeURIComponent(username)}/microscope-sessions`,
         );
         if (!response.ok)
           throw new Error("Failed to fetch microscope sessions");
@@ -146,9 +146,9 @@ async function renderMicroscopeUserTable() {
                 <tr>
                   <td>${grid.grid_identifier || ""}</td>
                   <td>${grid.sample || ""}</td>
+                  <td>${renderStarRating(grid.grid_quality)}</td>
                   <td>${renderStarRating(grid.ice_quality)}</td>
                   <td>${renderStarRating(grid.particle_concentration)}</td>
-                  <td>${renderStarRating(grid.grid_quality)}</td>
                   <td>${grid.number_of_images ?? ""}</td>
                   <td>${
                     grid.rescued == 1 ? "Yes" : grid.rescued == 0 ? "No" : ""
@@ -163,7 +163,7 @@ async function renderMicroscopeUserTable() {
                     </button>
                   </td>
                 </tr>
-              `
+              `,
                 )
                 .join("");
             } else {
@@ -178,9 +178,9 @@ async function renderMicroscopeUserTable() {
                       <tr>
                         <th>Grid Name</th>
                         <th>Sample</th>
+                        <th>Grid Quality</th>
                         <th>Ice Quality</th>
                         <th>Particle Concentration</th>
-                        <th>Grid Quality</th>
                         <th>Number of Images</th>
                         <th>Rescued</th>
                         <th>Actions</th>
@@ -233,13 +233,13 @@ async function renderMicroscopeUserTable() {
       if (event.target.id === "backToMicroscopeUsersButton") {
         // Hide sessions section and show users table again
         const sessionsSection = document.getElementById(
-          "microscopeSessionsSection"
+          "microscopeSessionsSection",
         );
         if (sessionsSection) {
           sessionsSection.style.display = "none";
         }
         const usersSection = document.querySelector(
-          "#microscopeView .form-section"
+          "#microscopeView .form-section",
         );
         if (usersSection) {
           usersSection.style.display = "block";
