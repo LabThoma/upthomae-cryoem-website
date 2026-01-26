@@ -805,6 +805,9 @@ function displayMicroscopeSessions(sessionsData) {
   sessionsData.forEach((session, idx) => {
     // Main session row
     const sessionRow = document.createElement("tr");
+    // Convert newlines to HTML line breaks for issues display
+    const issuesDisplay = (session.issues || "").replace(/\n/g, "<br>");
+
     sessionRow.innerHTML = `
       <td>
         <span class="expandable-row-icon" data-session-idx="${idx}">▶</span>
@@ -814,7 +817,7 @@ function displayMicroscopeSessions(sessionsData) {
       <td>${session.users || "N/A"}</td>
       <td>${session.grid_count || 0}</td>
       <td>${session.overnight ? "Yes" : "No"}</td>
-      <td>${session.issues || ""}</td>
+      <td class="issues-col">${issuesDisplay}</td>
     `;
 
     // Detail row (initially hidden)

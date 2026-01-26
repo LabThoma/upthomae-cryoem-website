@@ -30,6 +30,16 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
+/* Make the issues column handle text wrapping in microscope sessions table */
+.grid-table td.issues-col {
+    white-space: normal !important;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 300px;
+}
+
 /* Grid Table Inputs */
 .grid-table input[type="checkbox"] {
     width: 20px;
