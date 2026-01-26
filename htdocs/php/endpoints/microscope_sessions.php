@@ -331,44 +331,39 @@ function getLastCollectionParameters($db) {
         // Use existing logic to find prep_id and then get username from session
         $prep_id = findPrepIdByGridIdentifier($db, $gridIdentifier);
         
+        // Store validation error info (for field validation) but continue to provide fallback parameters
+        $gridErrorType = null;
+        $gridErrorMessage = null;
+        
         if (!$prep_id) {
             // Check if it's a format issue or missing data issue
             if (!preg_match('/^([A-Za-z0-9]+)g(0?[1-9]|1[0-2])$/', $gridIdentifier)) {
-                sendResponse([
-                    'message' => "Invalid grid identifier format: '$gridIdentifier'. Expected format: BoxNameg1-12 (e.g., AJ060g1)",
-                    'parameters' => null,
-                    'error_type' => 'invalid_format'
-                ]);
+                $gridErrorMessage = "Invalid grid identifier format: '$gridIdentifier'. Expected format: BoxNameg1-12 (e.g., AJ060g1)";
+                $gridErrorType = 'invalid_format';
             } else {
                 // Format is correct but grid not found in database
-                sendResponse([
-                    'message' => "Grid identifier '$gridIdentifier' not found in database. Please verify the grid ID exists.",
-                    'parameters' => null,
-                    'error_type' => 'not_found'
-                ]);
+                $gridErrorMessage = "Grid identifier '$gridIdentifier' not found in database. Please verify the grid ID exists.";
+                $gridErrorType = 'not_found';
             }
-            return;
+            // Don't return - continue to try fallback parameters
         }
         
-        // Get username from prep_id -> session_id -> user_name
-        $userQuery = "
-            SELECT s.user_name
-            FROM grid_preparations gp
-            JOIN sessions s ON gp.session_id = s.session_id
-            WHERE gp.prep_id = ?
-        ";
-        
-        $userResult = $db->query($userQuery, [$prep_id]);
-        
-        if (empty($userResult)) {
-            sendResponse([
-                'message' => 'No user found for grid identifier: ' . $gridIdentifier,
-                'parameters' => null
-            ]);
-            return;
+        $username = null;
+        if ($prep_id) {
+            // Get username from prep_id -> session_id -> user_name
+            $userQuery = "
+                SELECT s.user_name
+                FROM grid_preparations gp
+                JOIN sessions s ON gp.session_id = s.session_id
+                WHERE gp.prep_id = ?
+            ";
+            
+            $userResult = $db->query($userQuery, [$prep_id]);
+            
+            if (!empty($userResult)) {
+                $username = $userResult[0]['user_name'];
+            }
         }
-        
-        $username = $userResult[0]['user_name'];
         
         // Get the last collection parameters for this user and microscope
         $parametersQuery = "
@@ -433,7 +428,9 @@ function getLastCollectionParameters($db) {
                 sendResponse([
                     'message' => "No collection parameters found for microscope $microscope",
                     'parameters' => null,
-                    'user' => $username
+                    'user' => $username,
+                    'error_type' => $gridErrorType, // Include for field validation
+                    'grid_error_message' => $gridErrorMessage // Include grid error even when no parameters
                 ]);
                 return;
             }
@@ -449,6 +446,8 @@ function getLastCollectionParameters($db) {
                 'fallback_user' => $fallbackUser,
                 'microscope' => $microscope,
                 'is_fallback' => true,
+                'error_type' => $gridErrorType, // Include for field validation
+                'grid_error_message' => $gridErrorMessage, // Separate error message for validation
                 'parameters' => [
                     'px_size' => $params['px_size'],
                     'magnification' => $params['magnification'],
@@ -474,6 +473,8 @@ function getLastCollectionParameters($db) {
             'message' => "Last collection parameters found for user $username",
             'user' => $username,
             'microscope' => $microscope,
+            'error_type' => $gridErrorType, // Will be null for valid grid identifiers
+            'grid_error_message' => $gridErrorMessage, // Will be null for valid grid identifiers
             'parameters' => [
                 'px_size' => $params['px_size'],
                 'magnification' => $params['magnification'],

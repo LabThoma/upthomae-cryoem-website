@@ -57,12 +57,15 @@ async function validateGridIdentifier(gridIdentifier, inputField) {
     const result = await response.json();
 
     // Check for grid identifier errors
+    // Use grid_error_message if available (when fallback parameters exist), otherwise use message
+    const errorMessage = result.grid_error_message || result.message;
+
     if (result.error_type === "invalid_format") {
       inputField.classList.add("error");
-      showModalAlert(result.message, "error", false); // Red alert that stays until manually closed
+      showModalAlert(errorMessage, "error", false); // Red alert that stays until manually closed
     } else if (result.error_type === "not_found") {
       inputField.classList.add("error");
-      showModalAlert(`${result.message}`, "error", false); // Red alert that stays
+      showModalAlert(errorMessage, "error", false); // Red alert that stays
     } else {
       // Valid grid identifier - clear error styling
       inputField.classList.remove("error");
