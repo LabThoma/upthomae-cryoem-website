@@ -306,6 +306,25 @@
     background-color: rgba(255, 154, 158, 0.2) !important;
 }
 
+/* Microscope grid styling - green background for grids at microscope */
+.grid-detail-table tr.microscope-grid:not(.trashed-grid):not(.shipped-grid) {
+    background-color: rgba(212, 237, 218, 0.6) !important; /* light green */
+}
+
+.grid-detail-table tr.microscope-grid:not(.trashed-grid):not(.shipped-grid) td {
+    color: #155724;
+}
+
+/* When grid is both at microscope and trashed, keep green background but cross out */
+.grid-detail-table tr.microscope-grid.trashed-grid {
+    background-color: rgba(212, 237, 218, 0.6) !important; /* same light green */
+    text-decoration: line-through;
+}
+
+.grid-detail-table tr.microscope-grid.trashed-grid td {
+    color: #155724;
+}
+
 /* Shipped grid styling: only apply if not trashed, scoped to grid-detail-table for specificity */
 .grid-detail-table tr.shipped-grid:not(.trashed-grid) {
     background-color: rgba(217, 152, 74, 0.12) !important; /* light orange, matches accent color */
