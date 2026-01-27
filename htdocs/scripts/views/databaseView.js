@@ -6,6 +6,10 @@ import {
   setupGridModalEventListeners,
   showGridModal,
 } from "../components/gridModal.js";
+import {
+  showMicroscopeGridModal,
+  setupMicroscopeGridModal,
+} from "../components/microscopeGridModal.js";
 import { formatDate } from "../utils/dateUtils.js";
 import { getExpandedRowIds, restoreExpandedState } from "../utils/domUtils.js";
 
@@ -30,6 +34,8 @@ export function setupDatabaseView() {
     setupDatabaseEventListeners();
     setupTrashEventListeners();
     setupShipEventListeners();
+    setupMicroscopeEventListeners();
+    setupMicroscopeGridModal();
     areEventListenersSetup = true;
   }
 
@@ -517,7 +523,11 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
               </button>
               ${
                 wasAtMicroscope
-                  ? `<button class="btn-icon btn-success microscope-grid-btn" data-microscope-session-id="${gridData.last_microscope_session}" title="View Microscope Session">
+                  ? `<button class="btn-icon btn-success microscope-grid-btn" 
+                      data-microscope-session-id="${gridData.last_microscope_session}" 
+                      data-prep-id="${gridData.prep_id}" 
+                      data-grid-identifier="${gridData.grid_identifier || ""}" 
+                      title="View Microscope Session">
                         <i class="fas fa-microscope"></i>
                     </button>`
                   : ""
@@ -789,6 +799,59 @@ function setupShipEventListeners() {
     }
   });
 }
+
+function setupMicroscopeEventListeners() {
+  // Event listeners for microscope buttons
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".microscope-grid-btn");
+    if (button) {
+      const microscopeSessionId = button.getAttribute(
+        "data-microscope-session-id",
+      );
+      const prepId = button.getAttribute("data-prep-id");
+      let gridIdentifier = button.getAttribute("data-grid-identifier");
+
+      if (microscopeSessionId && prepId) {
+        try {
+          // Fetch microscope session details to get the microscope slot and grid identifier if needed
+          const microscopeResponse = await fetch(
+            `/api/microscope-sessions/${microscopeSessionId}`,
+          );
+          if (!microscopeResponse.ok)
+            throw new Error("Failed to fetch microscope session");
+          const microscopeSession = await microscopeResponse.json();
+
+          // Find the grid in microscope_details
+          const microscopeDetail = microscopeSession.details?.find(
+            (d) => d.prep_id == prepId,
+          );
+
+          if (microscopeDetail) {
+            // Use grid_identifier from microscope detail if not in button
+            if (!gridIdentifier) {
+              gridIdentifier = microscopeDetail.grid_identifier;
+            }
+
+            showMicroscopeGridModal(
+              parseInt(microscopeSessionId),
+              gridIdentifier,
+              microscopeDetail.microscope_slot,
+            );
+          } else {
+            showAlert(
+              "Could not find grid details in microscope session",
+              "error",
+            );
+          }
+        } catch (error) {
+          console.error("Error loading microscope grid details:", error);
+          showAlert(`Error: ${error.message}`, "error");
+        }
+      }
+    }
+  });
+}
+
 async function shipGrid(prepId, sessionId, slot) {
   try {
     const response = await fetch(`/api/grid-preparations/${prepId}/ship`, {
