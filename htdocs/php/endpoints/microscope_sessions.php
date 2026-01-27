@@ -160,6 +160,16 @@ function saveMicroscopeSession($db, $input, $sessionId = null) {
                 }
                 $insertedSlots[] = $microscope_slot;
                 $count++;
+                
+                // Sync rescued status to grid_preparations if prep_id exists
+                if ($prep_id !== null && isset($rescued)) {
+                    try {
+                        syncRescuedStatusToGridPrep($db, $prep_id, $rescued, $sessionId, $input['date']);
+                    } catch (Exception $e) {
+                        // Log but don't fail the entire transaction
+                        error_log("Warning: Could not sync rescued status for prep_id $prep_id: " . $e->getMessage());
+                    }
+                }
             }
         }
 
@@ -494,5 +504,100 @@ function getLastCollectionParameters($db) {
     } catch (Exception $e) {
         error_log("Error fetching last collection parameters: " . $e->getMessage());
         sendError('Error fetching last collection parameters: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Sync rescued status from microscope session to grid preparation
+ * 
+ * @param Database $db Database connection
+ * @param int|null $prepId Grid preparation ID (if NULL, skip sync)
+ * @param int $rescued Rescued status: 1 = kept, 0 = discarded
+ * @param int $microscopeSessionId The microscope session ID
+ * @param string $microscopeSessionDate Date of microscope session (YYYY-MM-DD)
+ * @return bool True if synced, false if skipped
+ */
+function syncRescuedStatusToGridPrep($db, $prepId, $rescued, $microscopeSessionId, $microscopeSessionDate) {
+    // Skip if no prep_id to link to
+    if ($prepId === null) {
+        error_log("Cannot sync rescued status: prep_id is NULL for microscope_session_id $microscopeSessionId");
+        return false;
+    }
+    
+    try {
+        // Check if we should update based on timestamp comparison
+        $existingRows = $db->query(
+            "SELECT trashed_at FROM grid_preparations WHERE prep_id = ?",
+            [$prepId]
+        );
+        
+        if (empty($existingRows)) {
+            error_log("Cannot sync rescued status: prep_id $prepId not found");
+            return false;
+        }
+        
+        $existing = $existingRows[0];
+        
+        // Check if manually trashed AFTER this microscope session
+        $shouldUpdateStatus = true;
+        if ($existing['trashed_at'] !== null) {
+            $trashedDate = new DateTime($existing['trashed_at']);
+            $microscopeDate = new DateTime($microscopeSessionDate);
+            
+            if ($trashedDate > $microscopeDate) {
+                // Manual trashing is newer - don't update status, but still record the foreign key
+                $shouldUpdateStatus = false;
+                error_log("Skipping status sync for prep_id $prepId: manually trashed after microscope session (trashed: {$existing['trashed_at']}, microscope: $microscopeSessionDate)");
+            }
+        }
+        
+        // Always update last_microscope_session to maintain audit trail
+        if ($shouldUpdateStatus) {
+            // Update both status AND foreign key
+            if ($rescued == 1) {
+                // Grid was RESCUED (kept) - untrash it
+                $result = $db->execute(
+                    "UPDATE grid_preparations 
+                     SET trashed = 0, 
+                         trashed_at = ?,
+                         last_microscope_session = ?,
+                         updated_at = NOW()
+                     WHERE prep_id = ?",
+                    [$microscopeSessionDate, $microscopeSessionId, $prepId]
+                );
+                
+                error_log("Synced prep_id $prepId: rescued (kept) from microscope_session_id $microscopeSessionId");
+            } else {
+                // Grid was NOT rescued (discarded) - mark as trashed
+                $result = $db->execute(
+                    "UPDATE grid_preparations 
+                     SET trashed = 1, 
+                         trashed_at = ?,
+                         last_microscope_session = ?,
+                         updated_at = NOW()
+                     WHERE prep_id = ?",
+                    [$microscopeSessionDate, $microscopeSessionId, $prepId]
+                );
+                
+                error_log("Synced prep_id $prepId: not rescued (trashed) from microscope_session_id $microscopeSessionId");
+            }
+        } else {
+            // Only update foreign key, keep existing status
+            $result = $db->execute(
+                "UPDATE grid_preparations 
+                 SET last_microscope_session = ?,
+                     updated_at = NOW()
+                 WHERE prep_id = ?",
+                [$microscopeSessionId, $prepId]
+            );
+            
+            error_log("Updated last_microscope_session for prep_id $prepId (status not changed due to newer manual action)");
+        }
+        
+        return $result['rowCount'] > 0;
+        
+    } catch (Exception $e) {
+        error_log("Failed to sync rescued status for prep_id $prepId: " . $e->getMessage());
+        throw $e;
     }
 }
