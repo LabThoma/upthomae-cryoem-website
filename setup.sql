@@ -133,15 +133,19 @@ CREATE TABLE `grid_preparations` (
   `trashed_at` timestamp NULL DEFAULT NULL COMMENT 'Timestamp when grid was trashed',
   `shipped` tinyint(1) DEFAULT 0 COMMENT 'Boolean flag to indicate if grid is shipped',
   `shipped_at` timestamp NULL DEFAULT NULL COMMENT 'Timestamp when grid was shipped',
+  `last_microscope_session` int(11) DEFAULT NULL COMMENT 'The microscope_session_id this grid was last at; used for audit trail and UI display',
   PRIMARY KEY (`prep_id`),
   KEY `session_id` (`session_id`),
   KEY `sample_id` (`sample_id`),
   KEY `fk_grid_preparations_grid_id` (`grid_id`),
+  KEY `idx_last_microscope_session` (`last_microscope_session`),
   CONSTRAINT `grid_preparations_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE,
   CONSTRAINT `grid_preparations_ibfk_2` FOREIGN KEY (`sample_id`) REFERENCES `samples` (`sample_id`) ON DELETE
   SET NULL,
     CONSTRAINT `fk_grid_preparations_grid_id` FOREIGN KEY (`grid_id`) REFERENCES `grids` (`grid_id`) ON DELETE
-  SET NULL ON UPDATE CASCADE
+  SET NULL ON UPDATE CASCADE,
+    CONSTRAINT `fk_last_microscope_session` FOREIGN KEY (`last_microscope_session`) REFERENCES `microscope_sessions` (`microscope_session_id`) ON DELETE
+  SET NULL
 ) ENGINE = InnoDB AUTO_INCREMENT = 84 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- 7. Create microscope_sessions table
 CREATE TABLE `microscope_sessions` (
