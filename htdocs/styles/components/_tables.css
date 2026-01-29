@@ -184,15 +184,15 @@
 }
 
 /* Center star rating columns */
-.microscope-grid-table th:nth-child(5), /* Grid Quality */
-.microscope-grid-table th:nth-child(6), /* Ice Quality */
-.microscope-grid-table th:nth-child(7) { /* Particle Number */
+.microscope-grid-table th:nth-child(3), /* Grid Quality */
+.microscope-grid-table th:nth-child(4), /* Ice Quality */
+.microscope-grid-table th:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 
-.microscope-grid-table td:nth-child(5), /* Grid Quality */
-.microscope-grid-table td:nth-child(6), /* Ice Quality */
-.microscope-grid-table td:nth-child(7) { /* Particle Number */
+.microscope-grid-table td:nth-child(3), /* Grid Quality */
+.microscope-grid-table td:nth-child(4), /* Ice Quality */
+.microscope-grid-table td:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 

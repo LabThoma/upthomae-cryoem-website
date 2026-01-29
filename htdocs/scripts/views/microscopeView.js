@@ -173,7 +173,7 @@ async function renderMicroscopeUserTable() {
               <div class="expandable-content" id="microscope-details-${idx}">
                 <h4 class="detail-subtitle">Grid Details</h4>
                 <div class="grid-detail-container">
-                  <table class="grid-detail-table">
+                  <table class="microscope-grid-table">
                     <thead>
                       <tr>
                         <th>Grid Name</th>
