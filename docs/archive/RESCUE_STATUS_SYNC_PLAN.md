@@ -1,5 +1,58 @@
 # Rescue Status Sync Implementation Plan
 
+## Implementation Status
+
+### ✅ Completed (January 2026)
+
+1. **Database Schema Changes**
+   - ✅ Added `last_microscope_session` column to `grid_preparations` table
+   - ✅ Added foreign key constraint `fk_last_microscope_session`
+   - ✅ Added index `idx_last_microscope_session`
+   - ✅ Updated `setup.sql` for fresh installations
+   - ✅ Migration file created: `database/migrations/add_last_microscope_session.sql`
+
+2. **Backend Implementation**
+   - ✅ Created `syncRescuedStatusToGridPrep()` function with timestamp comparison logic
+   - ✅ Integrated sync into `saveMicroscopeSession()`
+   - ✅ Fixed `updateSession()` to use UPDATE instead of DELETE+INSERT (preserves prep_id and prevents orphaned microscope_details)
+   - ✅ Timestamp precedence: manual trashing takes priority if newer than microscope session
+
+3. **Frontend Implementation**
+   - ✅ Added green background highlighting for grids at microscope
+   - ✅ Added microscope button to view grid details in microscope session
+   - ✅ Integrated `microscopeGridModal` for navigation
+   - ✅ CSS styling for microscope grids (green background)
+   - ✅ Strikethrough styling for trashed grids that were at microscope
+   - ✅ Fixed table layout issues (column widths, button positioning)
+   - ✅ Fixed microscope view table class (changed from `grid-detail-table` to `microscope-grid-table`)
+
+4. **Testing & Bug Fixes**
+   - ✅ Tested sync with rescued=1 (untrashes grid)
+   - ✅ Tested sync with rescued=0 (trashes grid)
+   - ✅ Verified timestamp comparison works correctly
+   - ✅ Fixed green highlighting being lost after editing grids
+   - ✅ Fixed microscope button error after editing grids
+
+5. **Backfill Scripts**
+   - ✅ Created `database/backfill_rescued_status.php` for historical data
+     - Usage: `php database/backfill_rescued_status.php`
+     - Finds all microscope_details with prep_id and rescued status
+     - Uses most recent microscope session per prep_id
+     - Respects timestamp precedence (newer manual trashing wins)
+     - Generates detailed logs and summary report
+     - Safe to re-run (skips already synced entries)
+   - ✅ Created `database/backfill_rescued_status.sql` for phpMyAdmin execution
+     - Usage: Run directly in phpMyAdmin SQL tab or `mysql -u root test_database < database/backfill_rescued_status.sql`
+     - Single UPDATE statement with nested queries
+     - Same logic as PHP script but pure SQL
+     - Tested and produces identical results (43 grids synced)
+
+### 🎉 Implementation Complete
+
+All core functionality and backfill options are complete. Feature is ready for production deployment.
+
+---
+
 ## 1. Problem Statement
 
 ### Current Situation
