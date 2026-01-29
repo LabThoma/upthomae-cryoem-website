@@ -551,9 +551,6 @@ function updateSession($db, $sessionId, $input) {
         
         // Update grid preparations if provided
         if ($grids) {
-            // Delete all grid preparations for this session and then re-insert
-            $db->execute("DELETE FROM grid_preparations WHERE session_id = ?", [$sessionId]);
-
             // Fetch grid_id and sample_id for this session
             $gridQuery = $db->query("SELECT grid_id FROM grids WHERE session_id = ?", [$sessionId]);
             $gridId = !empty($gridQuery) ? $gridQuery[0]['grid_id'] : null;
@@ -585,7 +582,7 @@ function updateSession($db, $sessionId, $input) {
                 }
             }
 
-            // Insert new grid preparations for each slot
+            // Update existing grid preparations for each slot
             for ($slotNumber = 1; $slotNumber <= 4; $slotNumber++) {
                 $grid = $slotData[$slotNumber] ?? null;
                 $includeInSession = $grid && ($grid['include_in_session'] ?? false);
@@ -612,17 +609,25 @@ function updateSession($db, $sessionId, $input) {
                         $blotForceOverride = floatval($grid['blot_force_override']);
                     }
                 }
-                $db->execute(
-                    "INSERT INTO grid_preparations (
-                    session_id, slot_number, sample_id, grid_id, volume_ul_override, 
-                    blot_time_override, blot_force_override, grid_batch_override, 
-                    grid_type_override, comments, additives_override, include_in_session,
-                    trashed, trashed_at, 
-                    shipped, shipped_at
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                
+                // UPDATE existing grid_preparations instead of DELETE+INSERT to preserve prep_id
+                $result = $db->execute(
+                    "UPDATE grid_preparations SET
+                        sample_id = ?,
+                        grid_id = ?,
+                        volume_ul_override = ?,
+                        blot_time_override = ?,
+                        blot_force_override = ?,
+                        grid_batch_override = ?,
+                        grid_type_override = ?,
+                        comments = ?,
+                        additives_override = ?,
+                        include_in_session = ?,
+                        trashed = ?,
+                        shipped = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE session_id = ? AND slot_number = ?",
                     [
-                        $sessionId,
-                        $slotNumber,
                         $sampleId,
                         $gridId,
                         $volumeOverride,
@@ -634,11 +639,39 @@ function updateSession($db, $sessionId, $input) {
                         $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
                         $includeInSession ? 1 : 0,
                         ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
-                        ($grid && isset($grid['trashed_at'])) ? $grid['trashed_at'] : null,
                         ($grid && ($grid['shipped'] ?? false)) ? 1 : 0,
-                        ($grid && isset($grid['shipped_at'])) ? $grid['shipped_at'] : null
+                        $sessionId,
+                        $slotNumber
                     ]
                 );
+                
+                // If UPDATE affected 0 rows, the slot doesn't exist yet - INSERT it
+                if ($result['rowCount'] === 0) {
+                    $db->execute(
+                        "INSERT INTO grid_preparations (
+                            session_id, slot_number, sample_id, grid_id, volume_ul_override,
+                            blot_time_override, blot_force_override, grid_batch_override,
+                            grid_type_override, comments, additives_override, include_in_session,
+                            trashed, shipped
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [
+                            $sessionId,
+                            $slotNumber,
+                            $sampleId,
+                            $gridId,
+                            $volumeOverride,
+                            $blotTimeOverride,
+                            $blotForceOverride,
+                            $grid ? emptyToNull($grid['grid_batch_override'] ?? null) : null,
+                            emptyToNull($finalGridTypeOverride),
+                            $grid ? emptyToNull($grid['comments'] ?? null) : null,
+                            $grid ? emptyToNull($grid['additives_override'] ?? null) : null,
+                            $includeInSession ? 1 : 0,
+                            ($grid && ($grid['trashed'] ?? false)) ? 1 : 0,
+                            ($grid && ($grid['shipped'] ?? false)) ? 1 : 0
+                        ]
+                    );
+                }
             }
         }
         
