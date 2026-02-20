@@ -134,7 +134,7 @@
     border-collapse: collapse;
     font-size: 0.9rem;
     margin: 0 auto;
-    table-layout: fixed;
+    table-layout: fixed; /* Fixed layout with horizontal scroll in container */
 }
 
 /* Microscope session detail table (in foldouts) */
@@ -184,15 +184,15 @@
 }
 
 /* Center star rating columns */
-.microscope-grid-table th:nth-child(5), /* Grid Quality */
-.microscope-grid-table th:nth-child(6), /* Ice Quality */
-.microscope-grid-table th:nth-child(7) { /* Particle Number */
+.microscope-grid-table th:nth-child(3), /* Grid Quality */
+.microscope-grid-table th:nth-child(4), /* Ice Quality */
+.microscope-grid-table th:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 
-.microscope-grid-table td:nth-child(5), /* Grid Quality */
-.microscope-grid-table td:nth-child(6), /* Ice Quality */
-.microscope-grid-table td:nth-child(7) { /* Particle Number */
+.microscope-grid-table td:nth-child(3), /* Grid Quality */
+.microscope-grid-table td:nth-child(4), /* Ice Quality */
+.microscope-grid-table td:nth-child(5) { /* Particle Concentration */
     text-align: center;
 }
 
@@ -215,10 +215,12 @@
 }
 
 /* Make the comments column handle text wrapping */
+.grid-detail-table th.comments-col,
 .grid-detail-table td.comments-col {
     white-space: normal !important;
     overflow-wrap: break-word;
     word-break: break-word;
+    width: 250px;
 }
 
 /* Make the sample column handle text wrapping for long words */
@@ -236,9 +238,9 @@
     word-break: break-word;
 }
 
-/* Style for actions column to display buttons inline */
-.grid-detail-table td:last-child:not(.comments-col) {
+/* Style for actions column to display buttons inline */.grid-detail-table th:last-child:not(.comments-col),.grid-detail-table td:last-child:not(.comments-col) {
     white-space: nowrap;
+    width: 200px; /* Accommodate 4 icon buttons */
 }
 
 .grid-detail-table td:last-child .btn-icon {
@@ -247,16 +249,32 @@
     vertical-align: middle;
 }
 
-/* Center star rating columns */
-.grid-detail-table th:nth-child(3), /* Grid Quality */
-.grid-detail-table th:nth-child(4), /* Ice Quality */
-.grid-detail-table th:nth-child(5) { /* Particle Concentration */
+/* Slot column - keep narrow */
+.grid-detail-table th:nth-child(1),
+.grid-detail-table td:nth-child(1) {
+    width: 60px;
+}
+
+/* Grid Type column - give more space for longer grid names */
+.grid-detail-table th:nth-child(2),
+.grid-detail-table td:nth-child(2) {
+    width: 150px;
+}
+
+/* Blot Time and Blot Force columns */
+.grid-detail-table th:nth-child(3), /* Blot Time */
+.grid-detail-table td:nth-child(3),
+.grid-detail-table th:nth-child(4), /* Blot Force */
+.grid-detail-table td:nth-child(4) {
+    width: 100px;
     text-align: center;
 }
 
-.grid-detail-table td:nth-child(3), /* Grid Quality */
-.grid-detail-table td:nth-child(4), /* Ice Quality */
-.grid-detail-table td:nth-child(5) { /* Particle Concentration */
+/* Volume and Additive columns */
+.grid-detail-table th:nth-child(5), /* Volume */
+.grid-detail-table td:nth-child(5),
+.grid-detail-table th:nth-child(6), /* Additive */
+.grid-detail-table td:nth-child(6) {
     text-align: center;
 }
 
@@ -304,6 +322,25 @@
 
 .trashed-gridbox:hover {
     background-color: rgba(255, 154, 158, 0.2) !important;
+}
+
+/* Microscope grid styling - green background for grids at microscope */
+.grid-detail-table tr.microscope-grid:not(.trashed-grid):not(.shipped-grid) {
+    background-color: rgba(212, 237, 218, 0.6) !important; /* light green */
+}
+
+.grid-detail-table tr.microscope-grid:not(.trashed-grid):not(.shipped-grid) td {
+    color: #155724;
+}
+
+/* When grid is both at microscope and trashed, keep green background but cross out */
+.grid-detail-table tr.microscope-grid.trashed-grid {
+    background-color: rgba(212, 237, 218, 0.6) !important; /* same light green */
+    text-decoration: line-through;
+}
+
+.grid-detail-table tr.microscope-grid.trashed-grid td {
+    color: #155724;
 }
 
 /* Shipped grid styling: only apply if not trashed, scoped to grid-detail-table for specificity */

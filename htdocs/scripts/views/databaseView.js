@@ -6,6 +6,10 @@ import {
   setupGridModalEventListeners,
   showGridModal,
 } from "../components/gridModal.js";
+import {
+  showMicroscopeGridModal,
+  setupMicroscopeGridModal,
+} from "../components/microscopeGridModal.js";
 import { formatDate } from "../utils/dateUtils.js";
 import { getExpandedRowIds, restoreExpandedState } from "../utils/domUtils.js";
 
@@ -30,6 +34,8 @@ export function setupDatabaseView() {
     setupDatabaseEventListeners();
     setupTrashEventListeners();
     setupShipEventListeners();
+    setupMicroscopeEventListeners();
+    setupMicroscopeGridModal();
     areEventListenersSetup = true;
   }
 
@@ -67,7 +73,7 @@ function setupDatabaseEventListeners() {
         });
       }
     },
-    true
+    true,
   ); // Use capture phase to run before gridModal's listener
 
   // Back to users button
@@ -136,7 +142,7 @@ export async function fetchUserGridData(username) {
       updateDatabaseTable(sessions, showTrashed);
       showAlert(
         `Displaying ${sessions.length} grids for ${username}`,
-        "success"
+        "success",
       );
     }
   } catch (error) {
@@ -228,7 +234,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
       session.grid_preparations &&
       session.grid_preparations.some(
         (grid) =>
-          grid.include_in_session === true || grid.include_in_session === 1
+          grid.include_in_session === true || grid.include_in_session === 1,
       );
 
     const hasUntrashedGrids =
@@ -236,7 +242,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
       session.grid_preparations.some(
         (grid) =>
           (grid.include_in_session === true || grid.include_in_session === 1) &&
-          !(grid.trashed === true || grid.trashed === 1)
+          !(grid.trashed === true || grid.trashed === 1),
       );
 
     const isCompletelyTrashed = hasUsedGrids && !hasUntrashedGrids;
@@ -271,7 +277,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
       session.grid_preparations &&
       session.grid_preparations.some(
         (grid) =>
-          grid.include_in_session === true || grid.include_in_session === 1
+          grid.include_in_session === true || grid.include_in_session === 1,
       );
 
     const hasUntrashedGrids =
@@ -279,7 +285,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
       session.grid_preparations.some(
         (grid) =>
           (grid.include_in_session === true || grid.include_in_session === 1) &&
-          !(grid.trashed === true || grid.trashed === 1)
+          !(grid.trashed === true || grid.trashed === 1),
       );
 
     // Check if this grid box is completely trashed (all used grids are trashed)
@@ -296,7 +302,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
           (grid) =>
             (grid.include_in_session === true ||
               grid.include_in_session === 1) &&
-            !(grid.trashed === true || grid.trashed === 1)
+            !(grid.trashed === true || grid.trashed === 1),
         )
       : [];
     const allUsedGridsShipped =
@@ -400,7 +406,7 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
       const gridData =
         grids.find(
-          (g) => parseInt(g.slot_number) === i || parseInt(g.slot) === i
+          (g) => parseInt(g.slot_number) === i || parseInt(g.slot) === i,
         ) || {};
 
       console.log(`Grid data for slot ${i}:`, gridData);
@@ -431,35 +437,35 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
           gridData.blot_time_override !== null
             ? gridData.blot_time_override
             : gridData.blot_time !== undefined && gridData.blot_time !== null
-            ? gridData.blot_time
-            : gridData.blot_time_seconds !== undefined &&
-              gridData.blot_time_seconds !== null
-            ? gridData.blot_time_seconds
-            : sessionBlotTime !== undefined && sessionBlotTime !== null
-            ? sessionBlotTime
-            : "N/A";
+              ? gridData.blot_time
+              : gridData.blot_time_seconds !== undefined &&
+                  gridData.blot_time_seconds !== null
+                ? gridData.blot_time_seconds
+                : sessionBlotTime !== undefined && sessionBlotTime !== null
+                  ? sessionBlotTime
+                  : "N/A";
 
         const blotForce =
           gridData.blot_force_override !== undefined &&
           gridData.blot_force_override !== null
             ? gridData.blot_force_override
             : gridData.blot_force !== undefined && gridData.blot_force !== null
-            ? gridData.blot_force
-            : sessionBlotForce !== undefined && sessionBlotForce !== null
-            ? sessionBlotForce
-            : "N/A";
+              ? gridData.blot_force
+              : sessionBlotForce !== undefined && sessionBlotForce !== null
+                ? sessionBlotForce
+                : "N/A";
 
         const volume =
           gridData.volume_ul_override !== undefined &&
           gridData.volume_ul_override !== null
             ? gridData.volume_ul_override
             : gridData.default_volume_ul !== undefined &&
-              gridData.default_volume_ul !== null
-            ? gridData.default_volume_ul
-            : sessionDefaultVolume !== undefined &&
-              sessionDefaultVolume !== null
-            ? sessionDefaultVolume
-            : "N/A";
+                gridData.default_volume_ul !== null
+              ? gridData.default_volume_ul
+              : sessionDefaultVolume !== undefined &&
+                  sessionDefaultVolume !== null
+                ? sessionDefaultVolume
+                : "N/A";
 
         const additives =
           gridData.additives_override !== undefined &&
@@ -467,12 +473,12 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
           gridData.additives_override !== ""
             ? gridData.additives_override
             : gridData.additives !== undefined &&
-              gridData.additives !== null &&
-              gridData.additives !== ""
-            ? gridData.additives
-            : session.sample && session.sample.additives
-            ? session.sample.additives
-            : "N/A";
+                gridData.additives !== null &&
+                gridData.additives !== ""
+              ? gridData.additives
+              : session.sample && session.sample.additives
+                ? session.sample.additives
+                : "N/A";
 
         const gridType =
           gridData.grid_type_override ||
@@ -483,14 +489,25 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
 
         // Check if grid is trashed
         const isTrashed = gridData.trashed === true || gridData.trashed === 1;
-        const trashedClass = isTrashed ? ' class="trashed-grid"' : "";
 
         // Check if grid is shipped
         const isShipped = gridData.shipped === true || gridData.shipped === 1;
-        const shippedClass = isShipped ? ' class="shipped-grid"' : "";
+
+        // Check if grid was at microscope
+        const wasAtMicroscope =
+          gridData.last_microscope_session !== null &&
+          gridData.last_microscope_session !== undefined;
+
+        // Build class list
+        let classes = [];
+        if (wasAtMicroscope) classes.push("microscope-grid");
+        if (isTrashed) classes.push("trashed-grid");
+        if (isShipped) classes.push("shipped-grid");
+        const classAttr =
+          classes.length > 0 ? ` class="${classes.join(" ")}"` : "";
 
         gridTableHTML += `
-          <tr${trashedClass}${shippedClass}>
+          <tr${classAttr}>
             <td>${i}</td>
             <td>${gridType}</td>
             <td>${blotTime}</td>
@@ -504,6 +521,17 @@ export function updateDatabaseTable(sessions, showTrashedGridBoxes = false) {
               }" data-slot="${i}" title="View & Edit">
                 <i class="fas fa-book-open"></i>
               </button>
+              ${
+                wasAtMicroscope
+                  ? `<button class="btn-icon btn-success microscope-grid-btn" 
+                      data-microscope-session-id="${gridData.last_microscope_session}" 
+                      data-prep-id="${gridData.prep_id}" 
+                      data-grid-identifier="${gridData.grid_identifier || ""}" 
+                      title="View Microscope Session">
+                        <i class="fas fa-microscope"></i>
+                    </button>`
+                  : ""
+              }
               ${
                 isShipped
                   ? `<button class="btn-icon btn-warning unship-grid-btn" data-prep-id="${gridData.prep_id}" data-session-id="${session.session_id}" data-slot="${i}" title="Unship Grid">
@@ -614,7 +642,7 @@ export function updateUsersTable(users, showInactiveUsers = false) {
 export function showUserGrids(username) {
   // Hide users table
   const usersSection = document.querySelector(
-    "#databaseView .form-section:first-child"
+    "#databaseView .form-section:first-child",
   );
   if (usersSection) {
     usersSection.style.display = "none";
@@ -633,7 +661,7 @@ export function showUserGrids(username) {
 export function showUsersTable() {
   // Show users table
   const usersSection = document.querySelector(
-    "#databaseView .form-section:first-child"
+    "#databaseView .form-section:first-child",
   );
   if (usersSection) {
     usersSection.style.display = "block";
@@ -683,7 +711,7 @@ function setupTrashEventListeners() {
       const sessionId = trashButton.getAttribute("data-session-id");
       if (
         confirm(
-          `Are you sure you want to trash ALL grids in this grid box? This will mark all used slots as trashed.`
+          `Are you sure you want to trash ALL grids in this grid box? This will mark all used slots as trashed.`,
         )
       ) {
         await trashWholeGridBox(sessionId);
@@ -696,7 +724,7 @@ function setupTrashEventListeners() {
       const sessionId = shipButton.getAttribute("data-session-id");
       if (
         confirm(
-          `Are you sure you want to mark ALL grids in this grid box as shipped? This will mark all used slots as shipped.`
+          `Are you sure you want to mark ALL grids in this grid box as shipped? This will mark all used slots as shipped.`,
         )
       ) {
         await shipWholeGridBox(sessionId);
@@ -746,7 +774,7 @@ function setupShipEventListeners() {
       const slot = button.getAttribute("data-slot");
       if (
         confirm(
-          `Are you sure you want to mark the grid in slot ${slot} as shipped?`
+          `Are you sure you want to mark the grid in slot ${slot} as shipped?`,
         )
       ) {
         await shipGrid(prepId, sessionId, slot);
@@ -763,7 +791,7 @@ function setupShipEventListeners() {
       const slot = button.getAttribute("data-slot");
       if (
         confirm(
-          `Are you sure you want to mark the grid in slot ${slot} as unshipped?`
+          `Are you sure you want to mark the grid in slot ${slot} as unshipped?`,
         )
       ) {
         await unshipGrid(prepId, sessionId, slot);
@@ -771,6 +799,59 @@ function setupShipEventListeners() {
     }
   });
 }
+
+function setupMicroscopeEventListeners() {
+  // Event listeners for microscope buttons
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".microscope-grid-btn");
+    if (button) {
+      const microscopeSessionId = button.getAttribute(
+        "data-microscope-session-id",
+      );
+      const prepId = button.getAttribute("data-prep-id");
+      let gridIdentifier = button.getAttribute("data-grid-identifier");
+
+      if (microscopeSessionId && prepId) {
+        try {
+          // Fetch microscope session details to get the microscope slot and grid identifier if needed
+          const microscopeResponse = await fetch(
+            `/api/microscope-sessions/${microscopeSessionId}`,
+          );
+          if (!microscopeResponse.ok)
+            throw new Error("Failed to fetch microscope session");
+          const microscopeSession = await microscopeResponse.json();
+
+          // Find the grid in microscope_details
+          const microscopeDetail = microscopeSession.details?.find(
+            (d) => d.prep_id == prepId,
+          );
+
+          if (microscopeDetail) {
+            // Use grid_identifier from microscope detail if not in button
+            if (!gridIdentifier) {
+              gridIdentifier = microscopeDetail.grid_identifier;
+            }
+
+            showMicroscopeGridModal(
+              parseInt(microscopeSessionId),
+              gridIdentifier,
+              microscopeDetail.microscope_slot,
+            );
+          } else {
+            showAlert(
+              "Could not find grid details in microscope session",
+              "error",
+            );
+          }
+        } catch (error) {
+          console.error("Error loading microscope grid details:", error);
+          showAlert(`Error: ${error.message}`, "error");
+        }
+      }
+    }
+  });
+}
+
 async function shipGrid(prepId, sessionId, slot) {
   try {
     const response = await fetch(`/api/grid-preparations/${prepId}/ship`, {
@@ -883,7 +964,7 @@ async function trashWholeGridBox(sessionId) {
     const result = await response.json();
     showAlert(
       `All grids in grid box have been trashed (${result.affectedRows} grids affected)`,
-      "success"
+      "success",
     );
 
     // Refresh the view to show updated status
@@ -911,7 +992,7 @@ async function shipWholeGridBox(sessionId) {
     const result = await response.json();
     showAlert(
       `All grids in grid box have been marked as shipped (${result.affectedRows} grids affected)`,
-      "success"
+      "success",
     );
 
     // Refresh the view to show updated status
@@ -935,7 +1016,7 @@ async function addNewGrid(sessionId, slot) {
           slot_number: slot,
           include_in_session: true,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
