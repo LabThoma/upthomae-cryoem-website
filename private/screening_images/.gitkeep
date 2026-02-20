@@ -1,0 +1,14 @@
+# Screening Images Directory
+
+This folder contains screening images uploaded externally.
+
+Structure:
+  {YYYYMMDD}/{gridIdentifier}/low/  - Low magnification images
+  {YYYYMMDD}/{gridIdentifier}/high/ - High magnification images
+
+Example:
+  20260130/AB123g1/low/01_atlas.jpg
+  20260130/AB123g1/high/01_detail.jpg
+
+Supported formats: jpg, jpeg, png, webp
+Files are sorted alphabetically (use prefixes like 01_, 02_ for ordering)

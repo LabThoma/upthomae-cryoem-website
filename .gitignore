@@ -35,3 +35,6 @@ database_backups/
 # Blog content (user-generated content should not be in version control)
 private/blog_content/posts/
 private/blog_content/images/
+
+# Screening images (subfolders uploaded externally, not version controlled)
+private/screening_images/*/
