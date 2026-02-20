@@ -8,6 +8,7 @@ require_once 'endpoints/grid_preparations.php';
 require_once 'endpoints/dashboard.php';
 require_once 'endpoints/microscope_sessions.php';
 require_once 'endpoints/blog.php';
+require_once 'endpoints/screening_images.php';
 
 // Set API headers for all API requests
 setApiHeaders();
@@ -71,6 +72,12 @@ function route($method, $path, $db, $input = null) {
     // Dashboard endpoint
     if (strpos($path, '/api/dashboard') === 0) {
         handleDashboard($method, $path, $db, $input);
+        return;
+    }
+    
+    // Screening images endpoint
+    if (strpos($path, '/api/screening-images') === 0) {
+        handleScreeningImages($method, $path, $db, $input);
         return;
     }
     
