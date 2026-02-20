@@ -3,6 +3,10 @@
 
 import { showAlert } from "./alertSystem.js";
 import { renderStarRating } from "../utils/starRating.js";
+import {
+  createScreeningGalleryHTML,
+  initScreeningGallery,
+} from "./screeningImageGallery.js";
 
 /**
  * Show microscope grid details modal
@@ -248,16 +252,30 @@ function renderModalContent(gridData, sessionData, modalContent) {
 
         <!-- Images Section (placeholder for future expansion) -->
         <div class="grid-detail-section">
-          <h3>Images</h3>
+          <h3>Screening Images</h3>
           <div class="detail-row">
-            <div class="images-placeholder">
-              <p class="text-muted">Image gallery will be added here in the future</p>
-            </div>
+            ${createScreeningGalleryHTML(formatSessionDate(sessionData.date), gridData.grid_identifier)}
           </div>
         </div>
       </div>
     </div>
   `;
+
+  // Initialize the screening gallery after HTML is rendered
+  const galleryElement = modalContent.querySelector(".screening-gallery");
+  if (galleryElement) {
+    initScreeningGallery(galleryElement);
+  }
+}
+
+/**
+ * Format session date from YYYY-MM-DD to YYYYMMDD
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @returns {string} Date in YYYYMMDD format
+ */
+function formatSessionDate(date) {
+  if (!date) return "";
+  return date.replace(/-/g, "");
 }
 
 /**
