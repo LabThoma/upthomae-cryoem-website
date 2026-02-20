@@ -74,6 +74,11 @@
   gap: 20px;
 }
 
+/* Make the images section span all columns */
+.microscope-grid-modal .grid-detail-section:has(.screening-gallery) {
+  grid-column: 1 / -1;
+}
+
 .microscope-grid-modal .detail-row {
   display: flex;
   justify-content: space-between;
