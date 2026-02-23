@@ -10,9 +10,16 @@
  * Routes:
  * - GET /api/screening-images/{sessionDate}/{gridIdentifier} - List images
  * - GET /api/screening-images/{sessionDate}/{gridIdentifier}/{mag}/{filename} - Serve image
+ * - POST /api/screening-images/upload - Upload image (API key protected)
  */
 
 function handleScreeningImages($method, $path, $db, $input = null) {
+    // Match: POST /api/screening-images/upload
+    if ($method === 'POST' && $path === '/api/screening-images/upload') {
+        uploadScreeningImage();
+        return;
+    }
+
     // Match: /api/screening-images/{sessionDate}/{gridIdentifier}/{mag}/{filename}
     if (preg_match('#^/api/screening-images/(\d{8})/([A-Za-z0-9]+g\d+)/(low|high)/([^/]+)$#', $path, $matches)) {
         if ($method === 'GET') {
@@ -30,6 +37,99 @@ function handleScreeningImages($method, $path, $db, $input = null) {
     }
     
     sendError('Invalid screening images endpoint', 404);
+}
+
+/**
+ * Upload a screening image from the cluster
+ * Authenticated via X-API-Key header
+ */
+function uploadScreeningImage() {
+    // Validate API key
+    $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
+    $validKey = defined('SCREENING_IMAGES_UPLOAD_KEY') ? SCREENING_IMAGES_UPLOAD_KEY : '';
+
+    if (empty($validKey) || !hash_equals($validKey, $providedKey)) {
+        http_response_code(401);
+        exit(json_encode(['error' => 'Unauthorized']));
+    }
+
+    // Validate POST fields
+    $sessionDate    = $_POST['session_date']    ?? '';
+    $gridIdentifier = $_POST['grid_identifier'] ?? '';
+    $mag            = $_POST['mag']             ?? '';
+
+    if (!preg_match('/^\d{8}$/', $sessionDate)) {
+        sendError('Invalid session_date format (expected YYYYMMDD)', 400);
+    }
+    if (!preg_match('/^[A-Za-z0-9]+g\d+$/', $gridIdentifier)) {
+        sendError('Invalid grid_identifier format (expected e.g. AB123g1)', 400);
+    }
+    if (!in_array($mag, ['low', 'high'])) {
+        sendError('Invalid mag value (expected low or high)', 400);
+    }
+
+    // Validate file upload
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        $code = $_FILES['file']['error'] ?? 'no file';
+        sendError('File upload error: ' . $code, 400);
+    }
+
+    $file      = $_FILES['file'];
+
+    // Enforce file size limit (10 MB)
+    $maxBytes = 10 * 1024 * 1024;
+    if ($file['size'] > $maxBytes) {
+        sendError('File too large. Maximum size is 10 MB.', 400);
+    }
+
+    $origName  = basename($file['name']);
+    $extension = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+        sendError('Invalid file extension. Allowed: jpg, jpeg, png, webp', 400);
+    }
+    if (!preg_match('/^[a-zA-Z0-9\-_.]+\.(jpg|jpeg|png|webp)$/i', $origName)) {
+        sendError('Invalid filename format', 400);
+    }
+
+    // Validate actual file content type
+    $mimeType     = mime_content_type($file['tmp_name']);
+    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!in_array($mimeType, $allowedMimes)) {
+        sendError('Invalid file content type: ' . $mimeType, 400);
+    }
+
+    // Build and create destination directory
+    $privateBase = realpath(__DIR__ . '/../../../private');
+    if ($privateBase === false) {
+        sendError('Server configuration error: private directory not found', 500);
+    }
+
+    $destDir = $privateBase . "/screening_images/{$sessionDate}/{$gridIdentifier}/{$mag}";
+    if (!is_dir($destDir)) {
+        if (!mkdir($destDir, 0755, true)) {
+            sendError('Failed to create destination directory', 500);
+        }
+    }
+
+    $destPath = $destDir . '/' . $origName;
+
+    // Verify final path is within the expected base (defense-in-depth)
+    $expectedBase = $privateBase . '/screening_images/';
+    if (strpos(realpath($destDir) . '/', $expectedBase) !== 0) {
+        sendError('Invalid destination path', 400);
+    }
+
+    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        sendError('Failed to save uploaded file', 500);
+    }
+
+    error_log("Screening image uploaded: {$sessionDate}/{$gridIdentifier}/{$mag}/{$origName}");
+
+    sendResponse([
+        'success' => true,
+        'path'    => "{$sessionDate}/{$gridIdentifier}/{$mag}/{$origName}"
+    ]);
 }
 
 /**
