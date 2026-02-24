@@ -180,7 +180,9 @@ function displayImage(galleryElement, mag, index) {
 
   // Add click handler for lightbox
   const img = container.querySelector("img");
-  img.addEventListener("click", () => openLightbox(imageUrl, filename));
+  img.addEventListener("click", () =>
+    openLightbox(imageUrl, filename, galleryElement, mag),
+  );
 }
 
 /**
@@ -264,8 +266,10 @@ function showNoImagesMessage(
  * Open lightbox to display image in larger view
  * @param {string} imageUrl - URL of the image
  * @param {string} filename - Filename for display
+ * @param {HTMLElement} galleryElement - The gallery container element
+ * @param {string} mag - Magnification type ('low' or 'high')
  */
-function openLightbox(imageUrl, filename) {
+function openLightbox(imageUrl, filename, galleryElement, mag) {
   // Create lightbox if it doesn't exist
   let lightbox = document.getElementById("screeningLightbox");
 
@@ -278,8 +282,17 @@ function openLightbox(imageUrl, filename) {
         <button class="screening-lightbox-close" aria-label="Close">
           <i class="fas fa-times"></i>
         </button>
-        <img src="" alt="" class="screening-lightbox-image" />
+        <div class="screening-lightbox-nav-container">
+          <button class="screening-lightbox-nav screening-lightbox-prev" aria-label="Previous image">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <img src="" alt="" class="screening-lightbox-image" />
+          <button class="screening-lightbox-nav screening-lightbox-next" aria-label="Next image">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
         <div class="screening-lightbox-caption"></div>
+        <div class="screening-lightbox-counter"></div>
         <a href="" target="_blank" class="screening-lightbox-open-tab" title="Open in new tab">
           <i class="fas fa-external-link-alt"></i> Open in new tab
         </a>
@@ -298,26 +311,96 @@ function openLightbox(imageUrl, filename) {
       .querySelector(".screening-lightbox-close")
       .addEventListener("click", closeLightbox);
 
+    // Navigation handlers
+    lightbox
+      .querySelector(".screening-lightbox-prev")
+      .addEventListener("click", (e) => {
+        e.stopPropagation();
+        navigateLightbox(-1);
+      });
+
+    lightbox
+      .querySelector(".screening-lightbox-next")
+      .addEventListener("click", (e) => {
+        e.stopPropagation();
+        navigateLightbox(1);
+      });
+
+    // Keyboard navigation
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && lightbox.classList.contains("active")) {
+      if (!lightbox.classList.contains("active")) return;
+
+      if (e.key === "Escape") {
         closeLightbox();
+      } else if (e.key === "ArrowLeft") {
+        navigateLightbox(-1);
+      } else if (e.key === "ArrowRight") {
+        navigateLightbox(1);
       }
     });
   }
 
-  // Update lightbox content
-  const img = lightbox.querySelector(".screening-lightbox-image");
-  const caption = lightbox.querySelector(".screening-lightbox-caption");
-  const openTabLink = lightbox.querySelector(".screening-lightbox-open-tab");
+  // Store current lightbox state
+  lightbox.galleryElement = galleryElement;
+  lightbox.mag = mag;
 
-  img.src = imageUrl;
-  img.alt = filename;
-  caption.textContent = filename;
-  openTabLink.href = imageUrl;
+  // Update lightbox content
+  updateLightboxContent(lightbox);
 
   // Show lightbox
   lightbox.classList.add("active");
   document.body.classList.add("lightbox-open");
+}
+
+/**
+ * Update lightbox content based on current state
+ * @param {HTMLElement} lightbox - The lightbox element
+ */
+function updateLightboxContent(lightbox) {
+  const galleryElement = lightbox.galleryElement;
+  const mag = lightbox.mag;
+  const { sessionDate, gridIdentifier, currentIndex } =
+    galleryElement.imageData;
+  const images = galleryElement.imageData[mag];
+  const index = currentIndex[mag];
+
+  const filename = images[index];
+  const imageUrl = `/api/screening-images/${sessionDate}/${gridIdentifier}/${mag}/${filename}`;
+
+  const img = lightbox.querySelector(".screening-lightbox-image");
+  const caption = lightbox.querySelector(".screening-lightbox-caption");
+  const counter = lightbox.querySelector(".screening-lightbox-counter");
+  const openTabLink = lightbox.querySelector(".screening-lightbox-open-tab");
+  const prevBtn = lightbox.querySelector(".screening-lightbox-prev");
+  const nextBtn = lightbox.querySelector(".screening-lightbox-next");
+
+  img.src = imageUrl;
+  img.alt = filename;
+  caption.textContent = filename;
+  counter.textContent = `${index + 1} / ${images.length}`;
+  openTabLink.href = imageUrl;
+
+  // Update navigation button states
+  prevBtn.disabled = index <= 0;
+  nextBtn.disabled = index >= images.length - 1;
+}
+
+/**
+ * Navigate to previous/next image in lightbox
+ * @param {number} direction - -1 for previous, 1 for next
+ */
+function navigateLightbox(direction) {
+  const lightbox = document.getElementById("screeningLightbox");
+  if (!lightbox || !lightbox.galleryElement) return;
+
+  const galleryElement = lightbox.galleryElement;
+  const mag = lightbox.mag;
+
+  // Use the existing navigateImage function to update the gallery state
+  navigateImage(galleryElement, mag, direction);
+
+  // Update lightbox display
+  updateLightboxContent(lightbox);
 }
 
 /**
