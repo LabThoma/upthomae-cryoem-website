@@ -97,6 +97,15 @@ export async function initScreeningGallery(galleryElement) {
       currentIndex: { low: 0, high: 0 },
     };
 
+    // Check if both are empty
+    if (
+      galleryElement.imageData.low.length === 0 &&
+      galleryElement.imageData.high.length === 0
+    ) {
+      showNoImagesMessage(galleryElement);
+      return;
+    }
+
     // Initialize both columns
     initGalleryColumn(galleryElement, "low");
     initGalleryColumn(galleryElement, "high");
@@ -119,26 +128,32 @@ function initGalleryColumn(galleryElement, mag) {
     `.screening-gallery-column[data-mag="${mag}"]`,
   );
   const images = galleryElement.imageData[mag];
+  const title = column.querySelector("h4");
+  const viewer = column.querySelector(".screening-image-viewer");
+  const counter = column.querySelector(".screening-image-counter");
+
+  if (images.length === 0) {
+    // Hide the title, viewer and counter, show simple text vertically centered
+    title.style.display = "none";
+    viewer.style.display = "none";
+    counter.style.display = "none";
+    const magLabel = mag === "low" ? "low" : "high";
+    column.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="screening-no-images-wrapper">
+        <p class="screening-no-images-text">No ${magLabel} magnification images uploaded</p>
+      </div>
+    `,
+    );
+    return;
+  }
+
   const container = column.querySelector(".screening-image-container");
   const currentIndexEl = column.querySelector(".current-index");
   const totalCountEl = column.querySelector(".total-count");
-  const prevBtn = column.querySelector(".gallery-nav-prev");
-  const nextBtn = column.querySelector(".gallery-nav-next");
 
   totalCountEl.textContent = images.length;
-
-  if (images.length === 0) {
-    container.innerHTML = `
-      <div class="screening-image-placeholder no-images">
-        <i class="fas fa-image"></i>
-        <p>No images</p>
-      </div>
-    `;
-    currentIndexEl.textContent = "0";
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    return;
-  }
 
   // Display first image
   displayImage(galleryElement, mag, 0);
@@ -250,16 +265,8 @@ function setupGalleryEventListeners(galleryElement) {
  * @param {HTMLElement} galleryElement - The gallery container
  * @param {string} message - Optional custom message
  */
-function showNoImagesMessage(
-  galleryElement,
-  message = "No screening images available",
-) {
-  galleryElement.innerHTML = `
-    <div class="screening-gallery-empty">
-      <i class="fas fa-images"></i>
-      <p>${message}</p>
-    </div>
-  `;
+function showNoImagesMessage(galleryElement, message = "No screening images") {
+  galleryElement.innerHTML = `<p class="screening-no-images-text">${message}</p>`;
 }
 
 /**

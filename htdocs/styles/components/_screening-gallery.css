@@ -17,6 +17,8 @@
   flex: 1;
   max-width: 400px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .screening-gallery-column h4 {
@@ -139,6 +141,23 @@
 .screening-gallery-empty p {
   margin: 0;
   font-style: italic;
+}
+
+/* Simple no images text */
+.screening-no-images-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+}
+
+.screening-no-images-text {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
 }
 
 /* Lightbox */
