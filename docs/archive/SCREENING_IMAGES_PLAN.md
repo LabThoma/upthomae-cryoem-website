@@ -122,13 +122,13 @@ Register the new screening images endpoint routes.
 
 ## Progress Tracking
 
-- [ ] Step 0: Create Upload Endpoint & Cluster Script
-- [ ] Step 1: Create Image API Endpoint
-- [ ] Step 2: Add API Routing
-- [ ] Step 3: Create Gallery Component
-- [ ] Step 4: Update View Modal
-- [ ] Step 5: Add CSS Styling
-- [ ] Testing with sample images
+- [x] Step 0: Create Upload Endpoint & Cluster Script
+- [x] Step 1: Create Image API Endpoint
+- [x] Step 2: Add API Routing
+- [x] Step 3: Create Gallery Component
+- [x] Step 4: Update View Modal
+- [x] Step 5: Add CSS Styling
+- [x] Testing with sample images
 
 ## Notes
 
