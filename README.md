@@ -96,19 +96,221 @@ The app is full of small conveniences designed to improve efficiency and consist
 | **Star ratings**                 | Quick 1–5 star input for quality assessment; read-only display in tables.                           |
 | **Search & filter**              | Full-text search and category/author filters on the blog; trashed/active toggle on the database.    |
 
+<!-- TODO: Add feature screenshots
+### Screenshots
+
+| Grid Prep Form | Grid Database | Microscope Session |
+|:-:|:-:|:-:|
+| ![Form](docs/screenshots/form.png) | ![Database](docs/screenshots/database.png) | ![Microscope](docs/screenshots/microscope.png) |
+
+| Screening Gallery | Blog | Admin Panel |
+|:-:|:-:|:-:|
+| ![Gallery](docs/screenshots/gallery.png) | ![Blog](docs/screenshots/blog.png) | ![Admin](docs/screenshots/admin.png) |
+-->
+
+---
+
+## Technical Reference
+
+Everything below is for **developers and system administrators** setting up or extending the application.
+
+- [Tech Stack & Architecture](#tech-stack--architecture)
+- [Setup & Deployment](#setup--deployment)
+- [Local Development](#local-development)
+- [Project Structure](#project-structure)
+- [API Endpoints](#api-endpoints)
+- [Authentication](#authentication)
+- [Tools & Scripts](#tools--scripts)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Tech Stack & Architecture
+
+**Backend:** PHP (no framework), RESTful JSON API, MariaDB/MySQL  
+**Frontend:** Vanilla JavaScript (ES modules), HTML, CSS — no build step, no bundler  
+**Auth:** Microsoft Entra ID via OpenID Connect  
+**Other:** TinyMCE (blog editor), Font Awesome 7 (icons), Composer for PHP packages
+
+The app is a **single-page application** served from a single PHP entry point (`index.php`). The frontend loads HTML templates via `fetch()` and talks to a PHP API router that dispatches to per-resource endpoint files. Validation is dual-layer — identical schemas enforced in [validation.js](htdocs/validation.js) (client) and [validation.php](htdocs/php/validation.php) (server).
+
+### Requirements
+
+- A web server with **PHP** ≥ 8.0 (Apache or Nginx)
+- **MariaDB** ≥ 10.5 or **MySQL** ≥ 8.0
+- **Composer** (for PHP dependencies)
+
+---
+
+## Setup & Deployment
+
+### 1. Clone the repository
+
+```sh
+git clone https://github.com/ASKrebs/upthomae-cryoem-website.git
+cd upthomae-cryoem-website
+```
+
+### 2. Install PHP dependencies
+
+```sh
+cd htdocs
+composer install
+cd ..
+```
+
+### 3. Set up the database
+
+Create a database and import the schema:
+
+```sh
+mysql -u root -p -e "CREATE DATABASE cryoem;"
+mysql -u root -p cryoem < setup.sql
+```
+
+### 4. Configure the application
+
+```sh
+cp private/config.example.php private/config.production.php
+```
+
+Edit `private/config.production.php` and fill in your database credentials:
+
+```php
+define('DB_HOST', 'localhost');
+define('DB_USER', 'your_db_user');
+define('DB_PASS', 'your_db_password');
+define('DB_NAME', 'cryoem');
+define('DB_CHARSET', 'utf8mb4');
+define('SCREENING_IMAGES_UPLOAD_KEY', 'your_secret_key');
+```
+
+For the blog editor, also copy and edit the TinyMCE config:
+
+```sh
+cp private/tinymce-config.example.php private/tinymce-config.php
+```
+
+### 5. Set up authentication
+
+Create the Entra ID environment file:
+
+```sh
+# htdocs/entra/.env.production
+AUTH_URL=https://login.microsoftonline.com/{tenant-id}/v2.0
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+OIDC_REDIRECT_URI=https://your-site.com/entra/entra.php
+```
+
+### 6. Deploy to your web server
+
+1. Upload all files to your server. The **document root** should point to `htdocs/`.
+2. Ensure `private/` and `include/` are accessible to PHP but **not** publicly served.
+3. On Apache, enable `mod_rewrite` and allow `.htaccess` rewrites.
+
+The app auto-detects the environment from `HTTP_HOST`: if it contains `epfl.ch` it loads `config.production.php`, otherwise `config.local.php`. Both include `private/config.shared.php` (Database class, error handlers, helpers).
+
+> **EPFL users:** See [EPFL_INFO.md](EPFL_INFO.md) for university-specific setup (LAMP server request, phpMyAdmin access, Entra ID registration).
+
+---
+
+## Local Development
+
+For local development, create a separate config:
+
+```sh
+cp private/config.example.php private/config.local.php
+# Edit with your local database credentials
+
+# Optionally create a local auth env file
+# htdocs/entra/.env.local
+```
+
+Start the built-in PHP dev server:
+
+```sh
+cd htdocs
+php -S localhost:8000 router.php
+```
+
+The router dispatches `/api/*` to `php/api.php`, serves static files directly, and falls back to `index.php` for everything else.
+
+Apply database migrations with `mysql -u root -p cryoem < database/migrations/<file>.sql`. Back up with `./database/backup_db.sh`.
+
+---
+
+## Project Structure
+
+```
+htdocs/                 # Web root (document root for your server)
+├── index.php           # SPA entry point
+├── router.php          # Dev server router (php -S)
+├── components/         # HTML template fragments
+├── entra/              # Entra ID / OIDC authentication
+├── php/api.php         # API router → php/endpoints/*.php
+├── scripts/            # Frontend JS (views/, controllers/, components/, utils/)
+└── styles/             # Modular CSS (base/, components/, features/, layout/)
+
+include/config.php      # Environment-detecting config loader
+private/                # Config files, blog content, screening images (not public)
+database/               # Backup script, CSV importers, migrations/
+tools/                  # CLI utilities (screening image uploader)
+setup.sql               # Full database schema
+```
+
+---
+
+## API Endpoints
+
+All endpoints return JSON and are prefixed with `/api/`. Request bodies use JSON for `POST`/`PUT`/`PATCH`.
+
+| Resource            | Endpoint                          | Methods                |
+| ------------------- | --------------------------------- | ---------------------- |
+| Plunging Sessions   | `/api/sessions[/{id}]`            | GET, POST, PUT         |
+| Samples             | `/api/samples`                    | GET, POST              |
+| Grid types          | `/api/grid-types[/{id}]`          | GET, POST, PATCH       |
+| Grid preparations   | `/api/grid-preparations[/{id}]`   | GET, POST, PATCH       |
+| Microscope sessions | `/api/microscope-sessions[/{id}]` | GET, POST, PUT         |
+| Screening images    | `/api/screening-images`           | GET, POST (API key)    |
+| Blog                | `/api/blog[/{id}]`                | GET, POST, PUT, DELETE |
+| Dashboard           | `/api/dashboard`                  | GET                    |
+| Users               | `/api/users`                      | GET                    |
+
+---
+
+## Authentication
+
+**Microsoft Entra ID** (Azure AD) via OpenID Connect, handled in `htdocs/entra/`. Provides `requireAuth()`, `getUserInfo()`, `getUserEmail()`, `getUserName()`, and `getUserGroups()` helpers. For EPFL, also extracts SCIPER and group memberships. The Admin Panel adds a client-side password gate on top. See [Configuration & Deployment](#configuration--deployment) for `.env` setup.
+
+---
+
+## Tools & Scripts
+
+| Tool                               | Purpose                                                                                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tools/upload_screening_images.sh` | Upload screening images from a compute cluster via the API. Set `CRYOEM_UPLOAD_KEY` and `CRYOEM_UPLOAD_URL` env vars, then pass `--folder`, `--session-date`, `--grid-id`. Supports `--skip-existing`. |
+| `database/backup_db.sh`            | Create a timestamped mysqldump in `database_backups/`.                                                                                                                                                 |
+| `database/migrations/`             | Incremental SQL schema changes.                                                                                                                                                                        |
+
+---
 
 ## Contributing
 
-Pull requests and suggestions are welcome! Please follow coding standards.
+Contributions are welcome! To get started:
 
-## Contact
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Push to your branch and open a pull request
 
 For questions, support, or feature requests, contact us via email or open an issue on GitHub.
 
-## Acknowledgments
-
-Thanks to all lab members and contributors for their input and feedback.
+Thanks to all lab members and contributors for their input and feedback!
 
 ## License
 
-License to be specified.
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright © 2026 LabThoma, PTPSP.
