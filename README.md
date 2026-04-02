@@ -1,6 +1,11 @@
 # 🔬 CryoEM Grid Manager
 
 > A web-based sample tracking and grid management platform for cryo-electron microscopy workflows.
+
+<p align="center">
+  <img src="docs/images/WebsiteBanner.png" alt="CryoEM Lab Manager – Overview" width="800">
+</p>
+
 ## What is this?
 
 The **CryoEM Grid Manager** tracks every grid from the moment it's plunge-frozen, through storage, screening at the microscope, all the way to data collection — giving the whole group a searchable, shared record of what was done, when, and by whom.
@@ -46,6 +51,9 @@ This is the primary data-entry view, designed to be used **while you're plunging
 - Optionally, override session-level defaults (volume, blot time, blot force, additives) on a per-grid basis
 
 When you're done, hit **Save & Update**. If you're freezing another box, hit **Next Box** — the box name auto-increments and your settings carry over.
+
+<img src="docs/images/VitrobotForm.png" alt="Input Form" width="700">
+
 ### 📦 Grid Database — Browse and manage your grids
 
 Every grid box appears in your personal database. Click your name to see all your boxes, then **expand any box** to reveal the individual grid slots inside.
@@ -59,6 +67,8 @@ From here you can:
 - **Filter** by trashed or active grids
 - See at a glance which grids were at the microscope, shipped, or trashed through visual status indicators
 
+<img src="docs/images/DatabaseOverview.png" alt="Grid Database" width="700">
+
 ### 🔬 Microscope Sessions — Track screening and data collection
 
 All the sessions are sorted by user and shows :
@@ -68,15 +78,26 @@ All the sessions are sorted by user and shows :
 - A **Popup for details** of each grid shows comments and collection parameters — pixel size, magnification, total exposure, defocus range, slit width, number of images
 - A built-in **Screening images gallery** shows low-mag and high-mag micrographs side by side, with navigation arrows and lightbox viewing
 - The **Rescued status** indicates whether a grid was rescued for re-use
+
+<img src="docs/images/MicroscopeSession.png" alt="Microscope Session" width="700">
+
 ### 📰 Blog — Share knowledge with the group
 
 An internal blog for cryoEM tips, freezing protocols, troubleshooting notes, or lab news. Posts support rich text and images via the TinyMCE editor, and can be searched, filtered by category or author.
+
+<img src="docs/images/blog.png" alt="Blog" width="700">
+
 ### 🔧 Admin Panel — Manage inventory and sessions
 
 A password-protected area for lab managers:
 
 - **Grid stock inventory** — Add new grid types (manufacturer, support, spacing, mesh, extra layer, quantity). & see at a glance how many are still unused vs. how many were used in the last 3 months to estimate when reordering is needed
 - **Microscope session management** — Create and edit microscope sessions, link grids, and track overnight runs.
+
+<img src="docs/images/AdminPanel.png" alt="Admin Panel" width="700">
+
+---
+
 ## Things That Save You Time
 
 The app is full of small conveniences designed to improve efficiency and consistency:
@@ -95,18 +116,6 @@ The app is full of small conveniences designed to improve efficiency and consist
 | **Visual status indicators**     | Trashed, shipped, and microscope-visited grids are color/style-coded at a glance.                   |
 | **Star ratings**                 | Quick 1–5 star input for quality assessment; read-only display in tables.                           |
 | **Search & filter**              | Full-text search and category/author filters on the blog; trashed/active toggle on the database.    |
-
-<!-- TODO: Add feature screenshots
-### Screenshots
-
-| Grid Prep Form | Grid Database | Microscope Session |
-|:-:|:-:|:-:|
-| ![Form](docs/screenshots/form.png) | ![Database](docs/screenshots/database.png) | ![Microscope](docs/screenshots/microscope.png) |
-
-| Screening Gallery | Blog | Admin Panel |
-|:-:|:-:|:-:|
-| ![Gallery](docs/screenshots/gallery.png) | ![Blog](docs/screenshots/blog.png) | ![Admin](docs/screenshots/admin.png) |
--->
 
 ---
 
@@ -282,7 +291,7 @@ All endpoints return JSON and are prefixed with `/api/`. Request bodies use JSON
 
 ## Authentication
 
-**Microsoft Entra ID** (Azure AD) via OpenID Connect, handled in `htdocs/entra/`. Provides `requireAuth()`, `getUserInfo()`, `getUserEmail()`, `getUserName()`, and `getUserGroups()` helpers. For EPFL, also extracts SCIPER and group memberships. The Admin Panel adds a client-side password gate on top. See [Configuration & Deployment](#configuration--deployment) for `.env` setup.
+**Microsoft Entra ID** (Azure AD) via OpenID Connect, handled in `htdocs/entra/`. Provides `requireAuth()`, `getUserInfo()`, `getUserEmail()`, `getUserName()`, and `getUserGroups()` helpers. For EPFL, also extracts SCIPER and group memberships. The Admin Panel adds a client-side password gate on top. See [Setup & Deployment](#setup--deployment) for `.env` setup.
 
 ---
 
